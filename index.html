@@ -635,7 +635,6 @@ function autoDistribuir(h,dayType){
 // ── TARIFA FACTURACIÓN (lo que cobras al cliente — igual normal y extra) ──
 function getTarifaFact(w,obra,tipo){
   if(!obra||(!obra.tof&&!obra.tpe))return 0;
-  // El cliente paga igual horas normales y extra
   return isOf(w)?(obra.tof||0):(obra.tpe||0);
 }
 
@@ -647,6 +646,28 @@ function getCosteTrabajador(w,tipo){
 
 // ── CÁLCULO MES POR TRABAJADOR ────────────────────────────────────
 // Devuelve {hN, hE, fact, coste, byObra:{obraId:{obra,hN,hE,fact,coste}}}
+// Devuelve la obra que tenía el trabajador en una fecha dada, consultando el historial
+function getObraEnFecha(w, year, month, day){
+  const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  const hist=w.obraHistory||[];
+  if(hist.length){
+    // Buscar la entrada del historial vigente en esa fecha
+    // El historial está ordenado cronológicamente
+    let obraId=null;
+    for(const h of hist){
+      if(h.desde<=dateStr){
+        // Esta entrada estaba activa desde h.desde
+        if(!h.hasta||h.hasta>=dateStr){
+          obraId=h.obraId;
+        }
+      }
+    }
+    if(obraId)return obras.find(o=>o.id===obraId)||null;
+  }
+  // Sin historial: usar la obra actual
+  return obras.find(o=>o.id===w.obra)||null;
+}
+
 function calcWorkerMonth(wid,month,year){
   const w=workers.find(x=>x.id===wid);
   if(!w)return{hN:0,hE:0,fact:0,coste:0,byObra:{}};
@@ -669,20 +690,22 @@ function calcWorkerMonth(wid,month,year){
   for(let d=1;d<=days;d++){
     const val=hor[`${year}-${month}-${wid}-${d}`];
     if(!val&&val!==0)continue;
-    // Ausencia con nota guardada como {tipo, nota} — no contar como horas
     if(typeof val==='object'&&val.tipo&&AUSENCIAS[val.tipo])continue;
     if(typeof val==='object'){
-      // Obra1
-      const ob1=val.obraId?obras.find(o=>o.id===val.obraId):(obras.find(o=>o.id===w.obra)||null);
-      addToObra(ob1?.id||0,val.n||0,val.he||0,ob1);
+      // Obra1: si tiene obraId guardado usarlo, si no consultar historial por fecha
+      const ob1=val.obraId
+        ? obras.find(o=>o.id===val.obraId)
+        : getObraEnFecha(w,year,month,d);
+      if(ob1)addToObra(ob1.id,val.n||0,val.he||0,ob1);
       // Obra2
       if(val.obra2&&val.obra2.obraId){
         const ob2=obras.find(o=>o.id===val.obra2.obraId);
         if(ob2)addToObra(ob2.id,val.obra2.n||0,val.obra2.he||0,ob2);
       }
     }else if(typeof val==='number'){
-      const ob=obras.find(o=>o.id===w.obra)||null;
-      addToObra(ob?.id||0,val,0,ob);
+      // Sin obraId: consultar historial por fecha
+      const ob=getObraEnFecha(w,year,month,d);
+      if(ob)addToObra(ob.id,val,0,ob);
     }
   }
   return{hN,hE,fact,coste,byObra};
@@ -774,13 +797,16 @@ function rObras(){
 }
 function oCard(o){
   const mA=new Date().getMonth(),yA=new Date().getFullYear();
-  const {fact,coste,hN,hE}=calcObraMonth(o.id,mA,yA);
+  const {fact,coste,hN,hE,wRows}=calcObraMonth(o.id,mA,yA);
   const ben=fact-coste;
-  const wc=workers.filter(w=>w.obra===o.id&&(w.estado==='active'||w.estado==='ext')).length;
+  // Actualmente asignados a esta obra
+  const activos=workers.filter(w=>w.obra===o.id&&(w.estado==='active'||w.estado==='ext'));
+  // Trabajaron este mes pero ya no están asignados (trasladados)
+  const trasladados=wRows.filter(({w})=>w.obra!==o.id);
   return`<div class="card"><div class="ct"><div style="flex:1;min-width:0"><div class="cn">${o.nombre}</div><div class="csub">${o.empresa}</div></div><span class="bdg ${ESTADOB[o.estado]||'ba'}">${ESTADOL[o.estado]||'En curso'}</span></div>
-  <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--t3);margin-bottom:6px">
-    <span><b style="color:var(--t2)">${wc}</b> trab.</span>
-    <span style="color:${o.tof>0?'var(--g)':'var(--t3)'};font-family:var(--fm)">${o.tof>0?`Of.${o.tof}€·Peón${o.tpe}€`:'Sin tarifa'}</span>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--t3);margin-bottom:6px">
+    <span>👷 <b style="color:var(--t2)">${activos.length}</b> activos${trasladados.length>0?` · <span style="color:#EF9F27">🔄 ${trasladados.length} trasladados</span>`:''}</span>
+    <span style="color:${o.tof>0?'var(--g)':'var(--t3)'};font-family:var(--fm)">${o.tof>0?`Of.${o.tof}€ · Peón${o.tpe}€`:'Sin tarifa'}</span>
     ${fact>0?`<span style="color:var(--g);font-weight:500">${fmt(fact)}</span>`:''}
     ${ben>0&&coste>0?`<span style="color:var(--g);font-size:11px">+${fmt(ben)}</span>`:''}
   </div>
@@ -864,16 +890,16 @@ function updHorPrev(){
   const dayType=getDayType(cY,cM,day);
   const{n,he}=autoDistribuir(selHoras,dayType);
   if(ob&&(ob.tof||ob.tpe)&&w){
-    const tarN=getTarifaFact(w,ob,'h');const tarHE=getTarifaFact(w,ob,'he');
+    const tar=getTarifaFact(w,ob,'h');
     const costN=getCosteTrabajador(w,'h');const costHE=getCosteTrabajador(w,'he');
+    const totalH=n+he;
     let txt=`<b>${ob.nombre.substring(0,28)}</b><br>`;
-    if(n>0)txt+=`${fmtH(n)}×${tarN}€ = <b>${fmt(n*tarN)}</b>`;
-    if(he>0)txt+=`${n>0?' + ':''}${fmtH(he)}HE×${tarHE.toFixed(1)}€ = <b>${fmt(he*tarHE)}</b>`;
+    txt+=`${fmtH(totalH)}h × ${tar}€ = <b>${fmt(totalH*tar)}</b>`;
     if(dayType==='allExtra')txt+=` <span style="background:var(--pl);color:#3C3489;padding:1px 5px;border-radius:4px;font-size:10px">TODO EXTRA</span>`;
     if(dayType==='viernes'&&he>0)txt+=` <span style="background:var(--al);color:#633806;padding:1px 5px;border-radius:4px;font-size:10px">VIE +${fmtH(he)}HE</span>`;
     if(costN>0||costHE>0){
       const c=n*costN+he*costHE;
-      const b=(n*tarN+he*tarHE)-c;
+      const b=(totalH*tar)-c;
       txt+=`<br><span style="color:var(--t3)">Coste: ${fmt(c)} · Ben: <b style="color:${b>=0?'var(--g)':'#E24B4A'}">${fmt(b)}</b></span>`;
     }
     prev.style.display='block';prev.innerHTML=txt;
@@ -885,10 +911,10 @@ function updHorPrev(){
     const ob2=ob2Id?obras.find(o=>o.id===ob2Id):null;
     const{n:n2,he:he2}=autoDistribuir(selHoras2,dayType);
     if(ob2&&w){
-      const tarN2=getTarifaFact(w,ob2,'h');const tarHE2=getTarifaFact(w,ob2,'he');
+      const tar2=getTarifaFact(w,ob2,'h');
+      const totalH2=n2+he2;
       let txt2=`② <b>${ob2.nombre.substring(0,28)}</b><br>`;
-      if(n2>0)txt2+=`${fmtH(n2)}×${tarN2}€ = <b>${fmt(n2*tarN2)}</b>`;
-      if(he2>0)txt2+=`${n2>0?' + ':''}${fmtH(he2)}HE×${tarHE2.toFixed(1)}€ = <b>${fmt(he2*tarHE2)}</b>`;
+      txt2+=`${fmtH(totalH2)}h × ${tar2}€ = <b>${fmt(totalH2*tar2)}</b>`;
       prev2.style.display='block';prev2.innerHTML=txt2;
     }else if(prev2)prev2.style.display='none';
   }else if(prev2)prev2.style.display='none';
@@ -1028,10 +1054,36 @@ function saveHor(){
       if(nota)val.nota=nota;
       hor[key]=val;
     }
-    const msg=dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
-    svFB('horario',hor);CM();rHor();toast(msg);
+
+    // ── REASIGNACIÓN AUTOMÁTICA DE OBRA ──────────────────────────
+    // Si la obra seleccionada es diferente a la asignada, reasignar al trabajador
+    if(obraSelId&&obraSelId!==w?.obra&&w){
+      const fechaCambio=`${cY}-${String(cM+1).padStart(2,'0')}-${String(editCell.day).padStart(2,'0')}`;
+      const obraAnterior=obras.find(o=>o.id===w.obra);
+      const obraNueva=obras.find(o=>o.id===obraSelId);
+      // Guardar historial
+      if(!w.obraHistory)w.obraHistory=[];
+      // Solo añadir al historial si la obra anterior no está ya registrada
+      if(w.obra&&(!w.obraHistory.length||w.obraHistory[w.obraHistory.length-1].obraId!==w.obra)){
+        w.obraHistory.push({obraId:w.obra,desde:w.obraDesde||'2020-01-01',hasta:fechaCambio});
+      }else if(w.obraHistory.length){
+        // Cerrar la entrada anterior si estaba abierta
+        const last=w.obraHistory[w.obraHistory.length-1];
+        if(!last.hasta)last.hasta=fechaCambio;
+      }
+      // Abrir nueva entrada en historial
+      w.obraHistory.push({obraId:obraSelId,desde:fechaCambio,hasta:null});
+      w.obra=obraSelId;
+      w.obraDesde=fechaCambio;
+      svFB('workers',workers);
+      const msg2=`✓ ${w.nombre.split(',')[0]} → ${obraNueva?.nombre||'nueva obra'}`;
+      toast(msg2);
+    }else{
+      const msg=dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
+      toast(msg);
+    }
+    svFB('horario',hor);CM();rHor();
   }else{
-    // Ausencia: si hay nota guardar como objeto {tipo, nota}, si no como string simple
     hor[key]=nota?{tipo:tp,nota}:tp;
     const label=AUSENCIAS[tp]?.txt||tp;
     svFB('horario',hor);CM();rHor();toast('✓ '+label+(nota?' 📝':''));
@@ -1115,8 +1167,11 @@ function rFact(){
     }
     html+=`<div style="font-size:11px;color:var(--t3);margin-bottom:6px">${fmtH(hN)} norm.${hE>0?' + '+fmtH(hE)+' extra':''} · ${wRows.length} trabajador${wRows.length!==1?'es':''}</div>`;
     wRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).forEach(({w,hN:wN,hE:wE,fact:wF,coste:wC})=>{
-      const tar=isOf(w)?o.tof:o.tpe;const tarHE=tar*(1+(o.the||25)/100);
-      let det='';if(wN>0)det+=`${fmtH(wN)}×${tar}€`;if(wE>0)det+=`${det?' +':''}${fmtH(wE)}hE×${tarHE.toFixed(1)}€`;
+      const tar=isOf(w)?o.tof:o.tpe;
+      let det='';
+      if(wN>0&&wE>0)det=`${fmtH(wN+wE)}h×${tar}€`;
+      else if(wN>0)det=`${fmtH(wN)}h×${tar}€`;
+      else if(wE>0)det=`${fmtH(wE)}hE×${tar}€`;
       html+=`<div class="frow2">
         <span class="fname">${w.nombre} <span style="opacity:.6;font-size:10px">${CATL[w.cat]||''}</span></span>
         <span class="fdet">${det}</span>
@@ -1153,8 +1208,11 @@ function exportPDF(){
     doc2.setTextColor(0);y+=6;
     wRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).forEach(({w,hN:wN,hE:wE,fact:wF})=>{
       if(y>270){doc2.addPage();y=20;}
-      const tar=isOf(w)?o.tof:o.tpe;const tarHE=tar*(1+(o.the||25)/100);
-      let det='';if(wN>0)det+=`${fmtH(wN)}×${tar}€`;if(wE>0)det+=` + ${fmtH(wE)}hE×${tarHE.toFixed(1)}€`;
+      const tar=isOf(w)?o.tof:o.tpe;
+      let det='';
+      if(wN>0&&wE>0)det=`${fmtH(wN+wE)}h×${tar}€`;
+      else if(wN>0)det=`${fmtH(wN)}h×${tar}€`;
+      else if(wE>0)det=`${fmtH(wE)}h×${tar}€`;
       doc2.setFontSize(8);doc2.text(`  ${w.nombre} (${CATL[w.cat]||''})`,16,y);
       doc2.text(det,100,y);doc2.text(fmt(wF),196,y,{align:'right'});y+=5;
     });
@@ -1356,20 +1414,35 @@ function openDO(id){
   const mA=new Date().getMonth(),yA=new Date().getFullYear();
   const{fact,coste,hN,hE,wRows}=calcObraMonth(id,mA,yA);
   const ben=fact-coste;
-  // Trabajadores actualmente asignados
-  const assigned=workers.filter(w=>w.obra===id&&(w.estado==='active'||w.estado==='ext')).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
-  const wHTML=wRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).map(({w,hN:wN,hE:wE,fact:wF,coste:wC})=>{
+  // Separar activos (siguen en esta obra) de trasladados (ya no están)
+  const activosRows=wRows.filter(({w})=>w.obra===id);
+  const trasladadosRows=wRows.filter(({w})=>w.obra!==id);
+
+  function wRowHTML({w,hN:wN,hE:wE,fact:wF,coste:wC},esTraslado){
     const tar=isOf(w)?o.tof:o.tpe;
-    return`<div class="wc" style="margin-bottom:8px"><div class="av ${avC(w.id)}">${ini(w.nombre)}</div>
-      <div class="wi"><div class="wn">${w.nombre}</div>
-        <div style="display:flex;gap:5px;margin-top:2px"><span class="tag">${CATL[w.cat]||'—'}</span>${tar>0?`<span style="font-size:11px;color:var(--g);font-family:var(--fm)">${tar}€/h</span>`:''}</div>
+    const obraActual=obras.find(ob=>ob.id===w.obra);
+    return`<div class="wc" style="margin-bottom:8px;${esTraslado?'opacity:.75':''}">
+      <div class="av ${avC(w.id)}">${ini(w.nombre)}</div>
+      <div class="wi">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <span class="wn">${w.nombre}</span>
+          ${esTraslado?`<span style="font-size:10px;background:#FEF3E2;color:#7C4A00;padding:2px 6px;border-radius:99px;font-weight:600">🔄 → ${obraActual?obraActual.nombre.substring(0,20):'otra obra'}</span>`:''}
+        </div>
+        <div style="display:flex;gap:5px;margin-top:2px"><span class="tag">${CATL[w.cat]||'—'}</span>${tar>0&&!esTraslado?`<span style="font-size:11px;color:var(--g);font-family:var(--fm)">${tar}€/h</span>`:''}</div>
         <div style="font-size:11px;color:var(--t3);margin-top:1px">${fmtH(wN)}${wE>0?' +'+fmtH(wE)+'hE':''} = <b style="color:var(--g)">${fmt(wF)}</b>${wC>0?` · coste <span style="color:#E24B4A">${fmt(wC)}</span>`:''}</div>
       </div></div>`;
-  }).join('');
+  }
+
+  const activosHTML=activosRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).map(r=>wRowHTML(r,false)).join('');
+  const trasladadosHTML=trasladadosRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).map(r=>wRowHTML(r,true)).join('');
+
+  // Trabajadores asignados sin horas este mes
+  const asignadosSinHoras=workers.filter(w=>w.obra===id&&(w.estado==='active'||w.estado==='ext')&&!activosRows.find(r=>r.w.id===w.id));
+
   document.getElementById('dov-body').innerHTML=`
     <div class="dttl">${o.nombre}</div><div class="dsub">${o.empresa} · ${o.dir}</div>
     <div class="bsgrid3">
-      <div class="bsi"><div class="bsv">${assigned.length}</div><div class="bsl">Asignados</div></div>
+      <div class="bsi"><div class="bsv">${activosRows.length+asignadosSinHoras.length}</div><div class="bsl">Asignados</div></div>
       <div class="bsi"><div class="bsv">${fmtH(hN+hE)}</div><div class="bsl">Horas ${MESES[mA]}</div></div>
       <div class="bsi"><div class="bsv">${fact>0?fmt(fact):'—'}</div><div class="bsl">Facturado</div></div>
     </div>
@@ -1380,9 +1453,11 @@ function openDO(id){
       <div class="inrow"><span class="ik">Estado</span><span class="iv">${ESTADOL[o.estado]||o.estado}</span></div>
       <div class="inrow"><span class="ik">Tarifa Oficial</span><span class="iv">${o.tof>0?o.tof+'€/h':'—'}</span></div>
       <div class="inrow"><span class="ik">Tarifa Peón</span><span class="iv">${o.tpe>0?o.tpe+'€/h':'—'}</span></div>
-      <div class="inrow"><span class="ik">% Extra</span><span class="iv">+${o.the||25}%</span></div>
     </div>
-    ${wHTML?`<div class="dsec"><div class="dsectl">Este mes (${wRows.length})</div>${wHTML}</div>`:'<div class="empty" style="padding:20px"><div class="empty-text">Sin horas registradas este mes</div></div>'}
+    ${activosHTML?`<div class="dsec"><div class="dsectl">✅ En esta obra este mes (${activosRows.length})</div>${activosHTML}</div>`:''}
+    ${asignadosSinHoras.length?`<div class="dsec"><div class="dsectl">Asignados sin horas este mes (${asignadosSinHoras.length})</div>${asignadosSinHoras.map(w=>`<div class="wc" style="margin-bottom:8px"><div class="av ${avC(w.id)}">${ini(w.nombre)}</div><div class="wi"><div class="wn">${w.nombre}</div><div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}</div></div></div>`).join('')}</div>`:''}
+    ${trasladadosHTML?`<div class="dsec"><div class="dsectl">🔄 Trasladados — trabajaron aquí este mes (${trasladadosRows.length})</div>${trasladadosHTML}</div>`:''}
+    ${!wRows.length&&!asignadosSinHoras.length?'<div class="empty" style="padding:20px"><div class="empty-text">Sin trabajadores este mes</div></div>':''}
   `;
   document.getElementById('dov-obra').classList.add('open');
 }
