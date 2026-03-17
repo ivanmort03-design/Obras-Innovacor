@@ -13,6 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <title>Obras360</title>
 <style>
 :root{--g:#1D9E75;--gd:#0F6E56;--gp:#085041;--gl:#E1F5EE;--al:#FAEEDA;--bl:#E6F1FB;--rl:#FCEBEB;--pl:#EEEDFE;--t:#1A1A18;--t2:#5F5E5A;--t3:#888780;--bg:#F7F6F2;--bc:#FFFFFF;--br:rgba(0,0,0,.09);--bm:rgba(0,0,0,.14);--sh:0 1px 3px rgba(0,0,0,.08);--shm:0 4px 16px rgba(0,0,0,.12);--r:12px;--rs:8px;--rp:99px;--f:'DM Sans',sans-serif;--fm:'DM Mono',monospace;--nh:64px;--hh:56px}
@@ -452,13 +454,16 @@ textarea.fi{min-height:75px;resize:vertical}
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import{getFirestore,doc,getDoc,setDoc,onSnapshot}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
+<script>
 const firebaseConfig={apiKey:"AIzaSyCqtBWiREaR_RynFocJbgeecF1lfXYggw8",authDomain:"innovacor-3b437.firebaseapp.com",projectId:"innovacor-3b437",storageBucket:"innovacor-3b437.firebasestorage.app",messagingSenderId:"682216481124",appId:"1:682216481124:web:39c3fde1f3f67a8d6cda71"};
-const fbApp=initializeApp(firebaseConfig);
-const db=getFirestore(fbApp);
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+// Helpers Firebase compat
+function fbDoc(col,id){return db.collection('app').doc(id);}
+async function fbGet(id){return db.collection('app').doc(id).get();}
+async function fbSet(id,data){return db.collection('app').doc(id).set(data);}
+function fbOnSnapshot(id,cb){return db.collection('app').doc(id).onSnapshot(cb);}
 
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const AVC=['av0','av1','av2','av3','av4'];
@@ -554,20 +559,8 @@ let chartObra=null;
 let factMode='fact'; // 'fact' o 'benef'
 let selHoras=9,selHoras2=4; // horas seleccionadas en el modal
 
-// Exponer funciones globalmente para llamadas desde HTML
+// Funciones globales - accesibles desde HTML automáticamente al ser script normal
 const G=window;
-function exposeGlobal(){
-  G.navTo=navTo;G.CM=CM;G.CD=CD;G.setObraTab=setObraTab;G.rObras=rObras;G.rWorkers=rWorkers;
-  G.openEO=openEO;G.saveObra=saveObra;G.delObra=delObra;G.openEW=openEW;G.saveWorker=saveWorker;
-  G.openDO=openDO;G.openDW=openDW;G.chMonth=chMonth;G.chMonthF=chMonthF;G.chMonthC=chMonthC;
-  G.eCell=eCell;G.saveHor=saveHor;G.delHor=delHor;G.thh=thh;G.updHorPrev=updHorPrev;
-  G.onHorWorkerChange=onHorWorkerChange;G.toggleSegundaObra=toggleSegundaObra;
-  G.openCopyDay=openCopyDay;G.pasteDay=pasteDay;G.addInc=addInc;G.openFab=openFab;
-  G.exportPDF=exportPDF;G.exportBackup=exportBackup;G.importBackup=importBackup;
-  G.exportInformeMensual=exportInformeMensual;G.openAddFestivo=openAddFestivo;
-  G.saveFestivo=saveFestivo;G.rAjustes=rAjustes;G.delFestivo=delFestivo;G.toggleFact=toggleFact;
-  G.setSelHoras=setSelHoras;G.setSelHoras2=setSelHoras2;
-}
 
 function setSyncDot(s){document.getElementById('sync-dot').className='sync-dot '+s;}
 function qni(i){return document.querySelectorAll('.ni')[i];}
@@ -576,27 +569,25 @@ async function initData(){
   setSyncDot('loading');
   try{
     const[obS,wkS,inS,horS,fesS]=await Promise.all([
-      getDoc(doc(db,'app','obras')),getDoc(doc(db,'app','workers')),
-      getDoc(doc(db,'app','incs')),getDoc(doc(db,'app','horario')),
-      getDoc(doc(db,'app','festivos')),
+      fbGet('obras'),fbGet('workers'),fbGet('incs'),fbGet('horario'),fbGet('festivos'),
     ]);
-    obras=obS.exists()?obS.data().list:OD;
-    workers=wkS.exists()?wkS.data().list:WD;
-    incs=inS.exists()?inS.data().list:[];
-    hor=horS.exists()?horS.data().data:{};
-    festivos=fesS.exists()?fesS.data().list:FESTIVOS_DEFAULT;
-    if(!obS.exists())await setDoc(doc(db,'app','obras'),{list:OD});
-    if(!wkS.exists())await setDoc(doc(db,'app','workers'),{list:WD});
-    if(!fesS.exists())await setDoc(doc(db,'app','festivos'),{list:FESTIVOS_DEFAULT});
+    obras=obS.exists?obS.data().list:OD;
+    workers=wkS.exists?wkS.data().list:WD;
+    incs=inS.exists?inS.data().list:[];
+    hor=horS.exists?horS.data().data:{};
+    festivos=fesS.exists?fesS.data().list:FESTIVOS_DEFAULT;
+    if(!obS.exists)await fbSet('obras',{list:OD});
+    if(!wkS.exists)await fbSet('workers',{list:WD});
+    if(!fesS.exists)await fbSet('festivos',{list:FESTIVOS_DEFAULT});
     setSyncDot('ok');
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='flex';
     rDash();
-    onSnapshot(doc(db,'app','obras'),s=>{if(s.exists()){obras=s.data().list;rDash();if(isActive('obras'))rObras();}});
-    onSnapshot(doc(db,'app','workers'),s=>{if(s.exists()){workers=s.data().list;rDash();if(isActive('personal'))rWorkers();}});
-    onSnapshot(doc(db,'app','incs'),s=>{if(s.exists()){incs=s.data().list||[];if(isActive('incidencias'))rIncs();}});
-    onSnapshot(doc(db,'app','horario'),s=>{if(s.exists()){hor=s.data().data||{};if(isActive('horario'))rHor();rDash();}});
-    onSnapshot(doc(db,'app','festivos'),s=>{if(s.exists())festivos=s.data().list||[];});
+    fbOnSnapshot('obras',s=>{if(s.exists){obras=s.data().list;rDash();if(isActive('obras'))rObras();}});
+    fbOnSnapshot('workers',s=>{if(s.exists){workers=s.data().list;rDash();if(isActive('personal'))rWorkers();}});
+    fbOnSnapshot('incs',s=>{if(s.exists){incs=s.data().list||[];if(isActive('incidencias'))rIncs();}});
+    fbOnSnapshot('horario',s=>{if(s.exists){hor=s.data().data||{};if(isActive('horario'))rHor();rDash();}});
+    fbOnSnapshot('festivos',s=>{if(s.exists)festivos=s.data().list||[];});
   }catch(e){
     console.error(e);setSyncDot('err');
     obras=OD;workers=WD;festivos=FESTIVOS_DEFAULT;
@@ -609,8 +600,8 @@ async function initData(){
 async function svFB(col,data){
   setSyncDot('loading');
   try{
-    if(col==='horario')await setDoc(doc(db,'app','horario'),{data});
-    else await setDoc(doc(db,'app',col),{list:data});
+    if(col==='horario')await fbSet('horario',{data});
+    else await fbSet(col,{list:data});
     setSyncDot('ok');
   }catch(e){setSyncDot('err');toast('Error al guardar');}
 }
@@ -1278,9 +1269,11 @@ function importBackup(event){
 function openEO(id){
   editObraId=id||null;const o=id?obras.find(x=>x.id===id):{};
   document.getElementById('ttl-obra').textContent=id?'Editar obra':'Nueva obra';
-  document.getElementById('ob-n').value=o?.nombre||'';document.getElementById('ob-e').value=o?.empresa||'';
-  document.getElementById('ob-d').value=o?.dir||'';document.getElementById('ob-tof').value=o?.tof||'';
-  document.getElementById('ob-tpe').value=o?.tpe||'';document.getElementById('ob-the').value=o?.the??25;
+  document.getElementById('ob-n').value=o?.nombre||'';
+  document.getElementById('ob-e').value=o?.empresa||'';
+  document.getElementById('ob-d').value=o?.dir||'';
+  document.getElementById('ob-tof').value=o?.tof||'';
+  document.getElementById('ob-tpe').value=o?.tpe||'';
   document.getElementById('ob-s').value=o?.estado||'active';
   document.getElementById('modal-obra').classList.add('open');
 }
@@ -1456,7 +1449,6 @@ function CD(id){document.getElementById(id)?.classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)CM();}));
 document.getElementById('hdate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-exposeGlobal();
 initData();
 </script>
 </body>
