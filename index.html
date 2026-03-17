@@ -256,6 +256,13 @@ textarea.fi{min-height:75px;resize:vertical}
     <div id="sec-ajustes" class="sec">
       <div class="sh"><div class="st">Ajustes</div></div>
       <div class="card">
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px">🏗️ Gestión de obras y personal</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btnp btnsm" onclick="navTo('obras',qni(1))">+ Nueva obra</button>
+          <button class="btn btng btnsm" onclick="navTo('personal',qni(2))">+ Nuevo trabajador</button>
+        </div>
+      </div>
+      <div class="card">
         <div style="font-size:14px;font-weight:600;margin-bottom:12px">🎉 Festivos Málaga 2026</div>
         <div id="festivos-list"></div>
         <button class="btn btng btnsm" style="margin-top:12px" onclick="openAddFestivo()">+ Añadir festivo</button>
