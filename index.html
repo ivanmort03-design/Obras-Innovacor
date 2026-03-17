@@ -104,10 +104,10 @@ textarea.fi{min-height:75px;resize:vertical}
 .hwrap{overflow-x:auto;margin:0 -16px;padding:0 16px 8px}
 .htbl{border-collapse:collapse;font-size:11px}
 .htbl th{background:var(--bc);border:1px solid var(--br);padding:5px 3px;text-align:center;font-weight:600;color:var(--t2);white-space:nowrap}
-.htbl th.nc{text-align:left;min-width:110px;padding-left:8px;position:sticky;left:0;z-index:3;background:var(--bc)}
+.htbl th.nc{text-align:left;min-width:200px;padding-left:8px;position:sticky;left:0;z-index:3;background:var(--bc)}
 .htbl td{border:1px solid var(--br);padding:4px 3px;text-align:center;font-family:var(--fm);font-size:11px;min-width:28px;cursor:pointer}
 .htbl td:hover{background:var(--gl)}
-.htbl td.nc{text-align:left;padding-left:8px;font-family:var(--f);font-size:11px;font-weight:500;background:var(--bc);position:sticky;left:0;z-index:1;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
+.htbl td.nc{text-align:left;padding-left:8px;font-family:var(--f);font-size:11px;font-weight:500;background:var(--bc);position:sticky;left:0;z-index:1;min-width:200px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
 .htbl td.nc:hover{background:var(--bc)}
 .htbl tr:nth-child(even) td:not(.nc){background:#FAFAF8}
 .htbl tr:nth-child(even) td.nc{background:var(--bc)}
@@ -117,6 +117,9 @@ textarea.fi{min-height:75px;resize:vertical}
 .cF{background:var(--bl) !important;color:#0C447C}.cE{color:var(--br)}
 .cHE{background:var(--pl) !important;color:#3C3489;font-weight:600}
 .cFES{background:#F0F4FF !important;color:#3C3489;font-weight:500}
+.cAUS{background:#FEF3E2 !important;color:#7C4A00;font-weight:600}
+.cVAC{background:#E6F1FB !important;color:#0C447C;font-weight:600}
+.cBE{background:#F0EFE9 !important;color:var(--t3);font-weight:600}
 .trow td{background:#F0EFE9 !important;font-weight:600;cursor:default}
 .trow td:hover{background:#F0EFE9 !important}
 .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -247,7 +250,7 @@ textarea.fi{min-height:75px;resize:vertical}
         <button class="btn btng btnsm" onclick="openBulkWeek()">📅 Rellenar semana</button>
         <button class="btn btng btnsm" onclick="openImportExcel()">📥 Importar Excel</button>
       </div>
-      <div class="hint" style="margin-bottom:8px">Toca celda para editar · <span style="background:var(--pl);color:#3C3489;padding:1px 5px;border-radius:4px;font-weight:600;font-size:10px">HE</span> extra · <span style="background:#F0F4FF;color:#3C3489;padding:1px 5px;border-radius:4px;font-size:10px">F</span> festivo</div>
+      <div class="hint" style="margin-bottom:8px">Toca celda para editar · <span style="background:var(--pl);color:#3C3489;padding:1px 5px;border-radius:4px;font-weight:600;font-size:10px">+HE</span> extra auto (Vie/Sáb/Dom/Fest) · <span style="font-size:10px">②</span> 2ª obra · <span style="font-size:10px">◆</span> obra distinta · <span style="background:#FEF3E2;color:#7C4A00;padding:1px 5px;border-radius:4px;font-size:10px">A/V/RM…</span> ausencia</div>
       <div class="hwrap"><div id="htbl"></div></div>
     </div>
 
@@ -407,13 +410,51 @@ textarea.fi{min-height:75px;resize:vertical}
     <div class="fg"><label class="fl">Día</label><input class="fi" type="date" id="hor-f"/></div>
     <div class="fg"><label class="fl">Tipo</label>
       <select class="fi" id="hor-tp" onchange="thh()">
-        <option value="h">Horas normales</option><option value="he">Horas extra</option>
-        <option value="x">No trabajado (X)</option><option value="np">No presentado (NP)</option>
-        <option value="b">Baja (B)</option><option value="f">Festivo (F)</option>
+        <option value="h">🕐 Horas normales</option>
+        <option value="he">⭐ Horas extra</option>
+        <optgroup label="── Ausencias justificadas ──">
+          <option value="a">A — Asuntos propios</option>
+          <option value="b">B — Baja (laboral / contingencia común)</option>
+          <option value="be">BE — Baja empresa</option>
+          <option value="d">D — Defunción familiar</option>
+          <option value="e">E — Enfermo sin baja</option>
+          <option value="fi">FI — Fiesta</option>
+          <option value="h_ij">H — Nacimiento hijo</option>
+          <option value="m">M — Acude a la mutua</option>
+          <option value="nl">NL — No laborable según convenio</option>
+          <option value="p">P — Permiso empresa</option>
+          <option value="rm">RM — Reconocimiento médico</option>
+          <option value="v">V — Vacaciones</option>
+          <option value="vm">F — Visita/acompañamiento médico</option>
+        </optgroup>
+        <optgroup label="── Otras ──">
+          <option value="n">N — No se trabajó (lluvia, etc.)</option>
+          <option value="np">NP — No presentado (falta sin justificar)</option>
+          <option value="x">X — No trabajado</option>
+          <option value="f">FES — Festivo</option>
+        </optgroup>
       </select>
     </div>
     <div class="fg" id="hor-hg"><label class="fl">Horas: <span id="hor-hv">9h</span></label><div class="rrow"><input type="range" min="1" max="14" value="9" id="hor-h" oninput="document.getElementById('hor-hv').textContent=this.value+'h';updHorPrev()"/></div></div>
-    <div id="hor-prev" style="background:var(--gl);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--gp);margin-top:-8px;margin-bottom:14px;display:none"></div>
+    <div class="fg" id="hor-obra-fg">
+      <label class="fl">Obra del día <span style="font-weight:400;color:var(--t3);text-transform:none">(por defecto: obra asignada)</span></label>
+      <select class="fi" id="hor-obra" onchange="updHorPrev()"></select>
+    </div>
+    <!-- SEGUNDA OBRA -->
+    <div id="hor-obra2-section" style="border-top:1px solid var(--br);margin-top:4px;padding-top:14px;display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:10px">➕ Segunda obra este día</div>
+      <div class="fg">
+        <label class="fl">Obra</label>
+        <select class="fi" id="hor-obra2"></select>
+      </div>
+      <div class="fg">
+        <label class="fl">Horas en 2ª obra: <span id="hor-h2v">4h</span></label>
+        <div class="rrow"><input type="range" min="1" max="14" value="4" id="hor-h2" oninput="document.getElementById('hor-h2v').textContent=this.value+'h';updHorPrev()"/></div>
+      </div>
+      <div id="hor-prev2" style="background:var(--bl);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:#0C447C;margin-top:-8px;margin-bottom:4px;display:none"></div>
+    </div>
+    <button type="button" id="btn-add-obra2" class="btn btng btnsm" style="margin-bottom:14px" onclick="toggleSegundaObra()">➕ Añadir segunda obra</button>
+    <div id="hor-prev" style="background:var(--gl);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--gp);margin-top:0;margin-bottom:14px;display:none"></div>
     <div class="sact"><button class="btn btng" onclick="CM()">Cancelar</button><button class="btn btnd btnsm" id="btn-del-hor" onclick="delHor()" style="display:none">🗑 Borrar</button><button class="btn btnp" onclick="saveHor()">Guardar</button></div>
   </div>
 </div>
@@ -700,18 +741,34 @@ function calcWorkerMonth(wid,month,year){
   const days=new Date(year,month+1,0).getDate();
   let hN=0,hE=0,total=0,np=0;
   const byObra={};
+  function addToObra(obraObj,hn,he){
+    if(!obraObj)return;
+    if(!byObra[obraObj.id])byObra[obraObj.id]={obra:obraObj,hN:0,hE:0,t:0};
+    const tN=hn*getTarifa(w,obraObj,'h');
+    const tE=he*getTarifa(w,obraObj,'he');
+    byObra[obraObj.id].hN+=hn;byObra[obraObj.id].hE+=he;byObra[obraObj.id].t+=tN+tE;
+    return tN+tE;
+  }
   for(let d=1;d<=days;d++){
     const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const obra=getWorkerObraAtDate(w,dateStr);
     const val=hor[`${year}-${month}-${wid}-${d}`];
+    // Obra principal: obraId en celda > historial > obra actual
+    let obra;
+    if(val&&typeof val==='object'&&val.obraId) obra=obras.find(o=>o.id===val.obraId);
+    else obra=getWorkerObraAtDate(w,dateStr);
     if(typeof val==='number'){
-      hN+=val;const t=val*getTarifa(w,obra,'h');total+=t;
-      if(obra){if(!byObra[obra.id])byObra[obra.id]={obra,hN:0,hE:0,t:0};byObra[obra.id].hN+=val;byObra[obra.id].t+=t;}
+      hN+=val;total+=addToObra(obra,val,0)||0;
     }else if(val&&typeof val==='object'){
-      hN+=val.n||0;hE+=val.he||0;
-      const tN=(val.n||0)*getTarifa(w,obra,'h');const tE=(val.he||0)*getTarifa(w,obra,'he');
-      total+=tN+tE;
-      if(obra){if(!byObra[obra.id])byObra[obra.id]={obra,hN:0,hE:0,t:0};byObra[obra.id].hN+=val.n||0;byObra[obra.id].hE+=val.he||0;byObra[obra.id].t+=tN+tE;}
+      const hn=val.n||0,he=val.he||0;
+      hN+=hn;hE+=he;
+      total+=addToObra(obra,hn,he)||0;
+      // Segunda obra
+      if(val.obra2){
+        const ob2=obras.find(o=>o.id===val.obra2.obraId);
+        const hn2=val.obra2.n||0,he2=val.obra2.he||0;
+        hN+=hn2;hE+=he2;
+        total+=addToObra(ob2,hn2,he2)||0;
+      }
     }else if(val==='np')np++;
   }
   return{hN,hE,total,np,byObra};
@@ -815,27 +872,116 @@ function rWorkers(){
 // ── HORARIO ───────────────────────────────────────────────────────
 function chMonth(d){cM+=d;if(cM>11){cM=0;cY++;}if(cM<0){cM=11;cY--;}rHor();}
 function hKey(wid,day){return`${cY}-${cM}-${wid}-${day}`;}
-function thh(){const tp=document.getElementById('hor-tp').value;document.getElementById('hor-hg').style.display=(tp==='h'||tp==='he')?'block':'none';updHorPrev();}
+function thh(){
+  const tp=document.getElementById('hor-tp').value;
+  const isH=tp==='h'||tp==='he';
+  document.getElementById('hor-hg').style.display=isH?'block':'none';
+  document.getElementById('hor-obra-fg').style.display=isH?'block':'none';
+  document.getElementById('btn-add-obra2').style.display=isH?'block':'none';
+  updHorPrev();
+}
+
+function toggleSegundaObra(){
+  const sec=document.getElementById('hor-obra2-section');
+  const btn=document.getElementById('btn-add-obra2');
+  const visible=sec.style.display!=='none';
+  sec.style.display=visible?'none':'block';
+  btn.textContent=visible?'➕ Añadir segunda obra':'✖ Quitar segunda obra';
+  updHorPrev();
+}
+
+// Detectar si un día es "especial" (sáb, dom, festivo, viernes)
+function getDayType(year,month,day){
+  const d=new Date(year,month,day);
+  const dow=d.getDay();
+  const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  if(dow===6||dow===0||isFestivo(dateStr)) return 'allExtra'; // sáb, dom, festivo → todo extra
+  if(dow===5) return 'viernes'; // viernes → 6h normal, resto extra
+  return 'normal';
+}
+
+// Calcular distribución automática de horas según tipo de día
+function autoDistribuir(hTotal, dayType){
+  if(dayType==='allExtra') return{n:0, he:hTotal};
+  if(dayType==='viernes'){
+    const n=Math.min(hTotal,6);
+    const he=Math.max(0,hTotal-6);
+    return{n, he};
+  }
+  return{n:hTotal, he:0};
+}
 function updHorPrev(){
   const prev=document.getElementById('hor-prev');
+  const prev2=document.getElementById('hor-prev2');
   const tp=document.getElementById('hor-tp').value;
-  if(tp!=='h'&&tp!=='he'){prev.style.display='none';return;}
+  if(tp!=='h'&&tp!=='he'){prev.style.display='none';prev2.style.display='none';return;}
   const wid=parseInt(document.getElementById('hor-w').value);
   const w=workers.find(x=>x.id===wid);
-  const ob=w?obras.find(o=>o.id===w.obra):null;
-  if(!ob||!ob.tof){prev.style.display='none';return;}
-  const h=parseInt(document.getElementById('hor-h').value)||9;
-  const tar=getTarifa(w,ob,tp);
-  prev.style.display='block';
-  prev.innerHTML=`${CATL[w?.cat]||''} · ${h}h × ${tar.toFixed(2)}€/h = <b>${fmt(h*tar)}</b>`;
+  const obraSelId=parseInt(document.getElementById('hor-obra')?.value||0);
+  const ob=obraSelId?obras.find(o=>o.id===obraSelId):(w?obras.find(o=>o.id===w.obra):null);
+  const hTotal=parseInt(document.getElementById('hor-h').value)||9;
+  const dayType=getDayType(cY,cM,editCell.day||new Date().getDate());
+  const{n,he}=autoDistribuir(hTotal,dayType);
+  if(ob&&ob.tof){
+    const tarN=getTarifa(w,ob,'h');
+    const tarHE=getTarifa(w,ob,'he');
+    let txt=`${CATL[w?.cat]||''} · <b>${ob.nombre.substring(0,22)}</b><br>`;
+    if(n>0)txt+=`${n}h normales × ${tarN.toFixed(2)}€ = <b>${fmt(n*tarN)}</b>`;
+    if(he>0)txt+=`${n>0?' + ':''}${he}h extra × ${tarHE.toFixed(2)}€ = <b>${fmt(he*tarHE)}</b>`;
+    if(dayType==='allExtra')txt+=` <span style="background:var(--pl);color:#3C3489;padding:1px 5px;border-radius:4px;font-size:10px">TODO EXTRA</span>`;
+    if(dayType==='viernes'&&he>0)txt+=` <span style="background:var(--al);color:#633806;padding:1px 5px;border-radius:4px;font-size:10px">VIERNES +${he}HE</span>`;
+    prev.style.display='block';prev.innerHTML=txt;
+  }else{prev.style.display='none';}
+  // Segunda obra
+  const sec2=document.getElementById('hor-obra2-section');
+  if(sec2.style.display!=='none'){
+    const obra2Id=parseInt(document.getElementById('hor-obra2')?.value||0);
+    const ob2=obra2Id?obras.find(o=>o.id===obra2Id):null;
+    const h2=parseInt(document.getElementById('hor-h2')?.value)||4;
+    const{n:n2,he:he2}=autoDistribuir(h2,dayType);
+    if(ob2&&ob2.tof){
+      const tarN2=getTarifa(w,ob2,'h');const tarHE2=getTarifa(w,ob2,'he');
+      let txt2=`2ª obra: <b>${ob2.nombre.substring(0,22)}</b><br>`;
+      if(n2>0)txt2+=`${n2}h × ${tarN2.toFixed(2)}€ = <b>${fmt(n2*tarN2)}</b>`;
+      if(he2>0)txt2+=`${n2>0?' + ':''}${he2}hE × ${tarHE2.toFixed(2)}€ = <b>${fmt(he2*tarHE2)}</b>`;
+      prev2.style.display='block';prev2.innerHTML=txt2;
+    }else{prev2.style.display='none';}
+  }else{prev2.style.display='none';}
 }
 function cellDisp(val,dateStr){
   if(isFestivo(dateStr))return{cls:'cFES',txt:'F*'};
   if(val===undefined||val===null)return{cls:'cE',txt:'·'};
-  if(typeof val==='object'){const p=[];if(val.n)p.push(val.n);if(val.he)p.push('+'+val.he);return{cls:'cH',txt:p.join('/')};}
-  if(typeof val==='number')return{cls:'cH',txt:val};
-  const map={x:{cls:'cX',txt:'X'},np:{cls:'cNP',txt:'NP'},b:{cls:'cB',txt:'B'},f:{cls:'cF',txt:'F'}};
-  return map[val]||{cls:'cE',txt:'?'};
+  const hasObraExtra=val&&typeof val==='object'&&val.obraId;
+  const hasObra2=val&&typeof val==='object'&&val.obra2;
+  const suffix=(hasObra2?'②':(hasObraExtra?'◆':''));
+  if(typeof val==='object'){
+    const p=[];
+    if(val.n)p.push(val.n);
+    if(val.he)p.push('+'+val.he);
+    if(val.obra2){const h2=(val.obra2.n||0)+(val.obra2.he||0);if(h2)p.push('/'+h2);}
+    return{cls:'cH',txt:p.join('')+suffix};
+  }
+  if(typeof val==='number')return{cls:'cH',txt:val+suffix};
+  const map={
+    x:{cls:'cX',txt:'X'},
+    np:{cls:'cNP',txt:'NP'},
+    b:{cls:'cB',txt:'B'},
+    f:{cls:'cF',txt:'FES'},
+    a:{cls:'cAUS',txt:'A'},
+    be:{cls:'cBE',txt:'BE'},
+    d:{cls:'cAUS',txt:'D'},
+    e:{cls:'cAUS',txt:'E'},
+    fi:{cls:'cF',txt:'FI'},
+    h_ij:{cls:'cAUS',txt:'H'},
+    m:{cls:'cAUS',txt:'M'},
+    n:{cls:'cX',txt:'N'},
+    nl:{cls:'cF',txt:'NL'},
+    p:{cls:'cAUS',txt:'P'},
+    rm:{cls:'cAUS',txt:'RM'},
+    v:{cls:'cVAC',txt:'V'},
+    vm:{cls:'cAUS',txt:'F'},
+  };
+  return map[val]||{cls:'cE',txt:val?.toUpperCase()||'?'};
 }
 function rHor(){
   document.getElementById('mlab').textContent=MESES[cM]+' '+cY;
@@ -852,7 +998,7 @@ function rHor(){
   let gtN=0,gtHE=0;
   list.forEach(w=>{
     let rN=0,rHE=0;
-    html+=`<tr><td class="nc" title="${w.nombre}">${w.nombre.split(',')[0]}${w.estado==='ext'?' *':''}</td>`;
+    html+=`<tr><td class="nc" title="${w.nombre}">${w.nombre}${w.estado==='ext'?' *':''}</td>`;
     for(let d=1;d<=days;d++){
       const val=hor[hKey(w.id,d)];
       const dow=new Date(cY,cM,d).getDay();
@@ -879,11 +1025,29 @@ function eCell(wid,day){
   document.getElementById('hor-f').value=`${cY}-${String(cM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const cur=hor[hKey(wid,day)];
   let tp='h',hn=9;
-  if(typeof cur==='object'){tp='h';hn=cur.n||9;}else if(typeof cur==='number'){tp='h';hn=cur;}else if(cur)tp=cur;
+  if(typeof cur==='object'){tp='h';hn=cur.n||cur.he||9;}
+  else if(typeof cur==='number'){tp='h';hn=cur;}
+  else if(cur)tp=cur;
   document.getElementById('hor-tp').value=tp;
   document.getElementById('hor-h').value=hn;
   document.getElementById('hor-hv').textContent=hn+'h';
   document.getElementById('btn-del-hor').style.display=(cur!==undefined&&cur!==null)?'block':'none';
+  // Obra principal
+  const obraGuardadaId=(cur&&typeof cur==='object'&&cur.obraId)?cur.obraId:0;
+  const obraOpciones='<option value="0">— Obra asignada (por defecto) —</option>'+sO().map(o=>`<option value="${o.id}"${o.id===obraGuardadaId?' selected':''}>${o.nombre}</option>`).join('');
+  document.getElementById('hor-obra').innerHTML=obraOpciones;
+  document.getElementById('hor-obra2').innerHTML=obraOpciones;
+  // Segunda obra
+  const tieneObra2=cur&&typeof cur==='object'&&cur.obra2;
+  const sec2=document.getElementById('hor-obra2-section');
+  const btn2=document.getElementById('btn-add-obra2');
+  sec2.style.display=tieneObra2?'block':'none';
+  btn2.textContent=tieneObra2?'✖ Quitar segunda obra':'➕ Añadir segunda obra';
+  if(tieneObra2){
+    document.getElementById('hor-obra2').value=cur.obra2.obraId||0;
+    document.getElementById('hor-h2').value=cur.obra2.n+(cur.obra2.he||0)||4;
+    document.getElementById('hor-h2v').textContent=(cur.obra2.n+(cur.obra2.he||0)||4)+'h';
+  }
   thh();
   document.getElementById('modal-hor').classList.add('open');
 }
@@ -891,10 +1055,38 @@ function saveHor(){
   const tp=document.getElementById('hor-tp').value;
   const wid=parseInt(document.getElementById('hor-w').value)||editCell.wid;
   const key=`${cY}-${cM}-${wid}-${editCell.day}`;
-  if(tp==='h'){const n=parseInt(document.getElementById('hor-h').value)||9;const cur=hor[key];const eHE=(cur&&typeof cur==='object'&&cur.he)||0;hor[key]=eHE>0?{n,he:eHE}:n;}
-  else if(tp==='he'){const he=parseInt(document.getElementById('hor-h').value)||1;const cur=hor[key];const eN=(cur&&typeof cur==='object'?cur.n:(typeof cur==='number'?cur:0))||0;hor[key]=eN>0?{n:eN,he}:{n:0,he};}
-  else hor[key]=tp;
-  svFB('horario',hor);CM();rHor();toast('Jornada guardada ✓');
+  const w=workers.find(x=>x.id===wid);
+  const obraSelId=parseInt(document.getElementById('hor-obra')?.value||0);
+  const obraIdExtra=(obraSelId&&obraSelId!==w?.obra)?obraSelId:null;
+  if(tp==='h'||tp==='he'){
+    const hTotal=parseInt(document.getElementById('hor-h').value)||9;
+    const dayType=getDayType(cY,cM,editCell.day);
+    const{n,he}=autoDistribuir(hTotal,dayType);
+    // Segunda obra
+    const sec2=document.getElementById('hor-obra2-section');
+    const tieneObra2=sec2.style.display!=='none';
+    let obra2=null;
+    if(tieneObra2){
+      const obra2Id=parseInt(document.getElementById('hor-obra2')?.value||0);
+      const h2Total=parseInt(document.getElementById('hor-h2')?.value)||4;
+      const{n:n2,he:he2}=autoDistribuir(h2Total,dayType);
+      if(obra2Id){obra2={obraId:obra2Id,n:n2,he:he2};}
+    }
+    // Construir valor de celda
+    const val={n,he:he||0};
+    if(obraIdExtra)val.obraId=obraIdExtra;
+    if(obra2)val.obra2=obra2;
+    // Simplificar si no hay extras
+    if(!obraIdExtra&&!obra2&&he===0)hor[key]=n;
+    else if(!obraIdExtra&&!obra2&&n===0)hor[key]={n:0,he};
+    else hor[key]=val;
+  }else{
+    hor[key]=tp;
+  }
+  svFB('horario',hor);CM();rHor();
+  const dayType=getDayType(cY,cM,editCell.day);
+  const msg=dayType==='allExtra'?'Guardado como horas extra ✓':dayType==='viernes'?'Viernes: horas auto-distribuidas ✓':'Jornada guardada ✓';
+  toast(msg);
 }
 function delHor(){
   const wid=parseInt(document.getElementById('hor-w').value)||editCell.wid;
