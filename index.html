@@ -200,11 +200,13 @@ textarea.fi{min-height:75px;resize:vertical}
         <button class="tab" onclick="setObraTab('done',this)">Finalizadas</button>
         <button class="tab" onclick="setObraTab('all',this)">Todas</button>
       </div>
+      <button class="btn btnp" style="width:100%;margin-bottom:12px" onclick="openEO(null)">+ Nueva obra</button>
       <div class="sbar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--t3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="search" id="srch-ob" placeholder="Buscar obra o empresa..." oninput="rObras()"/></div>
       <div id="obras-list"></div>
     </div>
     <!-- PERSONAL -->
     <div id="sec-personal" class="sec">
+      <button class="btn btnp" style="width:100%;margin-bottom:12px" onclick="openEW(null)">+ Nuevo trabajador</button>
       <div class="sbar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--t3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="search" id="srch-wk" placeholder="Buscar trabajador..." oninput="rWorkers()"/></div>
       <div id="workers-list"></div>
     </div>
@@ -216,6 +218,7 @@ textarea.fi{min-height:75px;resize:vertical}
         <button class="mbtn" onclick="chMonth(1)">→</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btnp btnsm" onclick="openFab()">+ Registrar jornada</button>
         <button class="btn btng btnsm" onclick="openCopyDay()">📋 Copiar día</button>
       </div>
       <div class="hint" style="margin-bottom:8px">Toca celda · obra asignada ese día se muestra en 2ª línea · <span style="background:#FEF3E2;color:#7C4A00;padding:1px 5px;border-radius:4px;font-size:10px">AUS</span> ausencia · HE auto (Vie/Sáb/Dom/Fest)</div>
@@ -245,7 +248,10 @@ textarea.fi{min-height:75px;resize:vertical}
       <div id="comp-content"></div>
     </div>
     <!-- INCIDENCIAS -->
-    <div id="sec-incidencias" class="sec"><div id="inc-list"></div></div>
+    <div id="sec-incidencias" class="sec">
+      <button class="btn btnp" style="width:100%;margin-bottom:12px" onclick="document.getElementById('in-o').innerHTML=sO().map(o=>`<option>${o.nombre}</option>`).join('');document.getElementById('modal-inc').classList.add('open')">+ Nueva incidencia</button>
+      <div id="inc-list"></div>
+    </div>
     <!-- AJUSTES -->
     <div id="sec-ajustes" class="sec">
       <div class="sh"><div class="st">Ajustes</div></div>
@@ -284,7 +290,6 @@ textarea.fi{min-height:75px;resize:vertical}
     <button class="ni" onclick="navTo('ajustes',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ajustes</button>
   </nav>
 </div><!-- fin #app -->
-<button class="fab" id="fab-btn" onclick="openFab()">+</button>
 
 <!-- MODAL OBRA -->
 <div class="ov" id="modal-obra">
@@ -542,8 +547,20 @@ let chartObra=null;
 let factMode='fact'; // 'fact' o 'benef'
 let selHoras=9,selHoras2=4; // horas seleccionadas en el modal
 
+// Exponer funciones globalmente para llamadas desde HTML
 const G=window;
-['navTo','CM','CD','setObraTab','rObras','rWorkers','openEO','saveObra','delObra','openEW','saveWorker','openDO','openDW','chMonth','chMonthF','chMonthC','eCell','saveHor','delHor','thh','updHorPrev','onHorWorkerChange','toggleSegundaObra','openCopyDay','pasteDay','addInc','openFab','exportPDF','exportBackup','importBackup','exportInformeMensual','openAddFestivo','saveFestivo','rAjustes','delFestivo','toggleFact'].forEach(fn=>G[fn]=(...a)=>eval(fn)(...a));
+function exposeGlobal(){
+  G.navTo=navTo;G.CM=CM;G.CD=CD;G.setObraTab=setObraTab;G.rObras=rObras;G.rWorkers=rWorkers;
+  G.openEO=openEO;G.saveObra=saveObra;G.delObra=delObra;G.openEW=openEW;G.saveWorker=saveWorker;
+  G.openDO=openDO;G.openDW=openDW;G.chMonth=chMonth;G.chMonthF=chMonthF;G.chMonthC=chMonthC;
+  G.eCell=eCell;G.saveHor=saveHor;G.delHor=delHor;G.thh=thh;G.updHorPrev=updHorPrev;
+  G.onHorWorkerChange=onHorWorkerChange;G.toggleSegundaObra=toggleSegundaObra;
+  G.openCopyDay=openCopyDay;G.pasteDay=pasteDay;G.addInc=addInc;G.openFab=openFab;
+  G.exportPDF=exportPDF;G.exportBackup=exportBackup;G.importBackup=importBackup;
+  G.exportInformeMensual=exportInformeMensual;G.openAddFestivo=openAddFestivo;
+  G.saveFestivo=saveFestivo;G.rAjustes=rAjustes;G.delFestivo=delFestivo;G.toggleFact=toggleFact;
+  G.setSelHoras=setSelHoras;G.setSelHoras2=setSelHoras2;G.editCosteObra=editCosteObra;
+}
 
 function setSyncDot(s){document.getElementById('sync-dot').className='sync-dot '+s;}
 function qni(i){return document.querySelectorAll('.ni')[i];}
@@ -722,10 +739,6 @@ function navTo(s,el){
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   document.getElementById('sec-'+s).classList.add('active');
   el?.classList.add('active');
-  // Mostrar/ocultar fab según sección
-  const fabSecs=['obras','personal','horario','incidencias','dashboard'];
-  const fab=document.getElementById('fab-btn');
-  if(fab)fab.style.display=fabSecs.includes(s)?'flex':'none';
   ({dashboard:rDash,obras:rObras,personal:rWorkers,horario:rHor,facturacion:rFact,comparativa:rComp,incidencias:rIncs,ajustes:rAjustes})[s]?.();
 }
 
@@ -1436,6 +1449,7 @@ function CD(id){document.getElementById(id)?.classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)CM();}));
 document.getElementById('hdate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+exposeGlobal();
 initData();
 </script>
 </body>
