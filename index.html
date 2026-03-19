@@ -1776,18 +1776,17 @@ window.delFestivo=delFestivo;
 // ── BACKUP ────────────────────────────────────────────────────────
 function resetWorkers(){
   if(!confirm('¿Actualizar datos de todos los trabajadores?\n\nSe actualizarán: DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL y cursos.\n\nLas obras asignadas, horas e historial NO se modifican.'))return;
-  // Para cada trabajador en WD, fusionar con el que hay en Firebase
-  // conservando: obra, estado, cn, ce, obraHistory, obraDesde
+  const current=[...workers]; // copia antes de modificar
   workers=WD.map(wd=>{
-    const existing=workers.find(w=>w.id===wd.id);
+    const existing=current.find(w=>w.id===wd.id);
     if(existing){
       return{
         ...wd,
-        // Preservar campos operativos de Firebase
         obra:existing.obra??wd.obra,
         estado:existing.estado??wd.estado,
-        cn:existing.cn??wd.cn,
-        ce:existing.ce??wd.ce,
+        cn:existing.cn!==undefined?existing.cn:wd.cn,
+        ce:existing.ce!==undefined?existing.ce:wd.ce,
+        nFija:existing.nFija!==undefined?existing.nFija:wd.nFija||0,
         obraHistory:existing.obraHistory||[],
         obraDesde:existing.obraDesde||'',
       };
