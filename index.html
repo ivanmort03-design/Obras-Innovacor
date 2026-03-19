@@ -278,13 +278,17 @@ textarea.fi{min-height:75px;resize:vertical}
         <input type="file" id="import-backup" accept=".json" style="display:none" onchange="importBackup(event)"/>
       </div>
       <div class="card">
-        <div style="font-size:14px;font-weight:600;margin-bottom:8px">📊 Informe PDF por obra</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">📊 Certificación PDF por obra</div>
         <div class="fg" style="margin-bottom:8px"><select class="fi" id="informe-obra"></select></div>
         <div class="fgrid" style="margin-bottom:8px">
           <div><label class="fl" style="margin-bottom:4px">Mes</label><select class="fi" id="informe-mes"></select></div>
           <div><label class="fl" style="margin-bottom:4px">Año</label><input class="fi" type="number" id="informe-anio" value="2026"/></div>
         </div>
-        <button class="btn btnp btnsm" onclick="exportInformeMensual()">📄 Generar informe</button>
+        <div class="fgrid" style="margin-bottom:8px">
+          <div><label class="fl" style="margin-bottom:4px">Nº Certificación</label><input class="fi" type="number" id="informe-num" placeholder="05" value="1"/></div>
+          <div><label class="fl" style="margin-bottom:4px">Fecha firma</label><input class="fi" type="date" id="informe-fecha"/></div>
+        </div>
+        <button class="btn btnp btnsm" onclick="exportInformeMensual()">📄 Generar certificación</button>
       </div>
     </div>
   </div>
@@ -1230,36 +1234,185 @@ function exportInformeMensual(){
   const obraId=parseInt(document.getElementById('informe-obra').value);
   const month=parseInt(document.getElementById('informe-mes').value);
   const year=parseInt(document.getElementById('informe-anio').value);
+  const numCert=document.getElementById('informe-num').value.padStart(2,'0');
+  const fechaFirma=document.getElementById('informe-fecha').value;
   const o=obras.find(x=>x.id===obraId);if(!o){toast('Selecciona una obra');return;}
+
   const{jsPDF}=window.jspdf;
-  const doc2=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  let y=20;
-  doc2.setFontSize(18);doc2.setFont('helvetica','bold');doc2.text('INNOVACOR',14,y);y+=8;
-  doc2.setFontSize(12);doc2.setFont('helvetica','normal');doc2.text(`Informe mensual — ${MESES[month]} ${year}`,14,y);y+=8;
-  doc2.setFontSize(13);doc2.setFont('helvetica','bold');doc2.text(o.nombre,14,y);y+=6;
-  doc2.setFontSize(10);doc2.setFont('helvetica','normal');doc2.text(`Empresa: ${o.empresa} · Dirección: ${o.dir}`,14,y);y+=8;
-  doc2.setDrawColor(200);doc2.line(14,y,196,y);y+=8;
-  const{fact,coste,hN,hE,wRows}=calcObraMonth(obraId,month,year);
-  const ben=fact-coste;
-  doc2.setFontSize(11);doc2.setFont('helvetica','bold');doc2.text('RESUMEN',14,y);y+=6;
-  doc2.setFontSize(9);doc2.setFont('helvetica','normal');
-  doc2.text(`Horas normales: ${fmtH(hN)}  ·  Horas extra: ${fmtH(hE)}  ·  Total: ${fmtH(hN+hE)}`,16,y);y+=5;
-  doc2.text(`Facturación: ${fmt(fact)}`,16,y);
-  if(coste>0)doc2.text(`  ·  Coste MO: ${fmt(coste)}  ·  Beneficio: ${fmt(ben)}`,60,y);
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const PW=287,ML=8,MR=8; // página landscape A4
+  const days=new Date(year,month+1,0).getDate();
+  const mesStr=MESES[month].toUpperCase();
+  const periodoStr=`01-${String(month+1).padStart(2,'0')}-${year} AL ${String(days).padStart(2,'0')}-${String(month+1).padStart(2,'0')}-${year}`;
+
+  // ── CABECERA ──────────────────────────────────────────────────────
+  doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('CERTIFICACION - LISTADO HORAS ADMINISTRACIÓN',ML,10);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('INNOVACOR PROYECTOS Y OBRAS S.L.',ML,15);
+  doc.text(`CLIENTE: ${o.empresa}`,ML,20);
+  doc.text(`OBRA: ${o.nombre}`,ML,25);
+  doc.text(`CERTIFICACIÓN: ${numCert} (DEL ${periodoStr})`,ML,30);
+  doc.text(`FECHA: ${fechaFirma?new Date(fechaFirma+'T00:00:00').toLocaleDateString('es-ES'):''}`,ML,35);
+
+  // ── TABLA ─────────────────────────────────────────────────────────
+  const tableTop=40;
+  const colCat=8;    // ancho columna CAT
+  const colName=38;  // ancho columna nombre
+  const colDay=5.8;  // ancho cada día
+  const colH=12;     // ancho columna HORAS
+  const colEH=8;     // ancho €/H
+  const colTot=14;   // ancho TOTAL
+  const rowH=5.5;    // alto fila
+
+  // Separar oficiales y peones
+  const{wRows}=calcObraMonth(obraId,month,year);
+  const oficiales=wRows.filter(({w})=>isOf(w)).sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es'));
+  const peones=wRows.filter(({w})=>!isOf(w)).sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es'));
+
+  // Función helper: obtener horas de un trabajador en un día
+  function getHorasDia(wid,d){
+    const val=hor[`${year}-${month}-${wid}-${d}`];
+    if(!val&&val!==0)return null;
+    if(typeof val==='object'&&val.tipo)return null; // ausencia
+    if(typeof val==='object')return(val.n||0)+(val.he||0);
+    if(typeof val==='number')return val;
+    return null;
+  }
+
+  // Cabecera de tabla
+  function drawTableHeader(y){
+    doc.setFillColor(230,230,230);
+    doc.rect(ML,y,PW-ML-MR,rowH,'F');
+    doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    let x=ML;
+    doc.text('CAT',x+1,y+3.5);x+=colCat;
+    doc.text('TRABAJADOR',x+1,y+3.5);x+=colName;
+    for(let d=1;d<=days;d++){
+      doc.text(String(d),x+colDay/2,y+3.5,{align:'center'});
+      x+=colDay;
+    }
+    doc.text('HORAS',x+1,y+3.5);x+=colH;
+    doc.text('€/H',x+1,y+3.5);x+=colEH;
+    doc.text('TOTAL',x+1,y+3.5);
+    // Línea bajo cabecera
+    doc.setDrawColor(150);
+    doc.line(ML,y+rowH,PW-MR,y+rowH);
+    return y+rowH;
+  }
+
+  // Dibujar fila de trabajador
+  function drawWorkerRow(w,y,catLabel){
+    doc.setFontSize(6);doc.setFont('helvetica','normal');
+    let x=ML;
+    doc.text(catLabel,x+1,y+3.5);x+=colCat;
+    // Nombre: apellido, nombre abreviado
+    const nombre=w.nombre.length>22?w.nombre.substring(0,21)+'…':w.nombre;
+    doc.text(nombre,x+1,y+3.5);x+=colName;
+    let totalH=0;
+    for(let d=1;d<=days;d++){
+      const h=getHorasDia(w.id,d);
+      if(h!==null&&h>0){
+        const hStr=Number.isInteger(h)?String(h):h.toString().replace('.',',');
+        doc.text(hStr,x+colDay/2,y+3.5,{align:'center'});
+        totalH+=h;
+      }
+      x+=colDay;
+    }
+    // Total horas
+    doc.setFont('helvetica','bold');
+    doc.text(totalH>0?(Number.isInteger(totalH)?String(totalH):totalH.toString().replace('.',',')):'',x+colH/2,y+3.5,{align:'center'});
+    doc.setFont('helvetica','normal');
+    doc.setDrawColor(200);
+    doc.line(ML,y+rowH,PW-MR,y+rowH);
+    return{rowY:y+rowH,totalH};
+  }
+
+  // Fila de subtotal (Oficiales o Peones)
+  function drawSubtotalRow(label,totalH,tarifa,y){
+    doc.setFillColor(240,248,240);
+    doc.rect(ML,y,PW-ML-MR,rowH,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','bold');
+    let x=ML;
+    x+=colCat+colName;
+    // Totales por día
+    // (columnas de días vacías en subtotal)
+    x+=colDay*days;
+    const totalEur=totalH*tarifa;
+    doc.text(totalH>0?String(totalH):'',x+colH/2,y+3.5,{align:'center'});x+=colH;
+    doc.text(tarifa>0?tarifa.toFixed(2):'',x+colEH/2,y+3.5,{align:'center'});x+=colEH;
+    doc.text(totalEur>0?totalEur.toLocaleString('es-ES',{minimumFractionDigits:2})+'€':'',x+colTot-2,y+3.5,{align:'right'});
+    // Etiqueta izquierda
+    doc.text(label,ML+1,y+3.5);
+    doc.setDrawColor(100);
+    doc.line(ML,y+rowH,PW-MR,y+rowH);
+    return y+rowH;
+  }
+
+  let y=drawTableHeader(tableTop);
+
+  // ── OFICIALES ─────────────────────────────────────────────────────
+  if(oficiales.length){
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(60,80,180);
+    doc.text('OFICIALES',ML+1,y+3.5);
+    doc.setTextColor(0);
+    doc.setDrawColor(180);doc.line(ML,y+rowH,PW-MR,y+rowH);
+    y+=rowH;
+    let totalOf=0;
+    oficiales.forEach(({w})=>{
+      const{rowY,totalH}=drawWorkerRow(w,y,'OF');
+      totalOf+=totalH;y=rowY;
+    });
+    const tarOf=o.tof||0;
+    y=drawSubtotalRow(`TOTAL OFICIALES — ${oficiales.length} trabajadores`,totalOf,tarOf,y);
+    y+=2;
+  }
+
+  // ── PEONES ────────────────────────────────────────────────────────
+  if(peones.length){
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(180,80,30);
+    doc.text('PEONES',ML+1,y+3.5);
+    doc.setTextColor(0);
+    doc.setDrawColor(180);doc.line(ML,y+rowH,PW-MR,y+rowH);
+    y+=rowH;
+    let totalPe=0;
+    peones.forEach(({w})=>{
+      const{rowY,totalH}=drawWorkerRow(w,y,'PE');
+      totalPe+=totalH;y=rowY;
+    });
+    const tarPe=o.tpe||0;
+    y=drawSubtotalRow(`TOTAL PEONES — ${peones.length} trabajadores`,totalPe,tarPe,y);
+    y+=2;
+  }
+
+  // ── TOTAL CERTIFICACIÓN ───────────────────────────────────────────
+  const{fact}=calcObraMonth(obraId,month,year);
+  const totalH=oficiales.reduce((a,{w})=>{let s=0;for(let d=1;d<=days;d++){const h=getHorasDia(w.id,d);if(h)s+=h;}return a+s;},0)
+              +peones.reduce((a,{w})=>{let s=0;for(let d=1;d<=days;d++){const h=getHorasDia(w.id,d);if(h)s+=h;}return a+s;},0);
+  y+=2;
+  doc.setFillColor(29,158,117);
+  doc.rect(ML,y,PW-ML-MR,rowH+1,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(255);
+  doc.text('TOTAL CERTIFICACIÓN',ML+2,y+4);
+  let tx=ML+colCat+colName+colDay*days+colH+colEH;
+  doc.text(fact.toLocaleString('es-ES',{minimumFractionDigits:2})+' €',tx+colTot-2,y+4,{align:'right'});
+  doc.setTextColor(0);
+  y+=rowH+3;
+
+  // ── FIRMA ─────────────────────────────────────────────────────────
   y+=8;
-  doc2.setFontSize(11);doc2.setFont('helvetica','bold');doc2.text('DETALLE POR TRABAJADOR',14,y);y+=7;
-  wRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).forEach(({w,hN:wN,hE:wE,fact:wF,coste:wC})=>{
-    if(y>270){doc2.addPage();y=20;}
-    const tar=isOf(w)?o.tof:o.tpe;
-    doc2.setFontSize(9);doc2.setFont('helvetica','normal');
-    doc2.text(`${w.nombre} (${CATL[w.cat]||''})`,16,y);
-    doc2.text(`${fmtH(wN)} norm.${wE>0?' + '+fmtH(wE)+' extra':''}  ·  ${tar}€/h`,90,y);
-    doc2.text(fmt(wF),196,y,{align:'right'});y+=5;
-    if(wC>0){doc2.setTextColor(150);doc2.text(`  Coste trabajador: ${fmt(wC)}  ·  Margen: ${fmt(wF-wC)}`,16,y);doc2.setTextColor(0);y+=5;}
-  });
-  doc2.setFontSize(8);doc2.setFont('helvetica','normal');doc2.setTextColor(150);
-  doc2.text(`Generado ${new Date().toLocaleDateString('es-ES')} — Obras360`,14,285);
-  doc2.save(`Informe_${o.nombre.substring(0,20)}_${MESES[month]}_${year}.pdf`);toast('Informe generado ✓');
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  const fechaStr=fechaFirma?new Date(fechaFirma+'T00:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
+  doc.text(`Fecha: ${fechaStr}`,ML,y);
+  doc.text('Fdo: ___________________________',PW-MR-60,y);
+
+  // ── PIE ───────────────────────────────────────────────────────────
+  doc.setFontSize(7);doc.setTextColor(150);
+  doc.text(`Generado ${new Date().toLocaleDateString('es-ES')} — Obras360 INNOVACOR`,ML,200);
+
+  const nomCert=`CERT_${numCert}_${mesStr.substring(0,3)}${year}_${o.nombre.substring(0,15).replace(/ /g,'_')}.pdf`;
+  doc.save(nomCert);
+  toast('Certificación generada ✓');
 }
 
 // ── COMPARATIVA ───────────────────────────────────────────────────
@@ -1289,6 +1442,16 @@ function rAjustes(){
   document.getElementById('festivos-list').innerHTML=sorted.map((f,i)=>`<div class="festivo-item"><div><div class="festivo-name">${f.nombre}</div><div class="festivo-date">${f.fecha}</div></div><button class="btn btnd btnsm" onclick="delFestivo(${i})">🗑</button></div>`).join('')||'<div style="font-size:13px;color:var(--t3)">Sin festivos</div>';
   document.getElementById('informe-obra').innerHTML=sO().map(o=>`<option value="${o.id}">${o.nombre}</option>`).join('');
   document.getElementById('informe-mes').innerHTML=MESES.map((m,i)=>`<option value="${i}"${i===new Date().getMonth()?' selected':''}>${m}</option>`).join('');
+  // Fecha = último día del mes seleccionado
+  function actualizarFechaFirma(){
+    const m=parseInt(document.getElementById('informe-mes').value);
+    const y=parseInt(document.getElementById('informe-anio').value);
+    const ultimoDia=new Date(y,m+1,0).getDate();
+    document.getElementById('informe-fecha').value=`${y}-${String(m+1).padStart(2,'0')}-${String(ultimoDia).padStart(2,'0')}`;
+  }
+  actualizarFechaFirma();
+  document.getElementById('informe-mes').onchange=actualizarFechaFirma;
+  document.getElementById('informe-anio').oninput=actualizarFechaFirma;
 }
 function openAddFestivo(){document.getElementById('fes-nombre').value='';document.getElementById('fes-fecha').value=today();document.getElementById('modal-festivo').classList.add('open');}
 function saveFestivo(){
