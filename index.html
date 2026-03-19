@@ -185,7 +185,6 @@ textarea.fi{min-height:75px;resize:vertical}
   <div id="main">
     <!-- DASHBOARD -->
     <div id="sec-dashboard" class="sec active">
-      <div id="alerts-container"></div>
       <div class="sgrid">
         <div class="sc acc" onclick="navTo('obras',qni(1))"><div class="sl">Obras activas</div><div class="sv" id="s-ob">—</div><div class="ss" id="s-ob2">&nbsp;</div></div>
         <div class="sc" onclick="navTo('personal',qni(2))"><div class="sl">Trabajadores</div><div class="sv" id="s-wk">—</div><div class="ss">en activo</div></div>
@@ -258,6 +257,24 @@ textarea.fi{min-height:75px;resize:vertical}
       </div>
       <div id="comp-content"></div>
     </div>
+    <!-- SUELDOS -->
+    <div id="sec-sueldos" class="sec">
+      <div class="mnav">
+        <button class="mbtn" onclick="chMonthS(-1)">←</button>
+        <span class="mlab" id="mlab-s"></span>
+        <button class="mbtn" onclick="chMonthS(1)">→</button>
+      </div>
+      <div id="sueldos-content"></div>
+    </div>
+    <!-- NOTIFICACIONES -->
+    <div id="sec-notificaciones" class="sec">
+      <div class="mnav">
+        <button class="mbtn" onclick="chMonthN(-1)">←</button>
+        <span class="mlab" id="mlab-n"></span>
+        <button class="mbtn" onclick="chMonthN(1)">→</button>
+      </div>
+      <div id="notif-content"></div>
+    </div>
     <!-- INCIDENCIAS -->
     <div id="sec-incidencias" class="sec">
       <button class="btn btnp" style="width:100%;margin-bottom:12px" onclick="document.getElementById('in-o').innerHTML=sO().map(o=>`<option>${o.nombre}</option>`).join('');document.getElementById('modal-inc').classList.add('open')">+ Nueva incidencia</button>
@@ -313,6 +330,8 @@ textarea.fi{min-height:75px;resize:vertical}
     <button class="ni" onclick="navTo('horario',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Horario</button>
     <button class="ni" onclick="navTo('facturacion',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Facturar</button>
     <button class="ni" onclick="navTo('comparativa',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Gráficas</button>
+    <button class="ni" onclick="navTo('sueldos',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Sueldos</button>
+    <button class="ni" onclick="navTo('notificaciones',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Avisos</button>
     <button class="ni" onclick="navTo('incidencias',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Alertas</button>
     <button class="ni" onclick="navTo('ajustes',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ajustes</button>
   </nav>
@@ -399,6 +418,10 @@ textarea.fi{min-height:75px;resize:vertical}
       <div class="fgrid">
         <div><label class="fl">€/h normal</label><input class="fi" type="number" step="0.5" id="wk-cn" placeholder="14"/></div>
         <div><label class="fl">€/h extra</label><input class="fi" type="number" step="0.5" id="wk-ce" placeholder="17"/></div>
+      </div>
+      <div class="fg" style="margin-top:8px;margin-bottom:0">
+        <label class="fl">Nómina fija mensual <span style="font-weight:400;color:var(--t3)">(si aplica — anula el cálculo por horas)</span></label>
+        <input class="fi" type="number" step="50" id="wk-nfija" placeholder="0"/>
       </div>
     </div>
     <div class="sact"><button class="btn btng" onclick="CM()">Cancelar</button><button class="btn btnp" onclick="saveWorker()">Guardar</button></div>
@@ -583,12 +606,12 @@ const OD=[
 ];
 const WD=[
   {id:1,nombre:'ARRABAL MORENO, ANTONIO',obra:0,estado:'admin',cat:'tec',cn:0,ce:0,dni:'25681690M',fnac:'15/02/1973',vtodni:'15/03/2033',tel:'606728218',cuenta:'ES7330580990272753262465',banco:'CAJAMAR',falta:'01/01/2026',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'antonioarrabalmoreno@gmail.com',prl20:'NO',cursos:'',imp:0},
-  {id:2,nombre:'CUEVAS MORILLAS, DAVID',obra:12,estado:'active',cat:'of1',cn:0,ce:0,dni:'45491478P',fnac:'31/08/1976',vtodni:'12/04/2026',tel:'644889738',cuenta:'ES1621032076030010048758',banco:'UNICAJA',falta:'02/02/2026',rm:'08/04/2025',vtrm:'08/04/2026',localidad:'ANTEQUERA',correo:'',prl20:'OK',cursos:'8H PRL - 6H ESTRUC. TUBUL.',imp:0},
+  {id:2,nombre:'CUEVAS MORILLAS, DAVID',obra:12,estado:'active',cat:'of1',cn:0,ce:0,nFija:1600,dni:'45491478P',fnac:'31/08/1976',vtodni:'12/04/2026',tel:'644889738',cuenta:'ES1621032076030010048758',banco:'UNICAJA',falta:'02/02/2026',rm:'08/04/2025',vtrm:'08/04/2026',localidad:'ANTEQUERA',correo:'',prl20:'OK',cursos:'8H PRL - 6H ESTRUC. TUBUL.',imp:0},
   {id:3,nombre:'DE LA RUBIA MARTIN, ISMAEL',obra:13,estado:'active',cat:'of1',cn:11,ce:0,dni:'76434727T',fnac:'16/01/1987',vtodni:'21/09/2027',tel:'662472598',cuenta:'ES9401824106700201753461',banco:'',falta:'24/02/2026',rm:'05/03/2026',vtrm:'05/03/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'20H APAR. ELEV. - 8H DUMPER',imp:11},
   {id:4,nombre:'DIAZ GARCIA, CARLOS',obra:13,estado:'active',cat:'of1',cn:12,ce:0,dni:'74838560X',fnac:'24/05/1981',vtodni:'29/09/2033',tel:'633207685',cuenta:'ES7321030108980010028375',banco:'UNICAJA',falta:'27/08/2025',rm:'04/09/2025',vtrm:'04/09/2026',localidad:'ALMOGIA',correo:'',prl20:'OK',cursos:'',imp:12},
   {id:5,nombre:'DIAZ RODRIGUEZ, MIGUEL ANGEL',obra:12,estado:'active',cat:'of1',cn:10.5,ce:0,dni:'74848273V',fnac:'28/09/1982',vtodni:'17/07/2033',tel:'631087840',cuenta:'ES4921004083562100740439',banco:'',falta:'28/01/2026',rm:'16/12/2025',vtrm:'16/12/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
   {id:6,nombre:'DIAZ URBANO, JESUS',obra:13,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'77227135N',fnac:'24/10/1998',vtodni:'04/01/2030',tel:'',cuenta:'ES3620801134203040168220',banco:'ABANCA',falta:'28/08/2025',rm:'04/09/2025',vtrm:'04/09/2026',localidad:'ALMOGIA',correo:'',prl20:'OK',cursos:'',imp:9.5},
-  {id:7,nombre:'DOMINGUEZ RUIZ, JOSE CARLOS',obra:0,estado:'admin',cat:'adm',cn:0,ce:0,dni:'74883119H',fnac:'29/10/1984',vtodni:'09/05/2028',tel:'667822795',cuenta:'ES8130580768182810729581',banco:'CAJAMAR',falta:'01/11/2024',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'',imp:0},
+  {id:7,nombre:'DOMINGUEZ RUIZ, JOSE CARLOS',obra:0,estado:'admin',cat:'adm',cn:0,ce:0,nFija:800,dni:'74883119H',fnac:'29/10/1984',vtodni:'09/05/2028',tel:'667822795',cuenta:'ES8130580768182810729581',banco:'CAJAMAR',falta:'01/11/2024',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'',imp:0},
   {id:8,nombre:'EL MASOUDI SFAIHI, HANZA',obra:7,estado:'active',cat:'pe',cn:9,ce:0,dni:'13453645W',fnac:'06/10/2006',vtodni:'04/07/2028',tel:'641557448',cuenta:'ES8601827363140201711548',banco:'',falta:'26/02/2026',rm:'12/03/2026',vtrm:'12/03/2027',localidad:'VELEZ-MALAGA',correo:'',prl20:'OK',cursos:'6H MOV. TIERRAS',imp:9},
   {id:9,nombre:'EL MASOUDI, HASSAN',obra:7,estado:'active',cat:'of1',cn:11,ce:0,dni:'X1235949K',fnac:'01/01/1964',vtodni:'16/05/2030',tel:'602189665',cuenta:'ES3121002573280110601608',banco:'LA CAIXA',falta:'12/01/2026',rm:'17/06/2025',vtrm:'17/06/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:11},
   {id:10,nombre:'EL OUAD, SELLAM',obra:0,estado:'baja',cat:'of1',cn:11,ce:0,dni:'X3401527B',fnac:'01/01/1962',vtodni:'04/02/2036',tel:'631204729',cuenta:'ES8830230063046332072716',banco:'C.R. GRANADA',falta:'24/09/2025',rm:'17/06/2025',vtrm:'17/06/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'6H ENCOF.',imp:11},
@@ -604,9 +627,9 @@ const WD=[
   {id:20,nombre:'LEAL MORALES, LUIS MANUEL',obra:9,estado:'active',cat:'pe',cn:9,ce:0,dni:'76437628A',fnac:'06/11/1991',vtodni:'14/02/1933',tel:'610158729',cuenta:'ES8015830001189000805953',banco:'',falta:'19/01/2026',rm:'17/02/2026',vtrm:'17/02/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'20H MOV. TIERRAS',imp:9},
   {id:21,nombre:'MARTIN BENAVIDES, DANIEL',obra:2,estado:'active',cat:'pe',cn:0,ce:0,dni:'74844717A',fnac:'07/01/1978',vtodni:'13/04/2034',tel:'642375460',cuenta:'ES4714650270391747578891',banco:'',falta:'02/03/2026',rm:'12/03/2026',vtrm:'12/03/2027',localidad:'FUENGIROLA',correo:'',prl20:'OK',cursos:'',imp:0},
   {id:22,nombre:'MARTIN CASTILLO, ALBERTO',obra:13,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'74833441C',fnac:'19/07/1984',vtodni:'05/11/2028',tel:'625647917',cuenta:'ES3721030246260040003016',banco:'',falta:'24/02/2026',rm:'05/03/2026',vtrm:'05/03/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:9.5},
-  {id:23,nombre:'MORENO DOMINGUEZ, JUAN',obra:0,estado:'admin',cat:'enc',cn:0,ce:0,dni:'30822248V',fnac:'24/01/1975',vtodni:'06/05/2026',tel:'655606879',cuenta:'ES1921004989542100000481',banco:'LA CAIXA',falta:'23/10/2025',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'60H PRL - 10H DIRECTIVO',imp:0},
+  {id:23,nombre:'MORENO DOMINGUEZ, JUAN',obra:0,estado:'admin',cat:'enc',cn:0,ce:0,nFija:1157,dni:'30822248V',fnac:'24/01/1975',vtodni:'06/05/2026',tel:'655606879',cuenta:'ES1921004989542100000481',banco:'LA CAIXA',falta:'23/10/2025',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'60H PRL - 10H DIRECTIVO',imp:0},
   {id:24,nombre:'MORENO DOMINGUEZ, SALVADOR',obra:12,estado:'active',cat:'of1',cn:10.5,ce:0,dni:'74831876L',fnac:'29/04/1978',vtodni:'27/07/2031',tel:'614486651',cuenta:'ES9814650100981754120412',banco:'',falta:'26/01/2026',rm:'02/12/2025',vtrm:'02/12/2026',localidad:'PUERTO DE LA TORRE',correo:'',prl20:'OK',cursos:'',imp:10.5},
-  {id:25,nombre:'MORENO TORREBLANCA, IVAN',obra:0,estado:'admin',cat:'adm',cn:0,ce:0,dni:'77190471X',fnac:'17/07/2003',vtodni:'15/05/2029',tel:'609196964',cuenta:'ES3021002904070258857977',banco:'LA CAIXA',falta:'24/11/2026',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'',imp:0},
+  {id:25,nombre:'MORENO TORREBLANCA, IVAN',obra:0,estado:'admin',cat:'adm',cn:0,ce:0,nFija:600,dni:'77190471X',fnac:'17/07/2003',vtodni:'15/05/2029',tel:'609196964',cuenta:'ES3021002904070258857977',banco:'LA CAIXA',falta:'24/11/2026',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'',imp:0},
   {id:26,nombre:'PEREZ BALLESTEROS, MANUEL',obra:8,estado:'active',cat:'of1',cn:12,ce:0,dni:'52582055F',fnac:'22/04/1968',vtodni:'31/01/2033',tel:'653703515',cuenta:'ES2021002573200110678634',banco:'LA CAIXA',falta:'14/07/2025',rm:'10/07/2025',vtrm:'10/07/2026',localidad:'MALAGA',correo:'',prl20:'NO OK',cursos:'',imp:12},
   {id:27,nombre:'RAMIREZ DEL PINO, FRANCISCO RUBEN',obra:1,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'26812854Y',fnac:'09/12/1992',vtodni:'30/03/2033',tel:'691550360',cuenta:'ES8600493375042714036160',banco:'',falta:'25/11/2025',rm:'02/12/2025',vtrm:'02/12/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'6H MOV. TIERRAS - 6H APAR. ELEV.',imp:9.5},
   {id:28,nombre:'SANGARE, MOHAMED',obra:5,estado:'active',cat:'pe',cn:9,ce:0,dni:'Z2085177W',fnac:'08/11/1991',vtodni:'25/12/2029',tel:'672063516',cuenta:'ES0601825332130208805765',banco:'BBVA',falta:'12/06/2025',rm:'24/06/2025',vtrm:'24/06/2026',localidad:'MALAGA',correo:'mohamed.sang686@gmail.com',prl20:'OK',cursos:'',imp:9},
@@ -618,9 +641,9 @@ const WD=[
   {id:34,nombre:'TESGHITI, MOHAMED',obra:0,estado:'active',cat:'of2',cn:10.5,ce:0,dni:'Y8500850H',fnac:'12/04/1993',vtodni:'18/12/2028',tel:'611705039',cuenta:'ES6700494988512716157971',banco:'',falta:'18/03/2026',rm:'',vtrm:'',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
 ];
 
-let obras=[],workers=[],incs=[],hor={},festivos=[];
+let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={};
 let cM=new Date().getMonth(),cY=new Date().getFullYear();
-let fM=cM,fY=cY,compM=cM,compY=cY;
+let fM=cM,fY=cY,compM=cM,compY=cY,sueldosM=cM,sueldosY=cY,notifM=cM,notifY=cY;
 let editObraId=null,editWkId=null,editCell={},copySourceDay=null;
 let obraTabFilter='active';
 let chartObra=null;
@@ -656,6 +679,7 @@ async function initData(){
     fbOnSnapshot('incs',s=>{if(s.exists){incs=s.data().list||[];if(isActive('incidencias'))rIncs();}});
     fbOnSnapshot('horario',s=>{if(s.exists){hor=s.data().data||{};if(isActive('horario'))rHor();rDash();}});
     fbOnSnapshot('festivos',s=>{if(s.exists)festivos=s.data().list||[];});
+    fbOnSnapshot('notifs',s=>{if(s.exists)notifs=s.data().data||{};});
   }catch(e){
     console.error(e);setSyncDot('err');
     obras=OD;workers=WD;festivos=FESTIVOS_DEFAULT;
@@ -678,11 +702,13 @@ function isActive(s){return document.getElementById('sec-'+s)?.classList.contain
 function sO(){return[...obras].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));}
 function sW(){return[...workers].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));}
 function ini(n){const p=n.replace(/,/g,' ').split(/\s+/).filter(Boolean);return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase();}
+// Convierte "APELLIDO APELLIDO, NOMBRE" → "NOMBRE APELLIDO APELLIDO"
+function fmtNombre(n){const p=n.split(',');if(p.length<2)return n;return(p[1].trim()+' '+p[0].trim()).trim();}
 function today(){return new Date().toISOString().split('T')[0];}
 // Convierte fecha dd/mm/aaaa a Date para comparar
 function parsefecha(f){if(!f)return null;const[d,m,y]=f.split('/');return new Date(y,m-1,d);}
 function vencido(f){const d=parsefecha(f);return d&&d<new Date();}
-function proximo(f){const d=parsefecha(f);if(!d)return false;const en60=new Date();en60.setDate(en60.getDate()+60);return d>=new Date()&&d<=en60;}
+function proximo(f){const d=parsefecha(f);if(!d)return false;const en30=new Date();en30.setDate(en30.getDate()+30);return d>=new Date()&&d<=en30;}
 function avC(id){return AVC[id%5];}
 function fmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';}
 function fmtH(n){return Number.isInteger(n)?n+'h':n+'h';}
@@ -712,7 +738,7 @@ function getTarifaFact(w,obra,tipo){
 
 // ── COSTE (lo que le pagas al trabajador) ─────────────────────────
 function getCosteTrabajador(w,tipo){
-  if(tipo==='he')return w.ce||0;
+  if(tipo==='he')return (w.cn||0)+2; // HE = tarifa normal + 2€
   return w.cn||0;
 }
 
@@ -832,7 +858,7 @@ function navTo(s,el){
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   document.getElementById('sec-'+s).classList.add('active');
   el?.classList.add('active');
-  ({dashboard:rDash,obras:rObras,personal:rWorkers,horario:rHor,facturacion:rFact,comparativa:rComp,incidencias:rIncs,ajustes:rAjustes})[s]?.();
+  ({dashboard:rDash,obras:rObras,personal:rWorkers,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,notificaciones:rNotifs,incidencias:rIncs,ajustes:rAjustes})[s]?.();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -849,20 +875,19 @@ function rDash(){
   // Alertas NP
   const m=new Date().getMonth(),y=new Date().getFullYear();
   const alerts=workers.filter(w=>(w.estado==='active'||w.estado==='ext')&&getNP(w.id,m,y)>=2);
-  // Alertas documentos caducados/próximos
-  const docsAlerts=workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').filter(w=>
-    vencido(w.vtodni)||proximo(w.vtodni)||vencido(w.vtrm)||proximo(w.vtrm)
-  );
+  // Alertas documentos — DNI y RM caducados o próximos a vencer (30 días)
+  function diasRestantes(f){const d=parsefecha(f);if(!d)return null;return Math.ceil((d-new Date())/(1000*60*60*24));}
+  const docsAlerts=[];
+  workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').forEach(w=>{
+    const nombre=fmtNombre(w.nombre);
+    if(vencido(w.vtodni))docsAlerts.push({nombre,msg:`DNI caducado`,tipo:'error'});
+    else if(proximo(w.vtodni)){const d=diasRestantes(w.vtodni);docsAlerts.push({nombre,msg:`DNI vence en ${d} día${d!==1?'s':''}`,tipo:'warn'});}
+    if(vencido(w.vtrm))docsAlerts.push({nombre,msg:`Rec. médico caducado`,tipo:'error'});
+    else if(proximo(w.vtrm)){const d=diasRestantes(w.vtrm);docsAlerts.push({nombre,msg:`Rec. médico vence en ${d} día${d!==1?'s':''}`,tipo:'warn'});}
+  });
   document.getElementById('alerts-container').innerHTML=[
-    ...alerts.map(w=>`<div class="alert-banner"><span style="font-size:18px">⚠️</span><span class="alert-banner-text"><b>${w.nombre.split(',')[0]}</b> — ${getNP(w.id,m,y)} NP este mes</span></div>`),
-    ...docsAlerts.map(w=>{
-      const msgs=[];
-      if(vencido(w.vtodni))msgs.push(`DNI caducado (${w.vtodni})`);
-      else if(proximo(w.vtodni))msgs.push(`DNI próximo a vencer (${w.vtodni})`);
-      if(vencido(w.vtrm))msgs.push(`RM caducado (${w.vtrm})`);
-      else if(proximo(w.vtrm))msgs.push(`RM próximo a vencer (${w.vtrm})`);
-      return`<div class="alert-banner" style="background:var(--al)"><span style="font-size:18px">📄</span><span class="alert-banner-text" style="color:#633806"><b>${w.nombre.split(',')[0]}</b> — ${msgs.join(' · ')}</span></div>`;
-    })
+    ...alerts.map(w=>`<div class="alert-banner"><span style="font-size:18px">⚠️</span><span class="alert-banner-text"><b>${fmtNombre(w.nombre)}</b> — ${getNP(w.id,m,y)} NP este mes</span></div>`),
+    ...docsAlerts.map(({nombre,msg,tipo})=>`<div class="alert-banner" style="background:${tipo==='error'?'var(--rl)':'var(--al)'}"><span style="font-size:18px">${tipo==='error'?'🔴':'📄'}</span><span class="alert-banner-text" style="color:${tipo==='error'?'#791F1F':'#633806'}"><b>${nombre}</b> — ${msg}</span></div>`)
   ].join('');
 }
 function getNP(wid,month,year){
@@ -1119,7 +1144,7 @@ function rHor(){
 function eCell(wid,day){
   editCell={wid,day};
   const w=workers.find(x=>x.id===wid);
-  document.getElementById('ttl-hor').textContent=(w?w.nombre.split(',')[0]:'')+' — Día '+day;
+  document.getElementById('ttl-hor').textContent=(w?fmtNombre(w.nombre):'')+' — Día '+day;
   document.getElementById('hor-w').innerHTML=sW().filter(x=>x.estado==='active'||x.estado==='ext'||x.estado==='baja').map(x=>`<option value="${x.id}"${x.id===wid?' selected':''}>${x.nombre}</option>`).join('');
   document.getElementById('hor-f').value=`${cY}-${String(cM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const cur=hor[hKey(wid,day)];
@@ -1210,7 +1235,7 @@ function saveHor(){
       w.obra=obraSelId;
       w.obraDesde=fechaCambio;
       svFB('workers',workers);
-      const msg2=`✓ ${w.nombre.split(',')[0]} → ${obraNueva?.nombre||'nueva obra'}`;
+      const msg2=`✓ ${fmtNombre(w.nombre)} → ${obraNueva?.nombre||'nueva obra'}`;
       toast(msg2);
     }else{
       const msg=dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
@@ -1545,7 +1570,163 @@ function exportInformeMensual(){
   toast('Certificación generada ✓');
 }
 
+// ── NOTIFICACIONES ────────────────────────────────────────────────
+function chMonthN(d){notifM+=d;if(notifM>11){notifM=0;notifY++;}if(notifM<0){notifM=11;notifY--;}rNotifs();}
+
+function toggleNotif(key){
+  notifs[key]=!notifs[key];
+  fbSet('notifs',{data:notifs});
+  rNotifs();
+}
+
+function rNotifs(){
+  document.getElementById('mlab-n').textContent=MESES[notifM]+' '+notifY;
+  const alertas=[];
+
+  // NP ≥ 2
+  workers.filter(w=>w.estado==='active'||w.estado==='ext').forEach(w=>{
+    const np=getNP(w.id,notifM,notifY);
+    if(np>=2){
+      alertas.push({
+        key:`np-${notifY}-${notifM}-${w.id}`,
+        tipo:'np',
+        icono:'⚠️',
+        color:'var(--rl)',
+        colorTxt:'#791F1F',
+        nombre:fmtNombre(w.nombre),
+        msg:`${np} ausencias NP este mes`,
+        wid:w.id,
+      });
+    }
+  });
+
+  // DNI y RM caducados o próximos
+  function diasR(f){const d=parsefecha(f);if(!d)return null;return Math.ceil((d-new Date())/(1000*60*60*24));}
+  workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').forEach(w=>{
+    if(vencido(w.vtodni)){
+      alertas.push({key:`dni-venc-${w.id}`,tipo:'doc',icono:'🔴',color:'var(--rl)',colorTxt:'#791F1F',nombre:fmtNombre(w.nombre),msg:'DNI / NIE caducado',wid:w.id});
+    } else if(proximo(w.vtodni)){
+      const d=diasR(w.vtodni);
+      alertas.push({key:`dni-prox-${w.id}`,tipo:'doc',icono:'📄',color:'var(--al)',colorTxt:'#633806',nombre:fmtNombre(w.nombre),msg:`DNI vence en ${d} día${d!==1?'s':''}`,wid:w.id});
+    }
+    if(vencido(w.vtrm)){
+      alertas.push({key:`rm-venc-${w.id}`,tipo:'doc',icono:'🔴',color:'var(--rl)',colorTxt:'#791F1F',nombre:fmtNombre(w.nombre),msg:'Reconocimiento médico caducado',wid:w.id});
+    } else if(proximo(w.vtrm)){
+      const d=diasR(w.vtrm);
+      alertas.push({key:`rm-prox-${w.id}`,tipo:'doc',icono:'📄',color:'var(--al)',colorTxt:'#633806',nombre:fmtNombre(w.nombre),msg:`Rec. médico vence en ${d} día${d!==1?'s':''}`,wid:w.id});
+    }
+  });
+
+  if(!alertas.length){
+    document.getElementById('notif-content').innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Sin notificaciones para ${MESES[notifM]}</div></div>`;
+    return;
+  }
+
+  const pendientes=alertas.filter(a=>!notifs[a.key]);
+  const notificadas=alertas.filter(a=>notifs[a.key]);
+
+  let html='';
+
+  if(pendientes.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📬 Pendientes (${pendientes.length})</div>`;
+    pendientes.forEach(a=>{
+      html+=`<div style="background:${a.color};border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">${a.icono}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px;color:${a.colorTxt}">${a.nombre}</div>
+          <div style="font-size:12px;color:${a.colorTxt};opacity:.85">${a.msg}</div>
+        </div>
+        <button onclick="toggleNotif('${a.key}')" style="background:#fff;border:1px solid ${a.colorTxt};color:${a.colorTxt};border-radius:var(--rs);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">
+          Marcar notificado ✓
+        </button>
+      </div>`;
+    });
+  }
+
+  if(notificadas.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:var(--t3);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px">✅ Ya notificados (${notificadas.length})</div>`;
+    notificadas.forEach(a=>{
+      html+=`<div style="background:var(--gl);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;opacity:.7">
+        <span style="font-size:18px">✅</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12px;color:var(--gp)">${a.nombre}</div>
+          <div style="font-size:11px;color:var(--gp)">${a.msg}</div>
+        </div>
+        <button onclick="toggleNotif('${a.key}')" style="background:transparent;border:1px solid var(--br);color:var(--t3);border-radius:var(--rs);padding:4px 8px;font-size:10px;cursor:pointer">
+          Deshacer
+        </button>
+      </div>`;
+    });
+  }
+
+  document.getElementById('notif-content').innerHTML=html;
+}
+
 // ── COMPARATIVA ───────────────────────────────────────────────────
+// ── SUELDOS ───────────────────────────────────────────────────────
+function chMonthS(d){sueldosM+=d;if(sueldosM>11){sueldosM=0;sueldosY++;}if(sueldosM<0){sueldosM=11;sueldosY--;}rSueldos();}
+function rSueldos(){
+  document.getElementById('mlab-s').textContent=MESES[sueldosM]+' '+sueldosY;
+  // Incluir activos, externos Y administrativos con nFija
+  const list=workers.filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&w.nFija>0));
+  let html='';
+
+  const resumen=list.map(w=>{
+    const calc=calcWorkerMonth(w.id,sueldosM,sueldosY);
+    const hN=calc.hN,hE=calc.hE;
+    const tarN=w.cn||0,tarHE=(w.cn||0)+2;
+    const esNFija=!!(w.nFija>0);
+    const nomina=esNFija?w.nFija:(hN*tarN+hE*tarHE);
+    return{w,hN,hE,tarN,tarHE,nomina,esNFija,calc};
+  }).filter(r=>r.esNFija||r.hN+r.hE>0||r.w.cn>0);
+
+  resumen.sort((a,b)=>b.nomina-a.nomina);
+  const totalNomina=resumen.reduce((s,r)=>s+r.nomina,0);
+
+  html+=`<div class="ftotal-bar" style="margin-bottom:16px">
+    <span class="ftotal-label">Total nóminas ${MESES[sueldosM]}</span>
+    <span class="ftotal-val">${fmt(totalNomina)}</span>
+  </div>`;
+
+  if(!resumen.length){
+    html+='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Sin datos este mes</div></div>';
+    document.getElementById('sueldos-content').innerHTML=html;return;
+  }
+
+  html+='<div style="display:flex;flex-direction:column;gap:10px">';
+  resumen.forEach(({w,hN,hE,tarN,tarHE,nomina,esNFija})=>{
+    const ob=obras.find(o=>o.id===w.obra);
+    const sinTarifa=!esNFija&&w.cn===0;
+    html+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${sinTarifa?'0':'8px'}">
+        <div class="av ${avC(w.id)}" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${ini(w.nombre)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px">${fmtNombre(w.nombre)}</div>
+          <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}${ob?' · '+ob.nombre:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:${sinTarifa?'var(--t3)':'var(--g)'}">${sinTarifa?'—':fmt(nomina)}</div>
+          ${esNFija?`<div style="font-size:10px;background:var(--bl);color:#0C447C;padding:2px 6px;border-radius:99px;font-weight:600;display:inline-block">Fija</div>`:''}
+          ${sinTarifa?`<div style="font-size:10px;color:#E24B4A">Sin tarifa</div>`:''}
+        </div>
+      </div>
+      ${sinTarifa||esNFija?'':`
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;background:var(--bg);border-radius:var(--rs);padding:8px">
+        <div><div style="color:var(--t3)">Horas norm.</div><div style="font-weight:600">${fmtH(hN)} × ${tarN}€</div><div style="color:var(--g)">${fmt(hN*tarN)}</div></div>
+        <div><div style="color:var(--t3)">Horas extra</div><div style="font-weight:600">${fmtH(hE)} × ${tarHE}€</div><div style="color:var(--g)">${fmt(hE*tarHE)}</div></div>
+        <div><div style="color:var(--t3)">Total</div><div style="font-weight:600">${fmtH(hN+hE)}h</div><div style="color:var(--g);font-weight:700">${fmt(nomina)}</div></div>
+      </div>`}
+    </div>`;
+  });
+
+  // Trabajadores sin tarifa ni nFija con horas registradas
+  const sinConf=list.filter(w=>!w.nFija&&!w.cn&&!resumen.find(r=>r.w.id===w.id));
+  if(sinConf.length)html+=`<div style="font-size:12px;color:var(--t3);padding:8px 4px">⚠️ Sin tarifa: ${sinConf.map(w=>fmtNombre(w.nombre)).join(', ')}</div>`;
+
+  html+='</div>';
+  document.getElementById('sueldos-content').innerHTML=html;
+}
+
 function chMonthC(d){compM+=d;if(compM>11){compM=0;compY++;}if(compM<0){compM=11;compY--;}rComp();}
 function rComp(){
   document.getElementById('mlab-c').textContent=MESES[compM]+' '+compY;
@@ -1619,6 +1800,7 @@ function resetWorkers(){
 }
 
 function exportBackup(){
+  const data={obras,workers,incs,hor,festivos,exportedAt:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=`obras360_backup_${today()}.json`;a.click();
@@ -1673,6 +1855,7 @@ function openEW(id){
   document.getElementById('wk-s').value=w?.estado||'active';
   document.getElementById('wk-cn').value=w?.cn||'';
   document.getElementById('wk-ce').value=w?.ce||'';
+  document.getElementById('wk-nfija').value=w?.nFija||'';
   document.getElementById('wk-dni').value=w?.dni||'';
   document.getElementById('wk-vtodni').value=w?.vtodni||'';
   document.getElementById('wk-fnac').value=w?.fnac||'';
@@ -1701,6 +1884,7 @@ function saveWorker(){
     obra:newObraId,
     cn:parseFloat(document.getElementById('wk-cn').value)||0,
     ce:parseFloat(document.getElementById('wk-ce').value)||0,
+    nFija:parseFloat(document.getElementById('wk-nfija').value)||0,
     dni:document.getElementById('wk-dni').value.trim().toUpperCase(),
     vtodni:document.getElementById('wk-vtodni').value.trim(),
     fnac:document.getElementById('wk-fnac').value.trim(),
@@ -1820,7 +2004,7 @@ function openDO(id){
 // ── DETAIL WORKER ─────────────────────────────────────────────────
 function openDW(id){
   const w=workers.find(x=>x.id===id);if(!w)return;
-  document.getElementById('dwk-ttl').textContent=w.nombre.split(',')[0];
+  document.getElementById('dwk-ttl').textContent=fmtNombre(w.nombre);
   document.getElementById('dwk-edit-btn').onclick=()=>{CD('dov-worker');openEW(id);};
   const ob=obras.find(o=>o.id===w.obra);
   const mA=new Date().getMonth(),yA=new Date().getFullYear();
@@ -1869,7 +2053,8 @@ function openDW(id){
       ${w.correo?`<div class="inrow"><span class="ik">Correo</span><span class="iv"><a href="mailto:${w.correo}" style="color:var(--g);font-size:12px">${w.correo}</a></span></div>`:''}
       ${w.localidad?`<div class="inrow"><span class="ik">Localidad</span><span class="iv">${w.localidad}</span></div>`:''}
       ${w.cn>0?`<div class="inrow"><span class="ik">€/h normal</span><span class="iv">${w.cn}€</span></div>`:''}
-      ${w.ce>0?`<div class="inrow"><span class="ik">€/h extra</span><span class="iv">${w.ce}€</span></div>`:''}
+      ${w.ce>0?`<div class="inrow"><span class="ik">€/h extra</span><span class="iv">${w.ce}€ (+2€ auto)</span></div>`:''}
+      ${w.nFija>0?`<div class="inrow"><span class="ik">Nómina fija</span><span class="iv" style="color:var(--g);font-weight:600">${fmt(w.nFija)} / mes</span></div>`:''}
     </div>
     <div class="dsec"><div class="dsectl">📋 Datos personales</div>
       ${w.dni?`<div class="inrow"><span class="ik">DNI / NIE</span><span class="iv" style="font-family:var(--fm)">${w.dni}</span></div>`:''}
