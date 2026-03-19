@@ -695,7 +695,11 @@ async function svFB(col,data){
     if(col==='horario')await fbSet('horario',{data});
     else await fbSet(col,{list:data});
     setSyncDot('ok');
-  }catch(e){setSyncDot('err');toast('Error al guardar');}
+  }catch(e){
+    setSyncDot('err');
+    console.error('Firebase error en',col,':',e.code,e.message);
+    toast('Error: '+( e.message||e.code||'sin conexión'));
+  }
 }
 
 function isActive(s){return document.getElementById('sec-'+s)?.classList.contains('active');}
@@ -872,23 +876,6 @@ function rDash(){
   let th=0;workers.forEach(w=>{const r=calcWorkerMonth(w.id,new Date().getMonth(),new Date().getFullYear());th+=r.hN+r.hE;});
   document.getElementById('s-h').textContent=th||'—';
   document.getElementById('dash-obras').innerHTML=sO().filter(o=>o.estado==='active').slice(0,5).map(oCard).join('')||'<div class="empty"><div class="empty-text">Sin obras activas</div></div>';
-  // Alertas NP
-  const m=new Date().getMonth(),y=new Date().getFullYear();
-  const alerts=workers.filter(w=>(w.estado==='active'||w.estado==='ext')&&getNP(w.id,m,y)>=2);
-  // Alertas documentos — DNI y RM caducados o próximos a vencer (30 días)
-  function diasRestantes(f){const d=parsefecha(f);if(!d)return null;return Math.ceil((d-new Date())/(1000*60*60*24));}
-  const docsAlerts=[];
-  workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').forEach(w=>{
-    const nombre=fmtNombre(w.nombre);
-    if(vencido(w.vtodni))docsAlerts.push({nombre,msg:`DNI caducado`,tipo:'error'});
-    else if(proximo(w.vtodni)){const d=diasRestantes(w.vtodni);docsAlerts.push({nombre,msg:`DNI vence en ${d} día${d!==1?'s':''}`,tipo:'warn'});}
-    if(vencido(w.vtrm))docsAlerts.push({nombre,msg:`Rec. médico caducado`,tipo:'error'});
-    else if(proximo(w.vtrm)){const d=diasRestantes(w.vtrm);docsAlerts.push({nombre,msg:`Rec. médico vence en ${d} día${d!==1?'s':''}`,tipo:'warn'});}
-  });
-  document.getElementById('alerts-container').innerHTML=[
-    ...alerts.map(w=>`<div class="alert-banner"><span style="font-size:18px">⚠️</span><span class="alert-banner-text"><b>${fmtNombre(w.nombre)}</b> — ${getNP(w.id,m,y)} NP este mes</span></div>`),
-    ...docsAlerts.map(({nombre,msg,tipo})=>`<div class="alert-banner" style="background:${tipo==='error'?'var(--rl)':'var(--al)'}"><span style="font-size:18px">${tipo==='error'?'🔴':'📄'}</span><span class="alert-banner-text" style="color:${tipo==='error'?'#791F1F':'#633806'}"><b>${nombre}</b> — ${msg}</span></div>`)
-  ].join('');
 }
 function getNP(wid,month,year){
   const days=new Date(year,month+1,0).getDate();
@@ -1776,8 +1763,8 @@ window.delFestivo=delFestivo;
 // ── BACKUP ────────────────────────────────────────────────────────
 function resetWorkers(){
   if(!confirm('¿Actualizar datos de todos los trabajadores?\n\nSe actualizarán: DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL y cursos.\n\nLas obras asignadas, horas e historial NO se modifican.'))return;
-  const current=[...workers]; // copia antes de modificar
-  workers=WD.map(wd=>{
+  const current=[...workers];
+  const updated=WD.map(wd=>{
     const existing=current.find(w=>w.id===wd.id);
     if(existing){
       return{
@@ -1786,16 +1773,22 @@ function resetWorkers(){
         estado:existing.estado??wd.estado,
         cn:existing.cn!==undefined?existing.cn:wd.cn,
         ce:existing.ce!==undefined?existing.ce:wd.ce,
-        nFija:existing.nFija!==undefined?existing.nFija:wd.nFija||0,
+        nFija:existing.nFija!==undefined?existing.nFija:(wd.nFija||0),
         obraHistory:existing.obraHistory||[],
         obraDesde:existing.obraDesde||'',
       };
     }
     return wd;
   });
-  svFB('workers',workers);
-  rWorkers();
-  toast('✓ Trabajadores actualizados');
+  // Test: medir tamaño del objeto
+  const json=JSON.stringify({list:updated});
+  const kb=Math.round(json.length/1024);
+  console.log('Tamaño workers a guardar:',kb,'KB');
+  if(kb>900){toast('Error: datos demasiado grandes ('+kb+'KB)');return;}
+  workers=updated;
+  db.collection('app').doc('workers').set({list:workers})
+    .then(()=>{setSyncDot('ok');rWorkers();toast('✓ Trabajadores actualizados');})
+    .catch(e=>{setSyncDot('err');console.error(e);toast('Error Firebase: '+(e.message||e.code));});
 }
 
 function exportBackup(){
