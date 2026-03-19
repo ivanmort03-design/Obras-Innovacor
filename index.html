@@ -219,11 +219,20 @@ textarea.fi{min-height:75px;resize:vertical}
         <span class="mlab" id="mlab"></span>
         <button class="mbtn" onclick="chMonth(1)">→</button>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
         <button class="btn btnp btnsm" onclick="openFab()">+ Registrar jornada</button>
         <button class="btn btng btnsm" onclick="openCopyDay()">📋 Copiar día</button>
       </div>
-      <div class="hint" style="margin-bottom:8px">Toca celda · obra asignada ese día se muestra en 2ª línea · <span style="background:#FEF3E2;color:#7C4A00;padding:1px 5px;border-radius:4px;font-size:10px">AUS</span> ausencia · HE auto (Vie/Sáb/Dom/Fest)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+        <select class="fi" id="hor-filtro-obra" onchange="rHor()" style="flex:1;min-width:140px;padding:7px 10px;font-size:12px">
+          <option value="">Todas las obras</option>
+        </select>
+        <select class="fi" id="hor-filtro-orden" onchange="rHor()" style="width:auto;padding:7px 10px;font-size:12px">
+          <option value="alfa">A-Z</option>
+          <option value="obra">Por obra</option>
+        </select>
+      </div>
+      <div class="hint" style="margin-bottom:8px">Toca celda · obra en 2ª línea · <span style="background:#FEF3E2;color:#7C4A00;padding:1px 5px;border-radius:4px;font-size:10px">AUS</span> ausencia · HE auto (Vie/Sáb/Dom/Fest)</div>
       <div class="hwrap"><div id="htbl"></div></div>
     </div>
     <!-- FACTURACIÓN -->
@@ -849,7 +858,12 @@ function rWorkers(){
 }
 
 // ── HORARIO ───────────────────────────────────────────────────────
-function chMonth(d){cM+=d;if(cM>11){cM=0;cY++;}if(cM<0){cM=11;cY--;}rHor();}
+function chMonth(d){cM+=d;if(cM>11){cM=0;cY++;}if(cM<0){cM=11;cY--;}
+  // Reset selector obras al cambiar mes para que se repueble
+  const el=document.getElementById('hor-filtro-obra');
+  if(el)el.innerHTML='<option value="">Todas las obras</option>';
+  rHor();
+}
 function hKey(wid,day){return`${cY}-${cM}-${wid}-${day}`;}
 
 function thh(){
@@ -948,8 +962,38 @@ function cellDisp(val,dateStr){
 
 function rHor(){
   document.getElementById('mlab').textContent=MESES[cM]+' '+cY;
+
+  // Actualizar selector de obras en filtro
+  const filtroObraEl=document.getElementById('hor-filtro-obra');
+  const filtroObraVal=filtroObraEl?.value||'';
+  if(filtroObraEl&&filtroObraEl.options.length<=1){
+    filtroObraEl.innerHTML='<option value="">Todas las obras</option>'+
+      sO().map(o=>`<option value="${o.id}">${o.nombre}</option>`).join('');
+    filtroObraEl.value=filtroObraVal;
+  }
+
+  const filtroObra=parseInt(document.getElementById('hor-filtro-obra')?.value)||0;
+  const filtroOrden=document.getElementById('hor-filtro-orden')?.value||'alfa';
+
   const days=new Date(cY,cM+1,0).getDate();
-  const list=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja');
+
+  // Obtener lista filtrada
+  let list=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja');
+  if(filtroObra){
+    list=list.filter(w=>w.obra===filtroObra);
+  }
+
+  // Ordenar
+  if(filtroOrden==='obra'){
+    list.sort((a,b)=>{
+      const oA=obras.find(o=>o.id===a.obra)?.nombre||'';
+      const oB=obras.find(o=>o.id===b.obra)?.nombre||'';
+      if(oA!==oB)return oA.localeCompare(oB,'es');
+      return a.nombre.localeCompare(b.nombre,'es');
+    });
+  }
+  // 'alfa' ya viene ordenado por sW()
+
   let html=`<table class="htbl"><thead><tr><th class="nc">Trabajador</th>`;
   for(let d=1;d<=days;d++){
     const dow=new Date(cY,cM,d).getDay();
@@ -958,10 +1002,23 @@ function rHor(){
     html+=`<th style="${dow===0||dow===6||isFes?'color:var(--g)':''}" title="${isFes?getFestivoName(ds):''}">${d}${isFes?'*':''}</th>`;
   }
   html+=`<th>N</th><th style="color:#3C3489">HE</th></tr></thead><tbody>`;
+
   let gtN=0,gtHE=0;
+  let lastObra='';
+
   list.forEach(w=>{
     let rN=0,rHE=0;
     const ob=obras.find(o=>o.id===w.obra);
+
+    // Si ordenamos por obra, mostrar cabecera de grupo
+    if(filtroOrden==='obra'&&!filtroObra){
+      const oNombre=ob?.nombre||'Sin obra';
+      if(oNombre!==lastObra){
+        lastObra=oNombre;
+        html+=`<tr><td class="nc" colspan="${days+3}" style="background:var(--gl);color:var(--gp);font-size:10px;font-weight:600;padding:4px 8px">🏗 ${oNombre}</td></tr>`;
+      }
+    }
+
     html+=`<tr><td class="nc" title="${w.nombre}">${w.nombre}${w.estado==='ext'?' *':''}</td>`;
     for(let d=1;d<=days;d++){
       const val=hor[hKey(w.id,d)];
@@ -970,13 +1027,13 @@ function rHor(){
       const{cls,txt,sub}=cellDisp(val,ds);
       if(typeof val==='object'){rN+=val.n||0;rHE+=val.he||0;if(val.obra2){rN+=val.obra2.n||0;rHE+=val.obra2.he||0;}}
       else if(typeof val==='number')rN+=val;
-      // Celda con 2 líneas: horas + obra
       const obraLabel=sub?`<div style="font-size:8px;color:var(--t3);line-height:1">${sub}</div>`:'';
       html+=`<td class="${cls}" style="${dow===0||dow===6?'opacity:.6':''}" onclick="eCell(${w.id},${d})">${txt}${obraLabel}</td>`;
     }
     gtN+=rN;gtHE+=rHE;
     html+=`<td style="font-weight:600;color:var(--g);font-family:var(--fm)">${rN||'—'}</td><td style="font-weight:600;color:#3C3489;font-family:var(--fm)">${rHE||'—'}</td></tr>`;
   });
+
   html+=`<tr class="trow"><td class="nc">TOTAL</td>`;
   for(let d=1;d<=days;d++){
     let dt=0;list.forEach(w=>{const v=hor[hKey(w.id,d)];if(typeof v==='number')dt+=v;else if(v&&typeof v==='object')dt+=(v.n||0)+(v.he||0)+((v.obra2?.n)||0)+((v.obra2?.he)||0);});
