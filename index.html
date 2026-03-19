@@ -286,6 +286,11 @@ textarea.fi{min-height:75px;resize:vertical}
         </div>
         <input type="file" id="import-backup" accept=".json" style="display:none" onchange="importBackup(event)"/>
       </div>
+      <div class="card" style="border:1px solid var(--al)">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">🔄 Actualizar datos de trabajadores</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Sobrescribe los datos de Firebase con la información actualizada del código (DNI, teléfonos, cuentas, cursos, etc.). Las horas y horarios no se modifican.</div>
+        <button class="btn btnp btnsm" onclick="resetWorkers()">🔄 Actualizar trabajadores desde código</button>
+      </div>
       <div class="card">
         <div style="font-size:14px;font-weight:600;margin-bottom:8px">📊 Certificación PDF por obra</div>
         <div class="fg" style="margin-bottom:8px"><select class="fi" id="informe-obra"></select></div>
@@ -332,7 +337,6 @@ textarea.fi{min-height:75px;resize:vertical}
 <div class="ov" id="modal-worker">
   <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-wk">Nuevo trabajador</div>
     <div class="fg"><label class="fl">Nombre</label><input class="fi" id="wk-n" placeholder="APELLIDO, NOMBRE"/></div>
-    <div class="fg"><label class="fl">Teléfono</label><input class="fi" type="tel" id="wk-t" placeholder="6XX XXX XXX"/></div>
     <div class="fg"><label class="fl">Categoría</label>
       <select class="fi" id="wk-cat"><option value="of1">Oficial 1ª</option><option value="of2">Oficial 2ª</option><option value="pe">Peón E.</option><option value="enc">Encargado</option><option value="tec">Técnico</option><option value="adm">Administrador</option></select>
     </div>
@@ -340,8 +344,58 @@ textarea.fi{min-height:75px;resize:vertical}
       <select class="fi" id="wk-s"><option value="active">Activo en obra</option><option value="admin">Administrativo</option><option value="ext">Externo</option><option value="baja">Baja</option><option value="noEmpresa">No en empresa</option></select>
     </div>
     <div class="fg"><label class="fl">Obra asignada</label><select class="fi" id="wk-o"></select></div>
+    <!-- Datos personales -->
+    <div style="background:var(--bg);border:1px solid var(--br);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:10px">📋 Datos personales</div>
+      <div class="fgrid fg">
+        <div><label class="fl">DNI / NIE</label><input class="fi" id="wk-dni" placeholder="12345678A"/></div>
+        <div><label class="fl">Vto. DNI</label><input class="fi" id="wk-vtodni" placeholder="dd/mm/aaaa"/></div>
+      </div>
+      <div class="fgrid fg">
+        <div><label class="fl">Fecha nacimiento</label><input class="fi" id="wk-fnac" placeholder="dd/mm/aaaa"/></div>
+        <div><label class="fl">Localidad</label><input class="fi" id="wk-localidad" placeholder="MÁLAGA"/></div>
+      </div>
+      <div class="fgrid fg">
+        <div><label class="fl">Teléfono</label><input class="fi" type="tel" id="wk-t" placeholder="6XX XXX XXX"/></div>
+        <div><label class="fl">Correo electrónico</label><input class="fi" type="email" id="wk-correo" placeholder="nombre@email.com"/></div>
+      </div>
+      <div class="fgrid fg">
+        <div><label class="fl">Fecha alta empresa</label><input class="fi" id="wk-falta" placeholder="dd/mm/aaaa"/></div>
+        <div><label class="fl">Banco</label><input class="fi" id="wk-banco" placeholder="UNICAJA"/></div>
+      </div>
+      <div class="fgrid fg">
+        <div><label class="fl">Localidad domicilio</label><input class="fi" id="wk-localidad" placeholder="Málaga"/></div>
+        <div><label class="fl">Correo electrónico</label><input class="fi" type="email" id="wk-email" placeholder="nombre@email.com"/></div>
+      </div>
+      <div class="fg"><label class="fl">Número de cuenta (IBAN)</label><input class="fi" id="wk-cuenta" placeholder="ES00 0000 0000 0000 0000 0000"/></div>
+    </div>
+    <!-- Reconocimiento médico -->
+    <div style="background:var(--bl);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:#0C447C;margin-bottom:10px">🏥 Reconocimiento médico</div>
+      <div class="fgrid">
+        <div><label class="fl">Fecha RM</label><input class="fi" id="wk-rm" placeholder="dd/mm/aaaa"/></div>
+        <div><label class="fl">Validez RM</label><input class="fi" id="wk-vtrm" placeholder="dd/mm/aaaa"/></div>
+      </div>
+    </div>
+    <!-- Prevención y cursos -->
+    <div style="background:var(--al);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:#633806;margin-bottom:10px">🦺 PRL y Cursos</div>
+      <div class="fg">
+        <label class="fl">PRL 20H Albañilería</label>
+        <select class="fi" id="wk-prl20">
+          <option value="OK">✅ OK</option>
+          <option value="NO OK">⚠️ NO OK</option>
+          <option value="NO">❌ NO</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Otros cursos</label>
+        <input class="fi" id="wk-cursos" placeholder="Ej: 20H APAR. ELEV. - 8H DUMPER"/>
+      </div>
+    </div>
+    <!-- Coste -->
     <div style="background:var(--gl);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--gp);margin-bottom:10px">💰 Lo que le pagas al trabajador</div>
+      <div style="font-size:12px;font-weight:600;color:var(--gp);margin-bottom:10px">💰 Lo que le pagas</div>
       <div class="fgrid">
         <div><label class="fl">€/h normal</label><input class="fi" type="number" step="0.5" id="wk-cn" placeholder="14"/></div>
         <div><label class="fl">€/h extra</label><input class="fi" type="number" step="0.5" id="wk-ce" placeholder="17"/></div>
@@ -528,39 +582,40 @@ const OD=[
   {id:14,nombre:'LOS NUÑEZ',empresa:'PARTICULAR',dir:'Pendiente',estado:'active',tof:0,tpe:0,the:25},
 ];
 const WD=[
-  {id:1,nombre:'ARRABAL MORENO, ANTONIO',obra:0,estado:'admin',tel:'',cat:'tec',cn:0,ce:0},
-  {id:2,nombre:'CUEVAS MORILLAS, DAVID',obra:12,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:3,nombre:'DE LA RUBIA MARTIN, ISMAEL',obra:13,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:4,nombre:'DIAZ GARCIA, CARLOS',obra:13,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:5,nombre:'DIAZ RODRIGUEZ, MIGUEL ANGEL',obra:12,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:6,nombre:'DIAZ URBANO, JESUS',obra:13,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:7,nombre:'DOMINGUEZ RUIZ, JOSE CARLOS',obra:0,estado:'admin',tel:'',cat:'adm',cn:0,ce:0},
-  {id:8,nombre:'EL MASOUDI SFAIHI, HANZA',obra:7,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:9,nombre:'EL MASOUDI, HASSAN',obra:7,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:10,nombre:'EL OUAD, SELLAM',obra:0,estado:'baja',tel:'',cat:'of1',cn:0,ce:0},
-  {id:11,nombre:'FEDASH, VOLODYMYR',obra:2,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:12,nombre:'FERNANDEZ FERNANDEZ, ADRIAN',obra:0,estado:'baja',tel:'',cat:'pe',cn:0,ce:0},
-  {id:13,nombre:'FOFANA, ISSA',obra:12,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:14,nombre:'FORTES ALMELLONES, PEDRO',obra:9,estado:'active',tel:'',cat:'of2',cn:0,ce:0},
-  {id:15,nombre:'GARRIDO RUIZ, JORGE',obra:6,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:16,nombre:'GOMEZ ADROUN, MOHAMED',obra:7,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:17,nombre:'HAMMADI, YASSINE',obra:3,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:18,nombre:'IZQUIERDO EXPOSITO, FERNANDO',obra:8,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:19,nombre:'KHIMCHAK, VASYL',obra:14,estado:'ext',tel:'',cat:'of1',cn:0,ce:0},
-  {id:20,nombre:'LEAL MORALES, LUIS MANUEL',obra:9,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:21,nombre:'MARTIN BENAVIDES, DANIEL',obra:2,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:22,nombre:'MARTIN CASTILLO, ALBERTO',obra:13,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:23,nombre:'MORENO DOMINGUEZ, JUAN',obra:0,estado:'admin',tel:'',cat:'enc',cn:0,ce:0},
-  {id:24,nombre:'MORENO DOMINGUEZ, SALVADOR',obra:12,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:25,nombre:'MORENO TORREBLANCA, IVAN',obra:0,estado:'admin',tel:'',cat:'adm',cn:0,ce:0},
-  {id:26,nombre:'PEREZ BALLESTEROS, MANUEL',obra:8,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:27,nombre:'RAMIREZ DEL PINO, FRANCISCO RUBEN',obra:1,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:28,nombre:'SANGARE, MOHAMED',obra:5,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:29,nombre:'SOTO HEREDIA, MANUEL',obra:12,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:30,nombre:'URBANO DE LA CRUZ, YERAY',obra:9,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:31,nombre:'VAZQUEZ HERNANDEZ, JUAN JOSE',obra:3,estado:'active',tel:'',cat:'pe',cn:0,ce:0},
-  {id:32,nombre:'VEGA CANTOS, CARLOS',obra:9,estado:'active',tel:'',cat:'of1',cn:0,ce:0},
-  {id:33,nombre:'VIRUEL ALARCON, PEDRO',obra:4,estado:'active',tel:'',cat:'of2',cn:0,ce:0},
+  {id:1,nombre:'ARRABAL MORENO, ANTONIO',obra:0,estado:'admin',cat:'tec',cn:0,ce:0,dni:'25681690M',fnac:'15/02/1973',vtodni:'15/03/2033',tel:'606728218',cuenta:'ES7330580990272753262465',banco:'CAJAMAR',falta:'01/01/2026',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'antonioarrabalmoreno@gmail.com',prl20:'NO',cursos:'',imp:0},
+  {id:2,nombre:'CUEVAS MORILLAS, DAVID',obra:12,estado:'active',cat:'of1',cn:0,ce:0,dni:'45491478P',fnac:'31/08/1976',vtodni:'12/04/2026',tel:'644889738',cuenta:'ES1621032076030010048758',banco:'UNICAJA',falta:'02/02/2026',rm:'08/04/2025',vtrm:'08/04/2026',localidad:'ANTEQUERA',correo:'',prl20:'OK',cursos:'8H PRL - 6H ESTRUC. TUBUL.',imp:0},
+  {id:3,nombre:'DE LA RUBIA MARTIN, ISMAEL',obra:13,estado:'active',cat:'of1',cn:11,ce:0,dni:'76434727T',fnac:'16/01/1987',vtodni:'21/09/2027',tel:'662472598',cuenta:'ES9401824106700201753461',banco:'',falta:'24/02/2026',rm:'05/03/2026',vtrm:'05/03/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'20H APAR. ELEV. - 8H DUMPER',imp:11},
+  {id:4,nombre:'DIAZ GARCIA, CARLOS',obra:13,estado:'active',cat:'of1',cn:12,ce:0,dni:'74838560X',fnac:'24/05/1981',vtodni:'29/09/2033',tel:'633207685',cuenta:'ES7321030108980010028375',banco:'UNICAJA',falta:'27/08/2025',rm:'04/09/2025',vtrm:'04/09/2026',localidad:'ALMOGIA',correo:'',prl20:'OK',cursos:'',imp:12},
+  {id:5,nombre:'DIAZ RODRIGUEZ, MIGUEL ANGEL',obra:12,estado:'active',cat:'of1',cn:10.5,ce:0,dni:'74848273V',fnac:'28/09/1982',vtodni:'17/07/2033',tel:'631087840',cuenta:'ES4921004083562100740439',banco:'',falta:'28/01/2026',rm:'16/12/2025',vtrm:'16/12/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
+  {id:6,nombre:'DIAZ URBANO, JESUS',obra:13,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'77227135N',fnac:'24/10/1998',vtodni:'04/01/2030',tel:'',cuenta:'ES3620801134203040168220',banco:'ABANCA',falta:'28/08/2025',rm:'04/09/2025',vtrm:'04/09/2026',localidad:'ALMOGIA',correo:'',prl20:'OK',cursos:'',imp:9.5},
+  {id:7,nombre:'DOMINGUEZ RUIZ, JOSE CARLOS',obra:0,estado:'admin',cat:'adm',cn:0,ce:0,dni:'74883119H',fnac:'29/10/1984',vtodni:'09/05/2028',tel:'667822795',cuenta:'ES8130580768182810729581',banco:'CAJAMAR',falta:'01/11/2024',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'',imp:0},
+  {id:8,nombre:'EL MASOUDI SFAIHI, HANZA',obra:7,estado:'active',cat:'pe',cn:9,ce:0,dni:'13453645W',fnac:'06/10/2006',vtodni:'04/07/2028',tel:'641557448',cuenta:'ES8601827363140201711548',banco:'',falta:'26/02/2026',rm:'12/03/2026',vtrm:'12/03/2027',localidad:'VELEZ-MALAGA',correo:'',prl20:'OK',cursos:'6H MOV. TIERRAS',imp:9},
+  {id:9,nombre:'EL MASOUDI, HASSAN',obra:7,estado:'active',cat:'of1',cn:11,ce:0,dni:'X1235949K',fnac:'01/01/1964',vtodni:'16/05/2030',tel:'602189665',cuenta:'ES3121002573280110601608',banco:'LA CAIXA',falta:'12/01/2026',rm:'17/06/2025',vtrm:'17/06/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:11},
+  {id:10,nombre:'EL OUAD, SELLAM',obra:0,estado:'baja',cat:'of1',cn:11,ce:0,dni:'X3401527B',fnac:'01/01/1962',vtodni:'04/02/2036',tel:'631204729',cuenta:'ES8830230063046332072716',banco:'C.R. GRANADA',falta:'24/09/2025',rm:'17/06/2025',vtrm:'17/06/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'6H ENCOF.',imp:11},
+  {id:11,nombre:'FEDASH, VOLODYMYR',obra:2,estado:'active',cat:'of1',cn:0,ce:0,dni:'X9764677G',fnac:'19/01/1972',vtodni:'27/07/2028',tel:'678005598',cuenta:'ES6901824106780201634694',banco:'',falta:'02/03/2026',rm:'12/03/2026',vtrm:'12/03/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:0},
+  {id:12,nombre:'FERNANDEZ FERNANDEZ, ADRIAN',obra:0,estado:'baja',cat:'pe',cn:9,ce:0,dni:'76435156S',fnac:'24/06/1987',vtodni:'18/06/2028',tel:'617899319',cuenta:'ES2701824106760201742733',banco:'',falta:'09/10/2025',rm:'22/10/2025',vtrm:'22/10/2026',localidad:'MALAGA',correo:'',prl20:'NO OK',cursos:'',imp:9},
+  {id:13,nombre:'FOFANA, ISSA',obra:12,estado:'active',cat:'pe',cn:8.5,ce:0,dni:'Z2084739R',fnac:'01/01/2002',vtodni:'26/12/2029',tel:'662434804',cuenta:'ES4801825332140000146417',banco:'',falta:'26/09/2025',rm:'09/10/2025',vtrm:'09/10/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:8.5},
+  {id:14,nombre:'FORTES ALMELLONES, PEDRO',obra:9,estado:'active',cat:'of2',cn:11,ce:0,dni:'74820706G',fnac:'20/05/1975',vtodni:'07/04/2027',tel:'685094103',cuenta:'ES0801825332180206361957',banco:'BBVA',falta:'06/10/2025',rm:'03/02/2026',vtrm:'03/02/2027',localidad:'MALAGA',correo:'pedro75fortes@gmail.com',prl20:'OK',cursos:'',imp:11},
+  {id:15,nombre:'GARRIDO RUIZ, JORGE',obra:6,estado:'active',cat:'of1',cn:0,ce:0,dni:'74837925L',fnac:'06/11/1980',vtodni:'01/12/2031',tel:'609939376',cuenta:'',banco:'',falta:'11/03/2026',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'OK',cursos:'',imp:0},
+  {id:16,nombre:'GOMEZ ADROUN, MOHAMED',obra:7,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'76437818D',fnac:'23/09/1986',vtodni:'29/10/2031',tel:'632067058',cuenta:'ES2521030236510010071508',banco:'UNICAJA',falta:'12/01/2026',rm:'18/07/2025',vtrm:'18/07/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:9.5},
+  {id:17,nombre:'HAMMADI, YASSINE',obra:3,estado:'active',cat:'of1',cn:11,ce:0,dni:'Y8535535L',fnac:'27/12/1988',vtodni:'06/05/2030',tel:'632417321',cuenta:'ES7330230010006975645612',banco:'C.R. GRANADA',falta:'24/09/2025',rm:'28/08/2025',vtrm:'28/08/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:11},
+  {id:18,nombre:'IZQUIERDO EXPOSITO, FERNANDO',obra:8,estado:'active',cat:'pe',cn:8.5,ce:0,dni:'33369113T',fnac:'03/09/1969',vtodni:'27/03/2033',tel:'697626756',cuenta:'ES4330580762252720005249',banco:'CAJAMAR',falta:'18/11/2024',rm:'18/11/2025',vtrm:'18/11/2026',localidad:'RINCON DE LA VICTORIA',correo:'fizquierdo79@gmail.com',prl20:'OK',cursos:'24H ELEV. TELESC.',imp:8.5},
+  {id:19,nombre:'KHIMCHAK, VASYL',obra:14,estado:'ext',cat:'of1',cn:11,ce:0,dni:'X5084152W',fnac:'27/12/1963',vtodni:'19/05/2029',tel:'673570059',cuenta:'ES7921006453170200039066',banco:'LA CAIXA',falta:'10/01/2026',rm:'14/01/2025',vtrm:'14/01/2026',localidad:'MALAGA',correo:'khimchak1963@gmail.com',prl20:'OK',cursos:'',imp:11},
+  {id:20,nombre:'LEAL MORALES, LUIS MANUEL',obra:9,estado:'active',cat:'pe',cn:9,ce:0,dni:'76437628A',fnac:'06/11/1991',vtodni:'14/02/1933',tel:'610158729',cuenta:'ES8015830001189000805953',banco:'',falta:'19/01/2026',rm:'17/02/2026',vtrm:'17/02/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'20H MOV. TIERRAS',imp:9},
+  {id:21,nombre:'MARTIN BENAVIDES, DANIEL',obra:2,estado:'active',cat:'pe',cn:0,ce:0,dni:'74844717A',fnac:'07/01/1978',vtodni:'13/04/2034',tel:'642375460',cuenta:'ES4714650270391747578891',banco:'',falta:'02/03/2026',rm:'12/03/2026',vtrm:'12/03/2027',localidad:'FUENGIROLA',correo:'',prl20:'OK',cursos:'',imp:0},
+  {id:22,nombre:'MARTIN CASTILLO, ALBERTO',obra:13,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'74833441C',fnac:'19/07/1984',vtodni:'05/11/2028',tel:'625647917',cuenta:'ES3721030246260040003016',banco:'',falta:'24/02/2026',rm:'05/03/2026',vtrm:'05/03/2027',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:9.5},
+  {id:23,nombre:'MORENO DOMINGUEZ, JUAN',obra:0,estado:'admin',cat:'enc',cn:0,ce:0,dni:'30822248V',fnac:'24/01/1975',vtodni:'06/05/2026',tel:'655606879',cuenta:'ES1921004989542100000481',banco:'LA CAIXA',falta:'23/10/2025',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'60H PRL - 10H DIRECTIVO',imp:0},
+  {id:24,nombre:'MORENO DOMINGUEZ, SALVADOR',obra:12,estado:'active',cat:'of1',cn:10.5,ce:0,dni:'74831876L',fnac:'29/04/1978',vtodni:'27/07/2031',tel:'614486651',cuenta:'ES9814650100981754120412',banco:'',falta:'26/01/2026',rm:'02/12/2025',vtrm:'02/12/2026',localidad:'PUERTO DE LA TORRE',correo:'',prl20:'OK',cursos:'',imp:10.5},
+  {id:25,nombre:'MORENO TORREBLANCA, IVAN',obra:0,estado:'admin',cat:'adm',cn:0,ce:0,dni:'77190471X',fnac:'17/07/2003',vtodni:'15/05/2029',tel:'609196964',cuenta:'ES3021002904070258857977',banco:'LA CAIXA',falta:'24/11/2026',rm:'',vtrm:'',localidad:'ALMOGIA',correo:'',prl20:'NO',cursos:'',imp:0},
+  {id:26,nombre:'PEREZ BALLESTEROS, MANUEL',obra:8,estado:'active',cat:'of1',cn:12,ce:0,dni:'52582055F',fnac:'22/04/1968',vtodni:'31/01/2033',tel:'653703515',cuenta:'ES2021002573200110678634',banco:'LA CAIXA',falta:'14/07/2025',rm:'10/07/2025',vtrm:'10/07/2026',localidad:'MALAGA',correo:'',prl20:'NO OK',cursos:'',imp:12},
+  {id:27,nombre:'RAMIREZ DEL PINO, FRANCISCO RUBEN',obra:1,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'26812854Y',fnac:'09/12/1992',vtodni:'30/03/2033',tel:'691550360',cuenta:'ES8600493375042714036160',banco:'',falta:'25/11/2025',rm:'02/12/2025',vtrm:'02/12/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'6H MOV. TIERRAS - 6H APAR. ELEV.',imp:9.5},
+  {id:28,nombre:'SANGARE, MOHAMED',obra:5,estado:'active',cat:'pe',cn:9,ce:0,dni:'Z2085177W',fnac:'08/11/1991',vtodni:'25/12/2029',tel:'672063516',cuenta:'ES0601825332130208805765',banco:'BBVA',falta:'12/06/2025',rm:'24/06/2025',vtrm:'24/06/2026',localidad:'MALAGA',correo:'mohamed.sang686@gmail.com',prl20:'OK',cursos:'',imp:9},
+  {id:29,nombre:'SOTO HEREDIA, MANUEL',obra:12,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'74865537P',fnac:'02/11/1980',vtodni:'25/08/2032',tel:'744733271',cuenta:'ES9821002904030288431764',banco:'LA CAIXA',falta:'15/07/2025',rm:'18/07/2025',vtrm:'18/07/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:9.5},
+  {id:30,nombre:'URBANO DE LA CRUZ, YERAY',obra:9,estado:'active',cat:'pe',cn:9,ce:0,dni:'79380628S',fnac:'29/07/2006',vtodni:'07/03/2031',tel:'633918492',cuenta:'ES3001824106780201724539',banco:'',falta:'20/10/2025',rm:'30/10/2025',vtrm:'30/10/2026',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:9},
+  {id:31,nombre:'VAZQUEZ HERNANDEZ, JUAN JOSE',obra:3,estado:'active',cat:'pe',cn:9.5,ce:0,dni:'25687523L',fnac:'16/08/1972',vtodni:'02/06/2026',tel:'643481423',cuenta:'ES6231870424135886284420',banco:'',falta:'16/09/2025',rm:'23/09/2025',vtrm:'23/09/2026',localidad:'MALAGA',correo:'',prl20:'NO OK',cursos:'6H MOV. TIERRAS - 20H CARRET. Y TELESCOPICA',imp:9.5},
+  {id:32,nombre:'VEGA CANTOS, CARLOS',obra:9,estado:'active',cat:'of1',cn:10.5,ce:0,dni:'53686486R',fnac:'19/07/1974',vtodni:'22/03/2026',tel:'655143241',cuenta:'ES4721030240520010074064',banco:'UNICAJA',falta:'20/01/2025',rm:'03/02/2026',vtrm:'03/02/2027',localidad:'MALAGA',correo:'carlosvega1974@gmail.com',prl20:'OK',cursos:'8H CARR. ELE. - 8H DUMPER',imp:10.5},
+  {id:33,nombre:'VIRUEL ALARCON, PEDRO',obra:4,estado:'active',cat:'of2',cn:9.5,ce:0,dni:'26831694D',fnac:'13/12/1994',vtodni:'18/07/2027',tel:'625784107',cuenta:'ES2721033067150010059726',banco:'UNICAJA',falta:'09/01/2025',rm:'03/02/2026',vtrm:'03/02/2027',localidad:'CAMPANILLAS',correo:'pedroviruelalarcon@gmail.com',prl20:'OK',cursos:'20H APAR. ELEV. - 6H MOV. TIERRAS',imp:9.5},
+  {id:34,nombre:'TESGHITI, MOHAMED',obra:0,estado:'active',cat:'of2',cn:10.5,ce:0,dni:'Y8500850H',fnac:'12/04/1993',vtodni:'18/12/2028',tel:'611705039',cuenta:'ES6700494988512716157971',banco:'',falta:'18/03/2026',rm:'',vtrm:'',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
 ];
 
 let obras=[],workers=[],incs=[],hor={},festivos=[];
@@ -624,6 +679,10 @@ function sO(){return[...obras].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')
 function sW(){return[...workers].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));}
 function ini(n){const p=n.replace(/,/g,' ').split(/\s+/).filter(Boolean);return((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase();}
 function today(){return new Date().toISOString().split('T')[0];}
+// Convierte fecha dd/mm/aaaa a Date para comparar
+function parsefecha(f){if(!f)return null;const[d,m,y]=f.split('/');return new Date(y,m-1,d);}
+function vencido(f){const d=parsefecha(f);return d&&d<new Date();}
+function proximo(f){const d=parsefecha(f);if(!d)return false;const en60=new Date();en60.setDate(en60.getDate()+60);return d>=new Date()&&d<=en60;}
 function avC(id){return AVC[id%5];}
 function fmt(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';}
 function fmtH(n){return Number.isInteger(n)?n+'h':n+'h';}
@@ -790,7 +849,21 @@ function rDash(){
   // Alertas NP
   const m=new Date().getMonth(),y=new Date().getFullYear();
   const alerts=workers.filter(w=>(w.estado==='active'||w.estado==='ext')&&getNP(w.id,m,y)>=2);
-  document.getElementById('alerts-container').innerHTML=alerts.map(w=>`<div class="alert-banner"><span style="font-size:18px">⚠️</span><span class="alert-banner-text"><b>${w.nombre.split(',')[0]}</b> — ${getNP(w.id,m,y)} NP este mes</span></div>`).join('');
+  // Alertas documentos caducados/próximos
+  const docsAlerts=workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').filter(w=>
+    vencido(w.vtodni)||proximo(w.vtodni)||vencido(w.vtrm)||proximo(w.vtrm)
+  );
+  document.getElementById('alerts-container').innerHTML=[
+    ...alerts.map(w=>`<div class="alert-banner"><span style="font-size:18px">⚠️</span><span class="alert-banner-text"><b>${w.nombre.split(',')[0]}</b> — ${getNP(w.id,m,y)} NP este mes</span></div>`),
+    ...docsAlerts.map(w=>{
+      const msgs=[];
+      if(vencido(w.vtodni))msgs.push(`DNI caducado (${w.vtodni})`);
+      else if(proximo(w.vtodni))msgs.push(`DNI próximo a vencer (${w.vtodni})`);
+      if(vencido(w.vtrm))msgs.push(`RM caducado (${w.vtrm})`);
+      else if(proximo(w.vtrm))msgs.push(`RM próximo a vencer (${w.vtrm})`);
+      return`<div class="alert-banner" style="background:var(--al)"><span style="font-size:18px">📄</span><span class="alert-banner-text" style="color:#633806"><b>${w.nombre.split(',')[0]}</b> — ${msgs.join(' · ')}</span></div>`;
+    })
+  ].join('');
 }
 function getNP(wid,month,year){
   const days=new Date(year,month+1,0).getDate();
@@ -1520,8 +1593,32 @@ function delFestivo(idx){festivos.splice(idx,1);svFB('festivos',festivos);rAjust
 window.delFestivo=delFestivo;
 
 // ── BACKUP ────────────────────────────────────────────────────────
+function resetWorkers(){
+  if(!confirm('¿Actualizar datos de todos los trabajadores?\n\nSe actualizarán: DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL y cursos.\n\nLas obras asignadas, horas e historial NO se modifican.'))return;
+  // Para cada trabajador en WD, fusionar con el que hay en Firebase
+  // conservando: obra, estado, cn, ce, obraHistory, obraDesde
+  workers=WD.map(wd=>{
+    const existing=workers.find(w=>w.id===wd.id);
+    if(existing){
+      return{
+        ...wd,
+        // Preservar campos operativos de Firebase
+        obra:existing.obra??wd.obra,
+        estado:existing.estado??wd.estado,
+        cn:existing.cn??wd.cn,
+        ce:existing.ce??wd.ce,
+        obraHistory:existing.obraHistory||[],
+        obraDesde:existing.obraDesde||'',
+      };
+    }
+    return wd;
+  });
+  svFB('workers',workers);
+  rWorkers();
+  toast('✓ Trabajadores actualizados');
+}
+
 function exportBackup(){
-  const data={obras,workers,incs,hor,festivos,exportedAt:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=`obras360_backup_${today()}.json`;a.click();
@@ -1570,9 +1667,26 @@ function delObra(id){
 function openEW(id){
   editWkId=id||null;const w=id?workers.find(x=>x.id===id):{};
   document.getElementById('ttl-wk').textContent=id?'Editar trabajador':'Nuevo trabajador';
-  document.getElementById('wk-n').value=w?.nombre||'';document.getElementById('wk-t').value=w?.tel||'';
-  document.getElementById('wk-cat').value=w?.cat||'of1';document.getElementById('wk-s').value=w?.estado||'active';
-  document.getElementById('wk-cn').value=w?.cn||'';document.getElementById('wk-ce').value=w?.ce||'';
+  document.getElementById('wk-n').value=w?.nombre||'';
+  document.getElementById('wk-t').value=w?.tel||'';
+  document.getElementById('wk-cat').value=w?.cat||'of1';
+  document.getElementById('wk-s').value=w?.estado||'active';
+  document.getElementById('wk-cn').value=w?.cn||'';
+  document.getElementById('wk-ce').value=w?.ce||'';
+  document.getElementById('wk-dni').value=w?.dni||'';
+  document.getElementById('wk-vtodni').value=w?.vtodni||'';
+  document.getElementById('wk-fnac').value=w?.fnac||'';
+  document.getElementById('wk-falta').value=w?.falta||'';
+  document.getElementById('wk-banco').value=w?.banco||'';
+  document.getElementById('wk-localidad').value=w?.localidad||'';
+  document.getElementById('wk-email').value=w?.email||'';
+  document.getElementById('wk-cuenta').value=w?.cuenta||'';
+  document.getElementById('wk-rm').value=w?.rm||'';
+  document.getElementById('wk-vtrm').value=w?.vtrm||'';
+  document.getElementById('wk-localidad').value=w?.localidad||'';
+  document.getElementById('wk-correo').value=w?.correo||'';
+  document.getElementById('wk-prl20').value=w?.prl20||'OK';
+  document.getElementById('wk-cursos').value=w?.cursos||'';
   document.getElementById('wk-o').innerHTML='<option value="0">Sin asignar</option>'+sO().map(o=>`<option value="${o.id}"${w?.obra===o.id?' selected':''}>${o.nombre}</option>`).join('');
   document.getElementById('modal-worker').classList.add('open');
 }
@@ -1581,7 +1695,28 @@ function saveWorker(){
   const newObraId=parseInt(document.getElementById('wk-o').value)||0;
   const w=editWkId?workers.find(x=>x.id===editWkId):null;
   const obraAnteriorId=w?.obra||0;
-  const data={nombre:n,tel:document.getElementById('wk-t').value.trim(),cat:document.getElementById('wk-cat').value,estado:document.getElementById('wk-s').value,obra:newObraId,cn:parseFloat(document.getElementById('wk-cn').value)||0,ce:parseFloat(document.getElementById('wk-ce').value)||0};
+  const data={
+    nombre:n,tel:document.getElementById('wk-t').value.trim(),
+    cat:document.getElementById('wk-cat').value,estado:document.getElementById('wk-s').value,
+    obra:newObraId,
+    cn:parseFloat(document.getElementById('wk-cn').value)||0,
+    ce:parseFloat(document.getElementById('wk-ce').value)||0,
+    dni:document.getElementById('wk-dni').value.trim().toUpperCase(),
+    vtodni:document.getElementById('wk-vtodni').value.trim(),
+    fnac:document.getElementById('wk-fnac').value.trim(),
+    falta:document.getElementById('wk-falta').value.trim(),
+    banco:document.getElementById('wk-banco').value.trim().toUpperCase(),
+    localidad:document.getElementById('wk-localidad').value.trim(),
+    email:document.getElementById('wk-email').value.trim().toLowerCase(),
+    cuenta:document.getElementById('wk-cuenta').value.trim().toUpperCase(),
+    rm:document.getElementById('wk-rm').value.trim(),
+    vtrm:document.getElementById('wk-vtrm').value.trim(),
+    localidad:document.getElementById('wk-localidad').value.trim().toUpperCase(),
+    correo:document.getElementById('wk-correo').value.trim().toLowerCase(),
+    prl20:document.getElementById('wk-prl20').value,
+    cursos:document.getElementById('wk-cursos').value.trim().toUpperCase(),
+    imp:w?.imp||0,
+  };
   if(editWkId){
     if(w)Object.assign(w,data);
     // Si cambió de obra, mostrar info
@@ -1729,11 +1864,35 @@ function openDW(id){
     <div class="dsec"><div class="dsectl">Información</div>
       <div class="inrow"><span class="ik">Obra asignada</span><span class="iv">${ob?ob.nombre:'Sin asignar'}</span></div>
       <div class="inrow"><span class="ik">Categoría</span><span class="iv">${CATL[w.cat]||'—'}</span></div>
+      <div class="inrow"><span class="ik">Situación</span><span class="iv">${WEST[w.estado||'active']}</span></div>
+      ${w.tel?`<div class="inrow"><span class="ik">Teléfono</span><span class="iv"><a href="tel:${w.tel}" style="color:var(--g)">${w.tel}</a></span></div>`:''}
+      ${w.correo?`<div class="inrow"><span class="ik">Correo</span><span class="iv"><a href="mailto:${w.correo}" style="color:var(--g);font-size:12px">${w.correo}</a></span></div>`:''}
+      ${w.localidad?`<div class="inrow"><span class="ik">Localidad</span><span class="iv">${w.localidad}</span></div>`:''}
       ${w.cn>0?`<div class="inrow"><span class="ik">€/h normal</span><span class="iv">${w.cn}€</span></div>`:''}
       ${w.ce>0?`<div class="inrow"><span class="ik">€/h extra</span><span class="iv">${w.ce}€</span></div>`:''}
-      ${w.tel?`<div class="inrow"><span class="ik">Teléfono</span><span class="iv">${w.tel}</span></div>`:''}
     </div>
-    ${obrasHTML?`<div class="dsec"><div class="dsectl">Obras este mes</div>${obrasHTML}</div>`:''}
+    <div class="dsec"><div class="dsectl">📋 Datos personales</div>
+      ${w.dni?`<div class="inrow"><span class="ik">DNI / NIE</span><span class="iv" style="font-family:var(--fm)">${w.dni}</span></div>`:''}
+      ${w.fnac?`<div class="inrow"><span class="ik">Fecha nacimiento</span><span class="iv">${w.fnac}</span></div>`:''}
+      ${w.vtodni?`<div class="inrow"><span class="ik">Vto. DNI</span><span class="iv" style="color:${vencido(w.vtodni)?'#E24B4A':proximo(w.vtodni)?'#EF9F27':'var(--t)'}">${w.vtodni}${vencido(w.vtodni)?' ⚠️ CADUCADO':proximo(w.vtodni)?' ⚠️ Próximo':''}</span></div>`:''}
+      ${w.falta?`<div class="inrow"><span class="ik">Alta empresa</span><span class="iv">${w.falta}</span></div>`:''}
+      ${w.banco?`<div class="inrow"><span class="ik">Banco</span><span class="iv">${w.banco}</span></div>`:''}
+      ${w.cuenta?`<div class="inrow"><span class="ik">IBAN</span><span class="iv" style="font-family:var(--fm);font-size:12px">${w.cuenta}</span></div>`:''}
+    </div>
+    <div class="dsec"><div class="dsectl">🏥 Reconocimiento médico</div>
+      ${w.rm?`<div class="inrow"><span class="ik">Fecha RM</span><span class="iv">${w.rm}</span></div>`:'<div class="inrow"><span class="ik">Fecha RM</span><span class="iv" style="color:var(--t3)">Sin registro</span></div>'}
+      ${w.vtrm?`<div class="inrow"><span class="ik">Validez RM</span><span class="iv" style="color:${vencido(w.vtrm)?'#E24B4A':proximo(w.vtrm)?'#EF9F27':'var(--t)'}">${w.vtrm}${vencido(w.vtrm)?' ⚠️ CADUCADO':proximo(w.vtrm)?' ⚠️ Próximo':''}</span></div>`:''}
+    </div>
+    <div class="dsec"><div class="dsectl">🦺 PRL y Cursos</div>
+      <div class="inrow">
+        <span class="ik">PRL 20H Albañilería</span>
+        <span class="iv" style="color:${w.prl20==='OK'?'var(--g)':w.prl20==='NO OK'?'#EF9F27':'#E24B4A'};font-weight:600">
+          ${w.prl20==='OK'?'✅ OK':w.prl20==='NO OK'?'⚠️ NO OK':'❌ NO'}
+        </span>
+      </div>
+      ${w.cursos?`<div class="inrow"><span class="ik">Otros cursos</span><span class="iv" style="font-size:12px">${w.cursos}</span></div>`:''}
+      ${w.imp>0?`<div class="inrow"><span class="ik">€/h (imputación)</span><span class="iv" style="color:var(--g);font-weight:600">${w.imp}€</span></div>`:''}
+    </div>
     ${histHTML?`<div class="dsec"><div class="dsectl">Historial 6 meses</div>${histHTML}</div>`:''}
   `;
   document.getElementById('dov-worker').classList.add('open');
