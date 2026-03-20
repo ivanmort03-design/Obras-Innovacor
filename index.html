@@ -2268,7 +2268,16 @@ function CM(){document.querySelectorAll('.ov').forEach(m=>m.classList.remove('op
 function CD(id){document.getElementById(id)?.classList.remove('open');}
 document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)CM();}));
 document.getElementById('hdate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const newSW=reg.installing;
+      newSW.addEventListener('statechange',()=>{
+        if(newSW.state==='activated')window.location.reload();
+      });
+    });
+  }).catch(()=>{});
+}
 initData();
 </script>
 </body>
