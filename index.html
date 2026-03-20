@@ -185,6 +185,7 @@ textarea.fi{min-height:75px;resize:vertical}
   <div id="main">
     <!-- DASHBOARD -->
     <div id="sec-dashboard" class="sec active">
+      <div id="dash-recordatorios"></div>
       <div class="sgrid">
         <div class="sc acc" onclick="navTo('obras',qni(1))"><div class="sl">Obras activas</div><div class="sv" id="s-ob">—</div><div class="ss" id="s-ob2">&nbsp;</div></div>
         <div class="sc" onclick="navTo('personal',qni(2))"><div class="sl">Trabajadores</div><div class="sv" id="s-wk">—</div><div class="ss">en activo</div></div>
@@ -266,6 +267,11 @@ textarea.fi{min-height:75px;resize:vertical}
       </div>
       <div id="sueldos-content"></div>
     </div>
+    <!-- RECORDATORIOS -->
+    <div id="sec-recordatorios" class="sec">
+      <button class="btn btnp" style="width:100%;margin-bottom:14px" onclick="openNuevoRec()">+ Nuevo recordatorio</button>
+      <div id="rec-list"></div>
+    </div>
     <!-- NOTIFICACIONES -->
     <div id="sec-notificaciones" class="sec">
       <div class="mnav">
@@ -331,6 +337,7 @@ textarea.fi{min-height:75px;resize:vertical}
     <button class="ni" onclick="navTo('facturacion',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Facturar</button>
     <button class="ni" onclick="navTo('comparativa',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Gráficas</button>
     <button class="ni" onclick="navTo('sueldos',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Sueldos</button>
+    <button class="ni" onclick="navTo('recordatorios',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/></svg>Agenda</button>
     <button class="ni" onclick="navTo('notificaciones',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Avisos</button>
     <button class="ni" onclick="navTo('incidencias',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Alertas</button>
     <button class="ni" onclick="navTo('ajustes',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ajustes</button>
@@ -428,6 +435,22 @@ textarea.fi{min-height:75px;resize:vertical}
   </div>
 </div>
 
+<!-- MODAL RECORDATORIO -->
+<div class="ov" id="modal-rec">
+  <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-rec">Nuevo recordatorio</div>
+    <div class="fg"><label class="fl">Título</label><input class="fi" id="rec-titulo" placeholder="Ej: Renovar contrato de Pedro"/></div>
+    <div class="fg"><label class="fl">Descripción <span style="font-weight:400;color:var(--t3)">(opcional)</span></label><textarea class="fi" id="rec-desc" placeholder="Detalles del recordatorio..." style="min-height:70px"></textarea></div>
+    <div class="fgrid fg">
+      <div><label class="fl">Fecha</label><input class="fi" type="date" id="rec-fecha"/></div>
+      <div><label class="fl">Hora <span style="font-weight:400;color:var(--t3)">(opcional)</span></label><input class="fi" type="time" id="rec-hora" value="09:00"/></div>
+    </div>
+    <div class="sact">
+      <button class="btn btng" onclick="CM()">Cancelar</button>
+      <button class="btn btnd btnsm" id="btn-del-rec" onclick="delRec()" style="display:none">🗑 Borrar</button>
+      <button class="btn btnp" onclick="saveRec()">Guardar</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL HORARIO -->
 <div class="ov" id="modal-hor">
   <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-hor">Registrar jornada</div>
@@ -641,7 +664,7 @@ const WD=[
   {id:34,nombre:'TESGHITI, MOHAMED',obra:0,estado:'active',cat:'of2',cn:10.5,ce:0,dni:'Y8500850H',fnac:'12/04/1993',vtodni:'18/12/2028',tel:'611705039',cuenta:'ES6700494988512716157971',banco:'',falta:'18/03/2026',rm:'',vtrm:'',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
 ];
 
-let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={};
+let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={},recordatorios=[];
 let cM=new Date().getMonth(),cY=new Date().getFullYear();
 let fM=cM,fY=cY,compM=cM,compY=cY,sueldosM=cM,sueldosY=cY,notifM=cM,notifY=cY;
 let editObraId=null,editWkId=null,editCell={},copySourceDay=null;
@@ -680,6 +703,7 @@ async function initData(){
     fbOnSnapshot('horario',s=>{if(s.exists){hor=s.data().data||{};if(isActive('horario'))rHor();rDash();}});
     fbOnSnapshot('festivos',s=>{if(s.exists)festivos=s.data().list||[];});
     fbOnSnapshot('notifs',s=>{if(s.exists)notifs=s.data().data||{};});
+    fbOnSnapshot('recordatorios',s=>{if(s.exists){recordatorios=s.data().list||[];rDash();if(isActive('recordatorios'))rRec();}});
   }catch(e){
     console.error(e);setSyncDot('err');
     obras=OD;workers=WD;festivos=FESTIVOS_DEFAULT;
@@ -862,7 +886,7 @@ function navTo(s,el){
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   document.getElementById('sec-'+s).classList.add('active');
   el?.classList.add('active');
-  ({dashboard:rDash,obras:rObras,personal:rWorkers,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,notificaciones:rNotifs,incidencias:rIncs,ajustes:rAjustes})[s]?.();
+  ({dashboard:rDash,obras:rObras,personal:rWorkers,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,recordatorios:rRec,notificaciones:rNotifs,incidencias:rIncs,ajustes:rAjustes})[s]?.();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -876,6 +900,36 @@ function rDash(){
   let th=0;workers.forEach(w=>{const r=calcWorkerMonth(w.id,new Date().getMonth(),new Date().getFullYear());th+=r.hN+r.hE;});
   document.getElementById('s-h').textContent=th||'—';
   document.getElementById('dash-obras').innerHTML=sO().filter(o=>o.estado==='active').slice(0,5).map(oCard).join('')||'<div class="empty"><div class="empty-text">Sin obras activas</div></div>';
+  // Recordatorios pendientes hoy o pasados
+  const ahora=new Date();
+  const hoy=ahora.toISOString().split('T')[0];
+  const pendientes=recordatorios.filter(r=>!r.hecho&&r.fecha<=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const proximos=recordatorios.filter(r=>!r.hecho&&r.fecha>hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,3);
+  let html='';
+  if(pendientes.length){
+    html+=pendientes.map(r=>`
+      <div style="background:var(--rl);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="navTo('recordatorios',qni(8))">
+        <span style="font-size:20px">🔔</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px;color:#791F1F">${r.titulo}</div>
+          ${r.desc?`<div style="font-size:11px;color:#791F1F;opacity:.8">${r.desc}</div>`:''}
+          <div style="font-size:11px;color:#791F1F;opacity:.7">${fmtFechaRec(r.fecha,r.hora)}</div>
+        </div>
+        <button onclick="event.stopPropagation();marcarHechoRec(${r.id})" style="background:#791F1F;color:#fff;border:none;border-radius:var(--rs);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">✓ Hecho</button>
+      </div>`).join('');
+  }
+  if(proximos.length){
+    html+=`<div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-weight:600">PRÓXIMOS</div>`;
+    html+=proximos.map(r=>`
+      <div style="background:var(--al);border-radius:var(--r);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="navTo('recordatorios',qni(8))">
+        <span style="font-size:16px">📅</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12px;color:#633806">${r.titulo}</div>
+          <div style="font-size:11px;color:#633806;opacity:.8">${fmtFechaRec(r.fecha,r.hora)}</div>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('dash-recordatorios').innerHTML=html;
 }
 function getNP(wid,month,year){
   const days=new Date(year,month+1,0).getDate();
@@ -1558,6 +1612,141 @@ function exportInformeMensual(){
 }
 
 // ── NOTIFICACIONES ────────────────────────────────────────────────
+// ── RECORDATORIOS ─────────────────────────────────────────────────
+let editRecId=null;
+
+function fmtFechaRec(fecha,hora){
+  if(!fecha)return '';
+  const d=new Date(fecha+'T'+(hora||'00:00'));
+  const hoy=new Date();
+  const diffDias=Math.ceil((new Date(fecha)-new Date(hoy.toISOString().split('T')[0]))/(1000*60*60*24));
+  let label='';
+  if(diffDias===0)label='Hoy';
+  else if(diffDias===1)label='Mañana';
+  else if(diffDias===-1)label='Ayer';
+  else if(diffDias<0)label=`Hace ${Math.abs(diffDias)} días`;
+  else label=d.toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'});
+  return label+(hora?' · '+hora:'');
+}
+
+function rRec(){
+  const ahora=new Date();
+  const hoy=ahora.toISOString().split('T')[0];
+  const pendientes=recordatorios.filter(r=>!r.hecho).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const hechos=recordatorios.filter(r=>r.hecho).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  if(!recordatorios.length){
+    document.getElementById('rec-list').innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Sin recordatorios. Pulsa + para añadir uno.</div></div>';
+    return;
+  }
+
+  let html='';
+  if(pendientes.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Pendientes (${pendientes.length})</div>`;
+    pendientes.forEach(r=>{
+      const vencido=r.fecha<hoy;
+      const esHoy=r.fecha===hoy;
+      const bg=vencido?'var(--rl)':esHoy?'var(--al)':'var(--bc)';
+      const txtColor=vencido?'#791F1F':esHoy?'#633806':'var(--t)';
+      html+=`<div style="background:${bg};border:1px solid var(--br);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px;margin-top:1px">${vencido?'🔔':esHoy?'⏰':'📅'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:14px;color:${txtColor}">${r.titulo}</div>
+            ${r.desc?`<div style="font-size:12px;color:${txtColor};opacity:.8;margin-top:2px">${r.desc}</div>`:''}
+            <div style="font-size:11px;color:${txtColor};opacity:.7;margin-top:4px">${fmtFechaRec(r.fecha,r.hora)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button onclick="openEditRec(${r.id})" style="background:transparent;border:1px solid var(--br);border-radius:var(--rs);padding:4px 8px;font-size:11px;cursor:pointer">✏️</button>
+            <button onclick="marcarHechoRec(${r.id})" style="background:var(--g);color:#fff;border:none;border-radius:var(--rs);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">✓</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if(hechos.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:var(--t3);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px">Completados (${hechos.length})</div>`;
+    hechos.slice(0,5).forEach(r=>{
+      html+=`<div style="background:var(--bg);border:1px solid var(--br);border-radius:var(--r);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;opacity:.6">
+        <span style="font-size:16px">✅</span>
+        <div style="flex:1;text-decoration:line-through;font-size:12px;color:var(--t3)">${r.titulo}</div>
+        <button onclick="marcarHechoRec(${r.id})" style="background:transparent;border:1px solid var(--br);color:var(--t3);border-radius:var(--rs);padding:3px 7px;font-size:10px;cursor:pointer">↩</button>
+        <button onclick="borrarRec(${r.id})" style="background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer">🗑</button>
+      </div>`;
+    });
+  }
+
+  document.getElementById('rec-list').innerHTML=html;
+}
+
+function openNuevoRec(){
+  editRecId=null;
+  document.getElementById('ttl-rec').textContent='Nuevo recordatorio';
+  document.getElementById('rec-titulo').value='';
+  document.getElementById('rec-desc').value='';
+  document.getElementById('rec-fecha').value=today();
+  document.getElementById('rec-hora').value='09:00';
+  document.getElementById('btn-del-rec').style.display='none';
+  document.getElementById('modal-rec').classList.add('open');
+}
+
+function openEditRec(id){
+  const r=recordatorios.find(x=>x.id===id);if(!r)return;
+  editRecId=id;
+  document.getElementById('ttl-rec').textContent='Editar recordatorio';
+  document.getElementById('rec-titulo').value=r.titulo||'';
+  document.getElementById('rec-desc').value=r.desc||'';
+  document.getElementById('rec-fecha').value=r.fecha||today();
+  document.getElementById('rec-hora').value=r.hora||'09:00';
+  document.getElementById('btn-del-rec').style.display='block';
+  document.getElementById('modal-rec').classList.add('open');
+}
+
+function saveRec(){
+  const titulo=document.getElementById('rec-titulo').value.trim();
+  if(!titulo){toast('Escribe un título');return;}
+  const data={
+    id:editRecId||Date.now(),
+    titulo,
+    desc:document.getElementById('rec-desc').value.trim(),
+    fecha:document.getElementById('rec-fecha').value,
+    hora:document.getElementById('rec-hora').value,
+    hecho:false,
+    creadoEn:editRecId?(recordatorios.find(r=>r.id===editRecId)?.creadoEn||today()):today(),
+  };
+  if(editRecId){
+    const idx=recordatorios.findIndex(r=>r.id===editRecId);
+    if(idx>=0){recordatorios[idx]=data;}
+  }else{
+    recordatorios.push(data);
+  }
+  db.collection('app').doc('recordatorios').set({list:recordatorios})
+    .then(()=>{setSyncDot('ok');CM();rRec();rDash();toast(editRecId?'✓ Recordatorio actualizado':'✓ Recordatorio guardado');})
+    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+}
+
+function delRec(){
+  if(!editRecId)return;
+  borrarRec(editRecId);
+  CM();
+}
+
+function borrarRec(id){
+  recordatorios=recordatorios.filter(r=>r.id!==id);
+  db.collection('app').doc('recordatorios').set({list:recordatorios})
+    .then(()=>{setSyncDot('ok');rRec();rDash();toast('Recordatorio eliminado');})
+    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+}
+
+function marcarHechoRec(id){
+  const r=recordatorios.find(x=>x.id===id);if(!r)return;
+  r.hecho=!r.hecho;
+  db.collection('app').doc('recordatorios').set({list:recordatorios})
+    .then(()=>{setSyncDot('ok');rRec();rDash();toast(r.hecho?'✓ Marcado como hecho':'↩ Reabierto');})
+    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+}
+
 function chMonthN(d){notifM+=d;if(notifM>11){notifM=0;notifY++;}if(notifM<0){notifM=11;notifY--;}rNotifs();}
 
 function toggleNotif(key){
