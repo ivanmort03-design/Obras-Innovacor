@@ -1764,8 +1764,13 @@ function marcarHechoRec(id){
 
 function chMonthN(d){notifM+=d;if(notifM>11){notifM=0;notifY++;}if(notifM<0){notifM=11;notifY--;}rNotifs();}
 
-function toggleNotif(key){
-  notifs[key]=!notifs[key];
+function toggleNotif(key,estado){
+  // estado: 'notificado' o 'entregado' o null (quitar)
+  if(notifs[key]===estado){
+    delete notifs[key]; // deshacer
+  }else{
+    notifs[key]=estado;
+  }
   fbSet('notifs',{data:notifs});
   rNotifs();
 }
@@ -1780,13 +1785,9 @@ function rNotifs(){
     if(np>=2){
       alertas.push({
         key:`np-${notifY}-${notifM}-${w.id}`,
-        tipo:'np',
-        icono:'⚠️',
-        color:'var(--rl)',
-        colorTxt:'#791F1F',
+        tipo:'np',icono:'⚠️',color:'var(--rl)',colorTxt:'#791F1F',
         nombre:fmtNombre(w.nombre),
         msg:`${np} ausencias NP este mes`,
-        wid:w.id,
       });
     }
   });
@@ -1795,57 +1796,82 @@ function rNotifs(){
   function diasR(f){const d=parsefecha(f);if(!d)return null;return Math.ceil((d-new Date())/(1000*60*60*24));}
   workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').forEach(w=>{
     if(vencido(w.vtodni)){
-      alertas.push({key:`dni-venc-${w.id}`,tipo:'doc',icono:'🔴',color:'var(--rl)',colorTxt:'#791F1F',nombre:fmtNombre(w.nombre),msg:'DNI / NIE caducado',wid:w.id});
-    } else if(proximo(w.vtodni)){
+      alertas.push({key:`dni-venc-${w.id}`,tipo:'doc',icono:'🔴',color:'var(--rl)',colorTxt:'#791F1F',nombre:fmtNombre(w.nombre),msg:'DNI / NIE caducado'});
+    }else if(proximo(w.vtodni)){
       const d=diasR(w.vtodni);
-      alertas.push({key:`dni-prox-${w.id}`,tipo:'doc',icono:'📄',color:'var(--al)',colorTxt:'#633806',nombre:fmtNombre(w.nombre),msg:`DNI vence en ${d} día${d!==1?'s':''}`,wid:w.id});
+      alertas.push({key:`dni-prox-${w.id}`,tipo:'doc',icono:'📄',color:'var(--al)',colorTxt:'#633806',nombre:fmtNombre(w.nombre),msg:`DNI vence en ${d} día${d!==1?'s':''}`});
     }
     if(vencido(w.vtrm)){
-      alertas.push({key:`rm-venc-${w.id}`,tipo:'doc',icono:'🔴',color:'var(--rl)',colorTxt:'#791F1F',nombre:fmtNombre(w.nombre),msg:'Reconocimiento médico caducado',wid:w.id});
-    } else if(proximo(w.vtrm)){
+      alertas.push({key:`rm-venc-${w.id}`,tipo:'doc',icono:'🔴',color:'var(--rl)',colorTxt:'#791F1F',nombre:fmtNombre(w.nombre),msg:'Reconocimiento médico caducado'});
+    }else if(proximo(w.vtrm)){
       const d=diasR(w.vtrm);
-      alertas.push({key:`rm-prox-${w.id}`,tipo:'doc',icono:'📄',color:'var(--al)',colorTxt:'#633806',nombre:fmtNombre(w.nombre),msg:`Rec. médico vence en ${d} día${d!==1?'s':''}`,wid:w.id});
+      alertas.push({key:`rm-prox-${w.id}`,tipo:'doc',icono:'📄',color:'var(--al)',colorTxt:'#633806',nombre:fmtNombre(w.nombre),msg:`Rec. médico vence en ${d} día${d!==1?'s':''}`});
     }
   });
 
   if(!alertas.length){
-    document.getElementById('notif-content').innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Sin notificaciones para ${MESES[notifM]}</div></div>`;
+    document.getElementById('notif-content').innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Sin avisos para ${MESES[notifM]}</div></div>`;
     return;
   }
 
-  const pendientes=alertas.filter(a=>!notifs[a.key]);
-  const notificadas=alertas.filter(a=>notifs[a.key]);
+  const pendientes  = alertas.filter(a=>!notifs[a.key]);
+  const notificados = alertas.filter(a=>notifs[a.key]==='notificado');
+  const entregados  = alertas.filter(a=>notifs[a.key]==='entregado');
 
-  let html='';
-
-  if(pendientes.length){
-    html+=`<div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📬 Pendientes (${pendientes.length})</div>`;
-    pendientes.forEach(a=>{
-      html+=`<div style="background:${a.color};border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+  function cardAviso(a){
+    return`<div style="background:${a.color};border-radius:var(--r);padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <span style="font-size:20px">${a.icono}</span>
         <div style="flex:1">
           <div style="font-weight:600;font-size:13px;color:${a.colorTxt}">${a.nombre}</div>
           <div style="font-size:12px;color:${a.colorTxt};opacity:.85">${a.msg}</div>
         </div>
-        <button onclick="toggleNotif('${a.key}')" style="background:#fff;border:1px solid ${a.colorTxt};color:${a.colorTxt};border-radius:var(--rs);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">
-          Marcar notificado ✓
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="toggleNotif('${a.key}','notificado')" style="flex:1;background:#fff;border:1px solid ${a.colorTxt};color:${a.colorTxt};border-radius:var(--rs);padding:6px;font-size:11px;font-weight:600;cursor:pointer">
+          🔔 Notificado
         </button>
+        <button onclick="toggleNotif('${a.key}','entregado')" style="flex:1;background:${a.colorTxt};border:none;color:#fff;border-radius:var(--rs);padding:6px;font-size:11px;font-weight:600;cursor:pointer">
+          📦 Entregado
+        </button>
+      </div>
+    </div>`;
+  }
+
+  let html='';
+
+  if(pendientes.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">⚠️ Pendientes (${pendientes.length})</div>`;
+    html+=pendientes.map(cardAviso).join('');
+  }
+
+  if(notificados.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:#0C447C;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px">🔔 Notificados (${notificados.length})</div>`;
+    notificados.forEach(a=>{
+      html+=`<div style="background:var(--bl);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px">🔔</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12px;color:#0C447C">${a.nombre}</div>
+          <div style="font-size:11px;color:#0C447C;opacity:.8">${a.msg}</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button onclick="toggleNotif('${a.key}','entregado')" style="background:#0C447C;color:#fff;border:none;border-radius:var(--rs);padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer">📦 Entregar</button>
+          <button onclick="toggleNotif('${a.key}','notificado')" style="background:transparent;border:1px solid var(--br);color:var(--t3);border-radius:var(--rs);padding:4px 6px;font-size:10px;cursor:pointer">↩</button>
+        </div>
       </div>`;
     });
   }
 
-  if(notificadas.length){
-    html+=`<div style="font-size:12px;font-weight:600;color:var(--t3);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px">✅ Ya notificados (${notificadas.length})</div>`;
-    notificadas.forEach(a=>{
-      html+=`<div style="background:var(--gl);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;opacity:.7">
-        <span style="font-size:18px">✅</span>
+  if(entregados.length){
+    html+=`<div style="font-size:12px;font-weight:600;color:var(--gp);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px">📦 Entregados (${entregados.length})</div>`;
+    entregados.forEach(a=>{
+      html+=`<div style="background:var(--gl);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;opacity:.75">
+        <span style="font-size:18px">📦</span>
         <div style="flex:1">
-          <div style="font-weight:600;font-size:12px;color:var(--gp)">${a.nombre}</div>
+          <div style="font-weight:600;font-size:12px;color:var(--gp);text-decoration:line-through">${a.nombre}</div>
           <div style="font-size:11px;color:var(--gp)">${a.msg}</div>
         </div>
-        <button onclick="toggleNotif('${a.key}')" style="background:transparent;border:1px solid var(--br);color:var(--t3);border-radius:var(--rs);padding:4px 8px;font-size:10px;cursor:pointer">
-          Deshacer
-        </button>
+        <button onclick="toggleNotif('${a.key}','entregado')" style="background:transparent;border:1px solid var(--br);color:var(--t3);border-radius:var(--rs);padding:4px 6px;font-size:10px;cursor:pointer">↩</button>
       </div>`;
     });
   }
