@@ -2040,7 +2040,7 @@ function rSueldos(){
     const obs=p.obs||'';
     const prestMes=getPrestamosActivos(w.id,sueldosM,sueldosY);
     const totalPrest=prestMes.reduce((s,pr)=>s+pr.cuotaMes,0);
-    const baseCalculo=nominaOficial>0?nominaOficial:totalBruto;
+    const baseCalculo=totalBruto; // siempre horas×tarifa o nómina fija
     const nomina=Math.round((baseCalculo-irpfEur-desc+gasoil)*100)/100;
     const saldo=Math.round((nomina+sobre-totalPrest)*100)/100;
     const negativo=saldo<0?Math.abs(saldo):0;
@@ -2099,12 +2099,11 @@ function rSueldos(){
         ${hE>0?`<span style="color:var(--t3)">H.extra: <b style="color:var(--t)">${fmtH(hE)}×${tarHE}€=${fmt(hE*tarHE)}</b></span>`:''}
       </div>`:''}
       <div style="background:var(--bl);border-radius:var(--rs);padding:10px;margin-bottom:10px">
-        <div style="font-size:11px;color:#0C447C;font-weight:600;margin-bottom:6px">📋 Datos de la asesoría</div>
+        <div style="font-size:11px;color:#0C447C;font-weight:600;margin-bottom:6px">📋 Datos de la asesoría <span style="font-weight:400;font-size:10px">(solo informativo)</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div><div style="font-size:11px;color:var(--t3)">IRPF (€)</div>${inp(w.id,'irpfEur',irpfEur,'0','0.01','#791F1F')}</div>
-          <div><div style="font-size:11px;color:var(--t3)">Nómina oficial</div>${inp(w.id,'nominaOficial',nominaOficial,'(auto)','0.01','#0C447C')}</div>
+          <div><div style="font-size:11px;color:var(--t3)">Nómina oficial</div>${inp(w.id,'nominaOficial',nominaOficial,'—','0.01','#0C447C')}</div>
         </div>
-        ${nominaOficial>0?`<div style="font-size:10px;color:#0C447C;margin-top:4px">ℹ️ Se usa la nómina oficial en lugar del cálculo automático</div>`:''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
         <div style="background:${desc>0?'var(--rl)':'var(--bg)'};border-radius:var(--rs);padding:8px;font-size:11px">
