@@ -1293,15 +1293,8 @@ function rHor(){
   // También mostrar trabajadores noEmpresa que causaron baja este mes
   let list=sW().filter(w=>{
     if(w.estado==='active'||w.estado==='ext'||w.estado==='baja')return true;
-    // noEmpresa: mostrar si causó baja este mes
-    if(w.estado==='noEmpresa'&&w.fechaBaja){
-      const fb=parsefecha(w.fechaBaja);
-      if(fb){
-        const inicioMes=new Date(cY,cM,1);
-        const finMes=new Date(cY,cM+1,0);
-        return fb>=inicioMes&&fb<=finMes;
-      }
-    }
+    // noEmpresa: siempre visible en horario para poder apuntarles horas
+    if(w.estado==='noEmpresa')return true;
     return false;
   });
   if(filtroObra){
@@ -1416,7 +1409,7 @@ function eCell(wid,day){
   editCell={wid,day};
   const w=workers.find(x=>x.id===wid);
   document.getElementById('ttl-hor').textContent=(w?fmtNombre(w.nombre):'')+' — Día '+day;
-  document.getElementById('hor-w').innerHTML=sW().filter(x=>x.estado==='active'||x.estado==='ext'||x.estado==='baja').map(x=>`<option value="${x.id}"${x.id===wid?' selected':''}>${x.nombre}</option>`).join('');
+  document.getElementById('hor-w').innerHTML=sW().filter(x=>x.estado==='active'||x.estado==='ext'||x.estado==='baja'||x.estado==='noEmpresa').map(x=>`<option value="${x.id}"${x.id===wid?' selected':''}>${x.nombre}${x.estado==='noEmpresa'?' (Baja emp.)':''}</option>`).join('');
   document.getElementById('hor-f').value=`${cY}-${String(cM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const cur=hor[hKey(wid,day)];
   let tp='h';
@@ -3953,7 +3946,7 @@ function openFab(){
     const fw=sW().find(w=>w.estado==='active'||w.estado==='ext');
     editCell={wid:fw?.id,day:new Date().getDate()};
     selHoras=9;selHoras2=4;
-    document.getElementById('hor-w').innerHTML=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja').map(w=>`<option value="${w.id}">${w.nombre}</option>`).join('');
+    document.getElementById('hor-w').innerHTML=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa').map(w=>`<option value="${w.id}">${w.nombre}${w.estado==='noEmpresa'?' (Baja emp.)':''}</option>`).join('');
     document.getElementById('hor-f').value=today();
     document.getElementById('hor-tp').value='h';
     const obraOpts='<option value="0">— Obra del trabajador —</option>'+sO().map(o=>`<option value="${o.id}">${o.nombre}</option>`).join('');
