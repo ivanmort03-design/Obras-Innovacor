@@ -273,18 +273,30 @@ textarea.fi{min-height:75px;resize:vertical}
         <span class="mlab" id="mlab-s"></span>
         <button class="mbtn" onclick="chMonthS(1)">→</button>
       </div>
-      <div style="display:flex;gap:6px;margin-bottom:10px">
-        <select class="fi" id="sueldos-filtro-obra" onchange="rSueldos()" style="flex:1;padding:7px 10px;font-size:12px">
-          <option value="">Todas las obras</option>
-        </select>
-        <select class="fi" id="sueldos-filtro-orden" onchange="rSueldos()" style="width:auto;padding:7px 10px;font-size:12px">
-          <option value="alfa">A-Z</option>
-          <option value="obra">Por obra</option>
-        </select>
-        <button class="btn btng btnsm" onclick="exportSueldosPDF()" style="white-space:nowrap">📄 PDF resumen</button>
-        <button class="btn btng btnsm" onclick="exportSueldosPDFDetalle()" style="white-space:nowrap">📄 PDF detalle</button>
+      <!-- Tabs sueldos -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid var(--br);padding-bottom:0">
+        <button id="stab-nominas" onclick="setSueldosTab('nominas')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--g);color:var(--g);margin-bottom:-2px">💰 Nóminas</button>
+        <button id="stab-resumen" onclick="setSueldosTab('resumen')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📊 Anticipos y Préstamos</button>
       </div>
-      <div id="sueldos-content"></div>
+      <!-- Tab nóminas -->
+      <div id="stab-content-nominas">
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <select class="fi" id="sueldos-filtro-obra" onchange="rSueldos()" style="flex:1;padding:7px 10px;font-size:12px">
+            <option value="">Todas las obras</option>
+          </select>
+          <select class="fi" id="sueldos-filtro-orden" onchange="rSueldos()" style="width:auto;padding:7px 10px;font-size:12px">
+            <option value="alfa">A-Z</option>
+            <option value="obra">Por obra</option>
+          </select>
+          <button class="btn btng btnsm" onclick="exportSueldosPDF()" style="white-space:nowrap">📄 PDF resumen</button>
+          <button class="btn btng btnsm" onclick="exportSueldosPDFDetalle()" style="white-space:nowrap">📄 PDF detalle</button>
+        </div>
+        <div id="sueldos-content"></div>
+      </div>
+      <!-- Tab resumen anticipos/préstamos -->
+      <div id="stab-content-resumen" style="display:none">
+        <div id="resumen-ant-prest-content"></div>
+      </div>
     </div>
     <!-- RECORDATORIOS -->
     <div id="sec-recordatorios" class="sec">
@@ -2058,6 +2070,172 @@ function rNotifs(){
 
 // ── COMPARATIVA ───────────────────────────────────────────────────
 // ── SUELDOS ───────────────────────────────────────────────────────
+function setSueldosTab(tab){
+  document.getElementById('stab-content-nominas').style.display=tab==='nominas'?'block':'none';
+  document.getElementById('stab-content-resumen').style.display=tab==='resumen'?'block':'none';
+  document.getElementById('stab-nominas').style.borderBottomColor=tab==='nominas'?'var(--g)':'transparent';
+  document.getElementById('stab-nominas').style.color=tab==='nominas'?'var(--g)':'var(--t3)';
+  document.getElementById('stab-resumen').style.borderBottomColor=tab==='resumen'?'var(--g)':'transparent';
+  document.getElementById('stab-resumen').style.color=tab==='resumen'?'var(--g)':'var(--t3)';
+  if(tab==='resumen')rResumenAntPrest();
+}
+
+function rResumenAntPrest(){
+  const el=document.getElementById('resumen-ant-prest-content');
+  if(!el)return;
+
+  // ── ANTICIPOS: suma de todos los meses por trabajador ─────────────
+  // Recorrer todos los pagos guardados
+  const anticiposPorW={};
+  Object.entries(pagos).forEach(([key,p])=>{
+    // key = "year-month-wid"
+    const parts=key.split('-');
+    if(parts.length<3)return;
+    const wid=parseInt(parts[2]);
+    const lista=p.anticipos||[];
+    const total=lista.reduce((s,a)=>s+(parseFloat(a.importe)||0),0);
+    if(total>0){
+      if(!anticiposPorW[wid])anticiposPorW[wid]={total:0,detalle:[]};
+      anticiposPorW[wid].total+=total;
+      lista.forEach(a=>{
+        if(parseFloat(a.importe)>0)
+          anticiposPorW[wid].detalle.push({fecha:a.fecha,importe:parseFloat(a.importe),mes:`${parts[1]}/${parts[0]}`});
+      });
+    }
+  });
+
+  // ── PRÉSTAMOS activos ─────────────────────────────────────────────
+  const prestPorW={};
+  prestamos.forEach(p=>{
+    if(p.saldado)return;
+    const cuotas=p.cuotas||(p.cuotasTotal?Array(p.cuotasTotal).fill(p.cuotaMes):[]);
+    const pagado=cuotas.slice(0,Math.min(calcMesesTranscurridos(p.inicio),cuotas.length)).reduce((s,c)=>s+c,0);
+    const pendiente=p.total-pagado;
+    if(!prestPorW[p.wid])prestPorW[p.wid]=[];
+    prestPorW[p.wid].push({...p,pagado,pendiente,cuotas});
+  });
+
+  const todosWids=new Set([...Object.keys(anticiposPorW).map(Number),...Object.keys(prestPorW).map(Number)]);
+  const wList=[...todosWids].map(wid=>workers.find(w=>w.id===wid)).filter(Boolean)
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+
+  if(!wList.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Sin anticipos ni préstamos pendientes</div></div>';
+    return;
+  }
+
+  let totalAnticiposGlobal=0,totalPrestGlobal=0;
+  let html='';
+
+  // ── TABLA ANTICIPOS ───────────────────────────────────────────────
+  const wConAnt=wList.filter(w=>anticiposPorW[w.id]);
+  if(wConAnt.length){
+    totalAnticiposGlobal=wConAnt.reduce((s,w)=>s+(anticiposPorW[w.id]?.total||0),0);
+    html+=`<div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">💵 Anticipos entregados</div>
+        <div style="font-size:13px;font-weight:700;color:#633806">Total: ${fmt(totalAnticiposGlobal)}</div>
+      </div>
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--al)">
+            <th style="text-align:left;padding:7px 10px;color:#633806;font-weight:600">Trabajador</th>
+            <th style="text-align:right;padding:7px 10px;color:#633806;font-weight:600">Total anticipos</th>
+            <th style="text-align:left;padding:7px 10px;color:#633806;font-weight:600">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    wConAnt.forEach((w,i)=>{
+      const data=anticiposPorW[w.id];
+      // Ordenar detalle por fecha
+      const det=[...data.detalle].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+      const detTxt=det.map(d=>{
+        const f=d.fecha?new Date(d.fecha+'T00:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}):d.mes;
+        return `${f}: ${fmt(d.importe)}`;
+      }).join(' · ');
+      html+=`<tr style="background:${i%2===0?'var(--bg)':'#FFF8F0'};border-bottom:1px solid var(--br)">
+        <td style="padding:8px 10px;font-weight:600">${fmtNombre(w.nombre)}</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:700;color:#633806">${fmt(data.total)}</td>
+        <td style="padding:8px 10px;color:var(--t3);font-size:11px">${detTxt}</td>
+      </tr>`;
+    });
+
+    html+=`</tbody></table></div></div>`;
+  }
+
+  // ── TABLA PRÉSTAMOS ───────────────────────────────────────────────
+  const wConPrest=wList.filter(w=>prestPorW[w.id]);
+  if(wConPrest.length){
+    totalPrestGlobal=wConPrest.reduce((s,w)=>s+prestPorW[w.id].reduce((ss,p)=>ss+p.pendiente,0),0);
+    html+=`<div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">💳 Préstamos activos</div>
+        <div style="font-size:13px;font-weight:700;color:#3C3489">Pendiente total: ${fmt(totalPrestGlobal)}</div>
+      </div>
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--pl)">
+            <th style="text-align:left;padding:7px 10px;color:#3C3489;font-weight:600">Trabajador</th>
+            <th style="text-align:left;padding:7px 10px;color:#3C3489;font-weight:600">Motivo</th>
+            <th style="text-align:right;padding:7px 10px;color:#3C3489;font-weight:600">Total</th>
+            <th style="text-align:right;padding:7px 10px;color:#3C3489;font-weight:600">Pagado</th>
+            <th style="text-align:right;padding:7px 10px;color:#3C3489;font-weight:600">Pendiente</th>
+            <th style="text-align:center;padding:7px 10px;color:#3C3489;font-weight:600">Cuotas</th>
+            <th style="text-align:left;padding:7px 10px;color:#3C3489;font-weight:600">Cuotas</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    wConPrest.forEach((w,i)=>{
+      const prests=prestPorW[w.id];
+      prests.forEach((p,pi)=>{
+        const mesesT=calcMesesTranscurridos(p.inicio);
+        const cuotasPagadas=Math.min(mesesT,p.cuotas.length);
+        const pct=Math.round(cuotasPagadas/p.cuotas.length*100);
+        const cuotasStr=p.cuotas.map((c,ci)=>`<span style="background:${ci<cuotasPagadas?'var(--gl)':'var(--bg)'};border:1px solid var(--br);border-radius:3px;padding:1px 4px;font-size:10px;margin:1px;display:inline-block;color:${ci<cuotasPagadas?'var(--gp)':'var(--t3)'}">${fmt(c)}</span>`).join('');
+        html+=`<tr style="background:${(i+pi)%2===0?'var(--bg)':'#F5F4FF'};border-bottom:1px solid var(--br)">
+          ${pi===0?`<td style="padding:8px 10px;font-weight:600" rowspan="${prests.length}">${fmtNombre(w.nombre)}</td>`:''}
+          <td style="padding:8px 10px;color:var(--t3)">${p.motivo||'Préstamo'}</td>
+          <td style="padding:8px 10px;text-align:right">${fmt(p.total)}</td>
+          <td style="padding:8px 10px;text-align:right;color:var(--gp)">${fmt(p.pagado)}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:700;color:#3C3489">${fmt(p.pendiente)}</td>
+          <td style="padding:8px 10px;text-align:center">
+            <div style="font-size:10px;color:var(--t3);margin-bottom:2px">${cuotasPagadas}/${p.cuotas.length}</div>
+            <div style="background:var(--br);border-radius:99px;height:4px;width:60px;margin:0 auto"><div style="background:var(--g);height:4px;border-radius:99px;width:${pct}%"></div></div>
+          </td>
+          <td style="padding:8px 10px">${cuotasStr}</td>
+        </tr>`;
+      });
+    });
+
+    html+=`</tbody></table></div></div>`;
+  }
+
+  // ── RESUMEN GLOBAL ─────────────────────────────────────────────────
+  if(totalAnticiposGlobal+totalPrestGlobal>0){
+    html+=`<div style="background:var(--bg);border:1px solid var(--br);border-radius:var(--r);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--t2)">💰 Total pendiente empresa</div>
+      <div style="display:flex;gap:16px">
+        ${totalAnticiposGlobal>0?`<div style="text-align:right"><div style="font-size:10px;color:var(--t3)">Anticipos</div><div style="font-size:15px;font-weight:700;color:#633806">${fmt(totalAnticiposGlobal)}</div></div>`:''}
+        ${totalPrestGlobal>0?`<div style="text-align:right"><div style="font-size:10px;color:var(--t3)">Préstamos</div><div style="font-size:15px;font-weight:700;color:#3C3489">${fmt(totalPrestGlobal)}</div></div>`:''}
+        <div style="text-align:right"><div style="font-size:10px;color:var(--t3)">Total</div><div style="font-size:15px;font-weight:700;color:var(--t)">${fmt(totalAnticiposGlobal+totalPrestGlobal)}</div></div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=html;
+}
+
+function calcMesesTranscurridos(inicio){
+  if(!inicio)return 0;
+  const[y,m]=inicio.split('-').map(Number);
+  const ahora=new Date();
+  return Math.max(0,(ahora.getFullYear()-y)*12+(ahora.getMonth()+1-m));
+}
+
 function chMonthS(d){
   sueldosM+=d;if(sueldosM>11){sueldosM=0;sueldosY++;}if(sueldosM<0){sueldosM=11;sueldosY--;}
   const el=document.getElementById('sueldos-filtro-obra');
