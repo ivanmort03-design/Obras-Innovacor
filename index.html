@@ -3596,23 +3596,23 @@ function exportSueldosPDFDetalle(){
 
   // ── DEFINICIÓN DE COLUMNAS ────────────────────────────────────────
   const cols=[
-    {h:'TRABAJADOR',      w:44},
-    {h:'IMP',             w:9},
-    {h:'HORAS',           w:11},
-    {h:'PARCIAL',         w:14},
+    {h:'TRABAJADOR',      w:40},
+    {h:'IMP',             w:8},
+    {h:'HORAS',           w:10},
+    {h:'PARCIAL',         w:13},
     {h:'H.EXT',           w:10},
-    {h:'TOTAL',           w:14},
-    {h:'DESC',            w:12},
-    {h:'SUMA',            w:12},
-    {h:'IRPF',            w:13},
-    {h:'SOBRE',           w:13},
-    {h:'NÓMINA',          w:15},
-    {h:'NEGATIVO',        w:14},
-    {h:'RESTO',           w:13},
-    {h:'ANTICIPOS',       w:16},
-    {h:'TRANSF.',         w:15},
-    {h:'A/C EXTRA',       w:14},
-    {h:'OBS',             w:0},// ancho dinámico
+    {h:'TOTAL',           w:13},
+    {h:'DESC',            w:11},
+    {h:'SUMA',            w:11},
+    {h:'IRPF',            w:12},
+    {h:'SOBRE',           w:12},
+    {h:'NÓMINA',          w:14},
+    {h:'NEGATIVO',        w:13},
+    {h:'RESTO',           w:12},
+    {h:'ANTICIPOS',       w:14},
+    {h:'TRANSF.',         w:14},
+    {h:'A/C',             w:11},
+    {h:'OBS',             w:0},
   ];
   // calcular ancho OBS con lo que quede
   const fixedW=cols.slice(0,-1).reduce((s,c)=>s+c.w,0);
@@ -3698,39 +3698,74 @@ function exportSueldosPDFDetalle(){
 
     function fmtN(v){return v?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'';}
 
-    cell(w.nombre.length>26?w.nombre.substring(0,25)+'…':w.nombre,true,null,x,cols[0].w);x+=cols[0].w;
-    cell(imp?imp:'',false,null,x,cols[1].w);x+=cols[1].w;
-    cell(hN?fmtN(hN):'',false,null,x,cols[2].w);x+=cols[2].w;
-    cell(parcial?fmtN(parcial):'',false,null,x,cols[3].w);x+=cols[3].w;
-    cell(hExtImporte?fmtN(hExtImporte):'',false,null,x,cols[4].w);x+=cols[4].w;
-    cell(totalBruto?fmtN(totalBruto):'',true,null,x,cols[5].w);x+=cols[5].w;
-    cell(desc?fmtN(desc):'',false,[180,30,30],x,cols[6].w);x+=cols[6].w;
-    cell(gasoil?fmtN(gasoil):'',false,[0,128,0],x,cols[7].w);x+=cols[7].w;
-    cell(irpfEur?fmtN(irpfEur):'',false,[180,30,30],x,cols[8].w);x+=cols[8].w;
-    cell(sobre?fmtN(sobre):'',false,sobre<0?[180,30,30]:[0,100,0],x,cols[9].w);x+=cols[9].w;
-    // NÓMINA = nómina oficial de la asesoría (si existe), si no la calculada
+    // Construir observaciones antes para calcular altura de fila
+    const obsPartes=[];
+    if(anticiposList.length>0){
+      anticiposList.forEach(a=>{
+        if(parseFloat(a.importe)>0){
+          const f=a.fecha?new Date(a.fecha+'T00:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}):'-';
+          obsPartes.push(`ANT ${f}:${fmtN(parseFloat(a.importe))}`);
+        }
+      });
+    }
+    if(prestMes.length>0){
+      prestMes.forEach(pr=>{
+        obsPartes.push(`PREST ${pdfTxt(pr.motivo||'Prestamo')}(${pr.cuotaActual}/${pr.cuotasTotal}):${fmtN(pr.cuotaMes)}`);
+      });
+    }
+    if(desc>0){
+      const obsLower=(obs||'').toLowerCase();
+      const tipoDesc=obsLower.includes('embargo')?'EMBARGO':obsLower.includes('prest')||obsLower.includes('pres.')?'PREST.':obsLower.includes('neg')?'NEG.ANT':obsLower.includes('cuota')?'CUOTA':'DTO';
+      obsPartes.push(`${tipoDesc}:${fmtN(desc)}`);
+    }
+    if(obs)obsPartes.push(pdfTxt(obs));
+    const obsStr=obsPartes.join(' | ');
+
+    // Fondo fila normal
+    if(fill){doc.setFillColor(247,247,247);}else{doc.setFillColor(255,255,255);}
+    doc.rect(ML,y,PW-ML-MR,ROW,'F');
+    fill=!fill;
+
+    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(0);
+
+    function cellC(val,bold,color,xi,wi){
+      if(bold)doc.setFont('helvetica','bold');
+      if(color)doc.setTextColor(...color);
+      const s=val===null||val===undefined||val===0?'':String(val);
+      doc.text(s,xi+wi/2,y+3.8,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setTextColor(0);
+    }
+
+    let xc=ML;
+    cellC(pdfTxt(w.nombre.length>24?w.nombre.substring(0,23)+'...':w.nombre),true,null,xc,cols[0].w);xc+=cols[0].w;
+    cellC(imp?imp:'',false,null,xc,cols[1].w);xc+=cols[1].w;
+    cellC(hN?fmtN(hN):'',false,null,xc,cols[2].w);xc+=cols[2].w;
+    cellC(parcial?fmtN(parcial):'',false,null,xc,cols[3].w);xc+=cols[3].w;
+    cellC(hExtImporte?fmtN(hExtImporte):'',false,null,xc,cols[4].w);xc+=cols[4].w;
+    cellC(totalBruto?fmtN(totalBruto):'',true,null,xc,cols[5].w);xc+=cols[5].w;
+    cellC(desc?fmtN(desc):'',false,[180,30,30],xc,cols[6].w);xc+=cols[6].w;
+    cellC(gasoil?fmtN(gasoil):'',false,[0,128,0],xc,cols[7].w);xc+=cols[7].w;
+    cellC(irpfEur?fmtN(irpfEur):'',false,[180,30,30],xc,cols[8].w);xc+=cols[8].w;
+    cellC(sobre?fmtN(sobre):'',false,sobre<0?[180,30,30]:[0,100,0],xc,cols[9].w);xc+=cols[9].w;
     const nominaPDF=nominaOficial>0?nominaOficial:nomina;
-    cell(nominaPDF?fmtN(nominaPDF):'',true,[0,80,160],x,cols[10].w);x+=cols[10].w;
-    cell(negativo?fmtN(negativo):'',false,[180,30,30],x,cols[11].w);x+=cols[11].w;
-    cell(resto?fmtN(resto):'',false,[0,100,0],x,cols[12].w);x+=cols[12].w;
-    cell(anticipo?fmtN(anticipo):'',false,[160,90,0],x,cols[13].w);x+=cols[13].w;
-    cell(transf?fmtN(transf):'',true,[0,100,0],x,cols[14].w);x+=cols[14].w;
+    cellC(nominaPDF?fmtN(nominaPDF):'',true,[0,80,160],xc,cols[10].w);xc+=cols[10].w;
+    cellC(negativo?fmtN(negativo):'',false,[180,30,30],xc,cols[11].w);xc+=cols[11].w;
+    cellC(resto?fmtN(resto):'',false,[0,100,0],xc,cols[12].w);xc+=cols[12].w;
+    cellC(anticipo?fmtN(anticipo):'',false,[160,90,0],xc,cols[13].w);xc+=cols[13].w;
+    cellC(transf?fmtN(transf):'',true,[0,100,0],xc,cols[14].w);xc+=cols[14].w;
     const acExtraStr=acExtra>0?'+'+fmtN(acExtra):acExtra<0?fmtN(acExtra):'';
-    cell(acExtraStr,false,acExtra>0?[0,128,0]:acExtra<0?[180,30,30]:null,x,cols[15].w);x+=cols[15].w;
-    // OBS — texto alineado a la izquierda
-    doc.setFontSize(5.5);
-    if(obs)doc.text(obs.substring(0,50),x+1,y+3.8);
-    doc.setFontSize(6.5);
+    cellC(acExtraStr,false,acExtra>0?[0,128,0]:acExtra<0?[180,30,30]:null,xc,cols[15].w);xc+=cols[15].w;
 
-    // Línea separadora
+    // OBS — una sola línea con todo el ancho disponible
+    doc.setFontSize(5.5);doc.setTextColor(60,60,60);
+    if(obsStr)doc.text(obsStr,xc+1,y+3.8,{maxWidth:cols[16].w-2});
+    doc.setFontSize(6.5);doc.setTextColor(0);
+
     doc.setDrawColor(220);doc.line(ML,y+ROW,PW-MR,y+ROW);
-
-    // Acumulados
     totHoras+=hN;totParcial+=parcial;totHext+=hE;totTotal+=totalBruto;
     totDesc+=desc;totSuma+=gasoil;totIrpf+=irpfEur;
     totNomina+=(nominaOficial>0?nominaOficial:nomina);
     totNeg+=negativo;totAnt+=anticipo;totTransf+=transf;
-
     y+=ROW;
   });
 
