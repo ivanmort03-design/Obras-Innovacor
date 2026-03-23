@@ -822,7 +822,13 @@ async function initData(){
     fbOnSnapshot('festivos',s=>{if(s.exists)festivos=s.data().list||[];});
     fbOnSnapshot('notifs',s=>{if(s.exists)notifs=s.data().data||{};});
     fbOnSnapshot('recordatorios',s=>{if(s.exists){recordatorios=s.data().list||[];rDash();if(isActive('recordatorios'))rRec();}});
-    fbOnSnapshot('pagos',s=>{if(s.exists){pagos=s.data().data||{};if(isActive('sueldos'))rSueldos();}});
+    fbOnSnapshot('pagos',s=>{
+      if(s.exists){
+        pagos=s.data().data||{};
+        // Solo redibujar si el usuario no está editando un campo de sueldos
+        if(isActive('sueldos')&&!document.activeElement?.closest('#sueldos-content'))rSueldos();
+      }
+    });
     fbOnSnapshot('prestamos',s=>{if(s.exists){prestamos=s.data().list||[];if(isActive('sueldos'))rSueldos();}});
     fbOnSnapshot('costesConfig',s=>{if(s.exists){costesConfig=s.data()||{};if(isActive('costes'))rCostes();}});
   }catch(e){
@@ -2141,6 +2147,22 @@ function rNotifs(){
 // ── COSTES ────────────────────────────────────────────────────────
 let costesM=new Date().getMonth(), costesY=new Date().getFullYear();
 
+// Normaliza texto para jsPDF (helvetica no soporta tildes ni ñ)
+function pdfTxt(s){
+  if(!s)return '';
+  return String(s)
+    .replace(/[áàäâã]/gi,m=>m===m.toUpperCase()?'A':'a')
+    .replace(/[éèëê]/gi,m=>m===m.toUpperCase()?'E':'e')
+    .replace(/[íìïî]/gi,m=>m===m.toUpperCase()?'I':'i')
+    .replace(/[óòöôõ]/gi,m=>m===m.toUpperCase()?'O':'o')
+    .replace(/[úùüû]/gi,m=>m===m.toUpperCase()?'U':'u')
+    .replace(/[ñ]/g,'n').replace(/[Ñ]/g,'N')
+    .replace(/[ç]/g,'c').replace(/[Ç]/g,'C')
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu,'') // eliminar emojis
+    .replace(/[\u{2600}-\u{27BF}]/gu,'')    // eliminar símbolos especiales
+    .replace(/[^\x20-\x7E]/g,'');           // eliminar cualquier otro no-ASCII
+}
+
 function exportCostesPDF(){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
@@ -2165,8 +2187,9 @@ function exportCostesPDF(){
 
   // Calcular filas de trabajadores
   const list=workers.filter(w=>{
-    if(w.estado==='active'||w.estado==='ext'||w.estado==='baja')return true;
+    if(w.estado==='active'||w.estado==='ext')return true;
     if(w.estado==='admin'&&(w.nFija>0||w.cn>0))return true;
+    if(w.estado==='baja')return true;
     if(w.estado==='noEmpresa'){const c=calcWorkerMonth(w.id,costesM,costesY);return(c.hN+c.hE)>0;}
     return false;
   }).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
@@ -2206,7 +2229,7 @@ function exportCostesPDF(){
   doc.setFontSize(12);doc.setFont('helvetica','bold');
   doc.text('INNOVACOR PROYECTOS Y OBRAS S.L.',ML,y);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(`Informe de costes y beneficios — ${MESES[costesM].toUpperCase()} ${costesY}`,PW/2,y,{align:'center'});
+  doc.text(pdfTxt(`Informe de costes y beneficios - ${MESES[costesM].toUpperCase()} ${costesY}`),PW/2,y,{align:'center'});
   doc.text(new Date().toLocaleDateString('es-ES'),PW-MR,y,{align:'right'});
   y+=5;doc.setDrawColor(150);doc.line(ML,y,PW-MR,y);y+=5;
 
@@ -2217,7 +2240,7 @@ function exportCostesPDF(){
   let xCF=ML;
   COSTES_FIJOS.forEach((c,i)=>{
     if(i%3===0&&i>0){y+=3.5;xCF=ML;}
-    doc.text(`${c.concepto}: ${fmt(c.mes)}`,xCF,y);
+    doc.text(pdfTxt(`${c.concepto}: ${fmt(c.mes)}`),xCF,y);
     xCF+=(PW-ML-MR)/3;
   });
   y+=4;
@@ -2265,8 +2288,8 @@ function exportCostesPDF(){
 
     doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(0);
     x=ML;
-    const nombre=r.w.nombre.length>24?r.w.nombre.substring(0,23)+'…':r.w.nombre;
-    doc.text(nombre+(r.esBaja?' 🏥':''),x+1,y+3.8);x+=cols[0].w;
+    const nombre=pdfTxt(r.w.nombre.length>24?r.w.nombre.substring(0,23)+'...':r.w.nombre);
+    doc.text(nombre+(r.esBaja?' (Baja)':''),x+1,y+3.8);x+=cols[0].w;
     doc.text(r.hTotal?fmtH(r.hTotal):'—',x+cols[1].w/2,y+3.8,{align:'center'});x+=cols[1].w;
     doc.text(r.salario?r.salario.toFixed(2):'—',x+cols[2].w-1,y+3.8,{align:'right'});x+=cols[2].w;
     const ssStr=r.ss?r.ss.toFixed(2)+(r.prorrataSS<1?`(${r.diasEnEmpresa}d)`:''):'—';
@@ -2288,7 +2311,7 @@ function exportCostesPDF(){
       const tar=isOf(r.w)?ob.tof:ob.tpe;
       return`${ob.ob?.nombre||'?'}: ${fmtH(ob.hN+ob.hE)}h×${tar}€=${ob.fact.toFixed(0)}€`;
     }).join(' | ');
-    if(obraStr)doc.text(obraStr.substring(0,70),x+1,y+3.8);
+    if(obraStr)doc.text(pdfTxt(obraStr.substring(0,70)),x+1,y+3.8);
 
     doc.setDrawColor(220);doc.line(ML,y+ROW,PW-MR,y+ROW);
 
@@ -2313,10 +2336,10 @@ function exportCostesPDF(){
 
   // ── RESUMEN FINAL ─────────────────────────────────────────────────
   doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(0);
-  doc.text(`Coste mano de obra: ${fmt(totSal+totSS)}   Costes indirectos: ${fmt(totalIndirectos)}   COSTE TOTAL: ${fmt(totCoste)}`,ML,y);y+=5;
+  doc.text(pdfTxt(`Coste mano de obra: ${fmt(totSal+totSS)}   Costes indirectos: ${fmt(totalIndirectos)}   COSTE TOTAL: ${fmt(totCoste)}`),ML,y);y+=5;
   doc.setFont('helvetica','bold');
   doc.setTextColor(totBenef>=0?0:180,totBenef>=0?100:30,totBenef>=0?60:30);
-  doc.text(`TOTAL FACTURADO: ${fmt(totFact)}   BENEFICIO NETO: ${fmt(totBenef)}   MARGEN: ${totFact>0?Math.round(totBenef/totFact*100):0}%`,ML,y);
+  doc.text(pdfTxt(`TOTAL FACTURADO: ${fmt(totFact)}   BENEFICIO NETO: ${fmt(totBenef)}   MARGEN: ${totFact>0?Math.round(totBenef/totFact*100):0}%`),ML,y);
 
   // Pie de página
   const nPags=doc.internal.getNumberOfPages();
@@ -2401,8 +2424,9 @@ function rCostes(){
 
   // Trabajadores activos + noEmpresa con horas
   const list=workers.filter(w=>{
-    if(w.estado==='active'||w.estado==='ext'||w.estado==='baja')return true;
+    if(w.estado==='active'||w.estado==='ext')return true;
     if(w.estado==='admin'&&(w.nFija>0||w.cn>0))return true;
+    if(w.estado==='baja')return true;
     if(w.estado==='noEmpresa'){const c=calcWorkerMonth(w.id,costesM,costesY);return(c.hN+c.hE)>0;}
     return false;
   }).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
@@ -2425,7 +2449,7 @@ function rCostes(){
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg);border-radius:var(--rs);padding:8px 10px">
           <span style="font-size:12px;font-weight:600">${label}</span>
           <input type="number" step="10" placeholder="0" value="${getCosteSS(cat)||''}"
-            onchange="costesConfig['ss_${cat}']=parseFloat(this.value)||0;saveCostesConfig()"
+            onblur="costesConfig['ss_${cat}']=parseFloat(this.value)||0;saveCostesConfig()" onkeydown="if(event.key==='Enter')this.blur()"
             style="width:80px;border:1px solid var(--br);border-radius:4px;padding:4px 6px;font-size:12px;text-align:right;background:transparent;color:var(--t);outline:none"/>
         </div>`).join('')}
     </div>
@@ -2476,10 +2500,10 @@ function rCostes(){
     ${indirectos.length?indirectos.map((ind,i)=>`
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
         <input type="text" placeholder="Descripción..." value="${(ind.desc||'').replace(/"/g,"'")}"
-          onchange="editCostesIndirecto(${i},'desc',this.value)"
+          onblur="editCostesIndirecto(${i},'desc',this.value)"
           style="flex:1;border:1px solid var(--br);border-radius:4px;padding:6px 8px;font-size:12px;background:transparent;color:var(--t);outline:none"/>
         <input type="number" step="10" placeholder="0€" value="${ind.importe||''}"
-          onchange="editCostesIndirecto(${i},'importe',this.value)"
+          onblur="editCostesIndirecto(${i},'importe',this.value)" onkeydown="if(event.key==='Enter')this.blur()"
           style="width:90px;border:1px solid var(--br);border-radius:4px;padding:6px 8px;font-size:12px;text-align:right;background:transparent;color:var(--t);outline:none"/>
         <button onclick="delCostesIndirecto(${i})" style="background:transparent;border:none;color:var(--t3);font-size:16px;cursor:pointer">×</button>
       </div>`).join('')
@@ -2796,11 +2820,17 @@ function getPagosKey(wid){return`${sueldosY}-${sueldosM}-${wid}`;}
 function guardarPago(wid,campo,valor){
   const key=getPagosKey(wid);
   if(!pagos[key])pagos[key]={};
-  if(campo==='transferirDif') pagos[key][campo]=valor===1||valor===true||valor==='1';
-  else pagos[key][campo]=parseFloat(valor)||0;
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>{setSyncDot('ok');rSueldos();})
-    .catch(e=>{setSyncDot('err');console.error(e);});
+  if(campo==='transferirDif'){
+    pagos[key][campo]=valor===1||valor===true||valor==='1';
+    db.collection('app').doc('pagos').set({data:pagos})
+      .then(()=>{setSyncDot('ok');rSueldos();}) // checkbox → redibujar totales
+      .catch(e=>{setSyncDot('err');console.error(e);});
+  }else{
+    pagos[key][campo]=parseFloat(valor)||0;
+    db.collection('app').doc('pagos').set({data:pagos})
+      .then(()=>setSyncDot('ok')) // campo numérico → solo sync, NO redibujar
+      .catch(e=>{setSyncDot('err');console.error(e);});
+  }
 }
 
 function addAnticipo(wid){
@@ -2893,16 +2923,28 @@ function rSueldos(){
     const pkey=getPagosKey(w.id);
     const p=pagos[pkey]||{};
     const nominaOficial=parseFloat(p.nominaOficial)||0;
-    // Baja médica: horas trabajadas + nómina oficial (lo que paga la mutua/empresa)
-    // Si tiene horas Y nómina oficial: ambas se suman
-    const totalBruto=esNFija?w.nFija:esBaja?(horasBruto+nominaOficial):horasBruto;
+    // Lógica de totalBruto:
+    // 1. Nómina fija → siempre la nómina fija
+    // 2. Con nómina oficial → se usa la nómina oficial, SALVO que las horas sean mayores
+    // 3. Sin nómina oficial → se calcula por horas
+    let totalBruto;
+    if(esNFija){
+      totalBruto=w.nFija;
+    }else if(esBaja&&nominaOficial>0){
+      // Baja médica: cobra lo mayor entre horas trabajadas y nómina oficial
+      totalBruto=horasBruto>nominaOficial?horasBruto:nominaOficial;
+    }else{
+      // Resto: siempre por horas (nómina oficial es solo informativa)
+      totalBruto=horasBruto;
+    }
     const irpfEur=parseFloat(p.irpfEur)||0;
     const irpfAplica=w.irpfAplica||'si';
     const irpfDescuentoW=irpfAplica==='no'||irpfAplica==='becario'?0:irpfAplica==='empresa50'?Math.round(irpfEur*0.5*100)/100:irpfEur;
-    // Para baja médica la nómina oficial ya está incluida en totalBruto, no mostrar como campo separado
-    const nominaOficialDisplay=esBaja?0:nominaOficial;
+    // Para baja médica: la nómina oficial se muestra Y se usa en el input
+    // pero en el cálculo ya está incluida en totalBruto, así que no la sumamos de nuevo
+    const nominaOficialDisplay=nominaOficial;
     const transferirDif=p.transferirDif===true;
-    const diferencia=nominaOficialDisplay>0?Math.round((totalBruto-nominaOficialDisplay)*100)/100:0;
+    const diferencia=nominaOficialDisplay>0&&!esBaja?Math.round((totalBruto-nominaOficialDisplay)*100)/100:0;
     const desc=parseFloat(p.desc)||0;
     const gasoil=parseFloat(p.gasoil)||0;
     const anticipos=p.anticipos||[];
@@ -2946,7 +2988,7 @@ function rSueldos(){
   function inp(wid,campo,val,placeholder,step,color){
     color=color||'var(--t)';
     return`<input type="number" step="${step||10}" placeholder="${placeholder||0}" value="${val||''}"
-      onchange="guardarPago(${wid},'${campo}',this.value)"
+      onblur="guardarPago(${wid},'${campo}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"
       style="width:100%;border:1px solid var(--br);border-radius:4px;background:transparent;font-size:13px;font-weight:600;color:${color};outline:none;padding:4px 6px;margin-top:3px"/>`;
   }
 
@@ -2972,21 +3014,11 @@ function rSueldos(){
       ${!esNFija&&(hN+hE)>0?`<div style="font-size:11px;background:var(--bg);border-radius:var(--rs);padding:7px 10px;margin-bottom:10px;display:flex;gap:14px;flex-wrap:wrap">
         <span style="color:var(--t3)">H.norm: <b style="color:var(--t)">${fmtH(hN)}×${imp}€=${fmt(parcial)}</b></span>
         ${hE>0?`<span style="color:var(--t3)">H.extra: <b style="color:var(--t)">${fmtH(hE)}×${tarHE}€=${fmt(hE*tarHE)}</b></span>`:''}
-        ${esBaja&&nominaOficial>0?`<span style="color:#791F1F">🏥 Nómina mutua: <b>${fmt(nominaOficial)}</b></span>`:''}
+        ${esBaja&&nominaOficial>0&&horasBruto<=nominaOficial?`<span style="color:#791F1F;font-size:10px">⚠️ Se paga nómina oficial (horas ${fmt(horasBruto)} < nómina ${fmt(nominaOficial)})</span>`:''}
+        ${esBaja&&nominaOficial>0&&horasBruto>nominaOficial?`<span style="color:var(--gp);font-size:10px">✅ Se pagan horas (${fmt(horasBruto)} > nómina ${fmt(nominaOficial)})</span>`:''}
       </div>`:''}
       ${esBaja&&!hN&&!hE?`<div style="font-size:11px;background:var(--rl);border-radius:var(--rs);padding:7px 10px;margin-bottom:10px;color:#791F1F">
         🏥 Todo el mes de baja — introduce la nómina oficial que manda la asesoría
-      </div>`:''}
-      ${esBaja&&(hN+hE)>0&&nominaOficial>0?`<div style="font-size:11px;background:var(--rl);border-radius:var(--rs);padding:7px 10px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;color:#791F1F">
-          <span>Horas trabajadas</span><b>${fmt(horasBruto)}</b>
-        </div>
-        <div style="display:flex;justify-content:space-between;color:#791F1F">
-          <span>Nómina baja (mutua)</span><b>${fmt(nominaOficial)}</b>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--br);margin-top:4px;padding-top:4px;color:#791F1F">
-          <span>Total bruto</span><b>${fmt(totalBruto)}</b>
-        </div>
       </div>`:''}
       <div style="background:var(--bl);border-radius:var(--rs);padding:10px;margin-bottom:10px">
         <div style="font-size:11px;color:#0C447C;font-weight:600;margin-bottom:6px">📋 Datos de la asesoría <span style="font-weight:400;font-size:10px">(solo informativo)</span></div>
@@ -3055,10 +3087,10 @@ function rSueldos(){
           ${anticipos.length?anticipos.map((a,i)=>`
             <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
               <input type="date" value="${a.fecha||''}"
-                onchange="editAnticipo(${w.id},${i},'fecha',this.value)"
+                onblur="editAnticipo(${w.id},${i},'fecha',this.value)"
                 style="flex:1;border:1px solid var(--br);border-radius:4px;background:transparent;font-size:10px;color:var(--t3);outline:none;padding:3px 4px"/>
               <input type="number" step="10" value="${a.importe||''}" placeholder="0€"
-                onchange="editAnticipo(${w.id},${i},'importe',this.value)"
+                onblur="editAnticipo(${w.id},${i},'importe',this.value)" onkeydown="if(event.key==='Enter')this.blur()"
                 style="width:70px;border:1px solid var(--br);border-radius:4px;background:transparent;font-size:12px;font-weight:600;color:#633806;outline:none;padding:3px 5px"/>
               <button onclick="delAnticipo(${w.id},${i})" style="background:transparent;border:none;color:var(--t3);font-size:14px;cursor:pointer;padding:0">×</button>
             </div>`).join(''):'<div style="color:var(--t3);font-size:11px">Sin anticipos</div>'}
@@ -3084,7 +3116,7 @@ function rSueldos(){
         </div>`}
       </div>
       <input type="text" placeholder="Observaciones..." value="${(obs||'').replace(/"/g,"'")}"
-        onchange="guardarPagoTexto(${w.id},'obs',this.value)"
+        onblur="guardarPagoTexto(${w.id},'obs',this.value)"
         style="width:100%;border:1px solid var(--br);border-radius:4px;background:transparent;font-size:11px;color:var(--t3);outline:none;padding:5px 8px"/>
       `}
     </div>`;
@@ -3440,7 +3472,7 @@ function exportSueldosPDF(){
 
   // Trabajadores ordenados alfabéticamente
   const list=workers
-    .filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&(w.nFija>0||w.cn>0)))
+    .filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||(w.estado==='admin'&&(w.nFija>0||w.cn>0))||(w.estado==='noEmpresa'&&(()=>{const c=calcWorkerMonth(w.id,sueldosM,sueldosY);const p=pagos[`${sueldosY}-${sueldosM}-${w.id}`]||{};return(c.hN+c.hE)>0||w.nFija>0||(parseFloat(p.nominaOficial)||0)>0;})()))
     .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
 
   // Cabecera tabla
@@ -3479,17 +3511,18 @@ function exportSueldosPDF(){
     const prestMes=getPrestamosActivos(w.id,sueldosM,sueldosY);
     const totalPrest=prestMes.reduce((s,pr)=>s+pr.cuotaMes,0);
 
-    const nomina=Math.round((totalBruto-irpfEur-desc+gasoil)*100)/100;
-    const saldo=Math.round((nomina+sobre-totalPrest)*100)/100;
-    const transf=Math.max(0,Math.round((saldo-anticipo)*100)/100);
-    const diferencia=nominaOficial>0?Math.round((totalBruto-nominaOficial)*100)/100:0;
+    const esBajaPDF=w.estado==='baja';
+    const totalBrutoPDF=esBajaPDF&&nominaOficial>0?(totalBruto>nominaOficial?totalBruto:nominaOficial):totalBruto;
+    const nominaPDF=Math.round((totalBrutoPDF-irpfEur-desc+gasoil)*100)/100;
+    const saldoPDF=Math.round((nominaPDF+sobre-totalPrest)*100)/100;
+    const transfPDF=Math.max(0,Math.round((saldoPDF-anticipo)*100)/100);
+    const diferenciaPDF=nominaOficial>0?Math.round((totalBrutoPDF-nominaOficial)*100)/100:0;
 
-    // Valores para columnas
-    const colNominaVal=nominaOficial>0?nominaOficial:nomina;
-    const colHorasVal=totalBruto;
-    const colAjusteVal=nominaOficial>0?diferencia:0;
+    const colNominaVal=nominaOficial>0?nominaOficial:nominaPDF;
+    const colHorasVal=esBajaPDF?totalBruto:totalBrutoPDF; // solo horas, sin sumar nómina oficial
+    const colAjusteVal=nominaOficial>0?diferenciaPDF:0;
 
-    if(totalBruto===0&&nomina===0&&transf===0)return;
+    if(totalBrutoPDF===0&&nominaPDF===0&&transfPDF===0&&!esBajaPDF)return;
 
     if(y>270){doc.addPage();y=20;}
 
@@ -3498,10 +3531,10 @@ function exportSueldosPDF(){
 
     doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(0);
     x=ML+1;
-    const nombre=w.nombre.length>30?w.nombre.substring(0,29)+'…':w.nombre;
-    doc.text(nombre,x,y+4);x+=colNombre;
+    const nombre=pdfTxt(w.nombre.length>30?w.nombre.substring(0,29)+'...':w.nombre);
+    doc.text(pdfTxt(nombre),x,y+4);x+=colNombre;
     doc.text(fmt(colNominaVal),x,y+4);x+=colNomina;
-    doc.text(fmt(colHorasVal),x,y+4);x+=colHoras;
+    doc.text(esBajaPDF&&colHorasVal===0?'0,00€':fmt(colHorasVal),x,y+4);x+=colHoras;
     if(colAjusteVal!==0){
       doc.setTextColor(colAjusteVal>0?0:220,colAjusteVal>0?128:50,colAjusteVal>0?0:50);
       doc.text((colAjusteVal>0?'+':'')+fmt(colAjusteVal),x,y+4);
@@ -3511,12 +3544,12 @@ function exportSueldosPDF(){
     }
     x+=colAjuste;
     doc.setFont('helvetica','bold');
-    doc.text(fmt(transf),x,y+4);
+    doc.text(fmt(transfPDF),x,y+4);
     doc.setFont('helvetica','normal');
 
     totalNominas+=colNominaVal;
     totalHoras+=colHorasVal;
-    totalTransfs+=transf;
+    totalTransfs+=transfPDF;
     y+=6;
   });
 
@@ -3557,7 +3590,7 @@ function exportSueldosPDFDetalle(){
   doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('INNOVACOR PROYECTOS Y OBRAS S.L.',ML,y);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(`SUELDOS ${MESES[sueldosM].toUpperCase()} ${sueldosY}`,PW/2,y,{align:'center'});
+  doc.text(pdfTxt(`SUELDOS ${MESES[sueldosM].toUpperCase()} ${sueldosY}`),PW/2,y,{align:'center'});
   doc.text(new Date().toLocaleDateString('es-ES'),PW-MR,y,{align:'right'});
   y+=5;doc.setDrawColor(150);doc.line(ML,y,PW-MR,y);y+=4;
 
@@ -3601,7 +3634,7 @@ function exportSueldosPDFDetalle(){
 
   // ── DATOS ─────────────────────────────────────────────────────────
   const list=workers
-    .filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&(w.nFija>0||w.cn>0)))
+    .filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||(w.estado==='admin'&&(w.nFija>0||w.cn>0))||(w.estado==='noEmpresa'&&(()=>{const c=calcWorkerMonth(w.id,sueldosM,sueldosY);const p=pagos[`${sueldosY}-${sueldosM}-${w.id}`]||{};return(c.hN+c.hE)>0||w.nFija>0||(parseFloat(p.nominaOficial)||0)>0;})()))
     .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
 
   let totHoras=0,totParcial=0,totHext=0,totTotal=0,totDesc=0,totSuma=0,totIrpf=0,totNomina=0,totNeg=0,totAnt=0,totTransf=0;
