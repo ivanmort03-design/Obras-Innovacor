@@ -2127,7 +2127,16 @@ function rSueldos(){
   const filtroObra=parseInt(document.getElementById('sueldos-filtro-obra')?.value)||0;
   const filtroOrden=document.getElementById('sueldos-filtro-orden')?.value||'alfa';
 
-  let list=workers.filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&(w.nFija>0||w.cn>0)));
+  let list=workers.filter(w=>{
+    if(w.estado==='active'||w.estado==='ext')return true;
+    if(w.estado==='admin'&&(w.nFija>0||w.cn>0))return true;
+    // Baja empresa: mostrar si tiene horas registradas este mes
+    if(w.estado==='noEmpresa'){
+      const calc=calcWorkerMonth(w.id,sueldosM,sueldosY);
+      return(calc.hN+calc.hE)>0||w.nFija>0;
+    }
+    return false;
+  });
 
   // Filtrar por obra
   if(filtroObra) list=list.filter(w=>w.obra===filtroObra);
