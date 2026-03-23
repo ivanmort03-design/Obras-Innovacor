@@ -49,7 +49,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:15px;lin
 .cn{font-size:15px;font-weight:600;line-height:1.3}.csub{font-size:12px;color:var(--t3);margin-top:2px}
 .ca{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .bdg{font-size:11px;font-weight:600;padding:3px 9px;border-radius:var(--rp);white-space:nowrap;flex-shrink:0}
-.ba{background:var(--gl);color:var(--gp)}.bp{background:var(--al);color:#633806}.bd{background:var(--bl);color:#0C447C}.bn{background:#F0EFE9;color:var(--t2)}.bbj{background:var(--rl);color:#791F1F}.badm{background:var(--pl);color:#3C3489}.bne{background:#F0EFE9;color:var(--t3)}.bext{background:#FEF3E2;color:#7C4A00}.bhigh{background:var(--rl);color:#791F1F}.bmed{background:var(--al);color:#633806}.blow{background:var(--gl);color:var(--gp)}
+.ba{background:var(--gl);color:var(--gp)}.bp{background:var(--al);color:#633806}.bd{background:var(--bl);color:#0C447C}.bn{background:#F0EFE9;color:var(--t2)}.bbj{background:var(--rl);color:#791F1F}.badm{background:var(--pl);color:#3C3489}.bne{background:#FFE5E5;color:#C0392B;font-weight:600}.bext{background:#FEF3E2;color:#7C4A00}.bhigh{background:var(--rl);color:#791F1F}.bmed{background:var(--al);color:#633806}.blow{background:var(--gl);color:var(--gp)}
 .wc{background:var(--bc);border:1px solid var(--br);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;text-transform:uppercase}
 .av0{background:var(--gl);color:var(--gp)}.av1{background:var(--bl);color:#0C447C}.av2{background:var(--al);color:#633806}.av3{background:var(--pl);color:#3C3489}.av4{background:var(--rl);color:#791F1F}
@@ -210,7 +210,14 @@ textarea.fi{min-height:75px;resize:vertical}
     <!-- PERSONAL -->
     <div id="sec-personal" class="sec">
       <button class="btn btnp" style="width:100%;margin-bottom:12px" onclick="openEW(null)">+ Nuevo trabajador</button>
-      <div class="sbar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--t3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="search" id="srch-wk" placeholder="Buscar trabajador..." oninput="rWorkers()"/></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <div class="sbar" style="flex:1;margin:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--t3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="search" id="srch-wk" placeholder="Buscar trabajador..." oninput="rWorkers()"/></div>
+        <select class="fi" id="wk-filtro-empresa" onchange="rWorkers()" style="width:auto;padding:7px 10px;font-size:12px">
+          <option value="activos">✅ En empresa</option>
+          <option value="exempresa">🚪 Baja empresa</option>
+          <option value="todos">👥 Todos</option>
+        </select>
+      </div>
       <div id="workers-list"></div>
     </div>
     <!-- HORARIO -->
@@ -393,7 +400,17 @@ textarea.fi{min-height:75px;resize:vertical}
       <select class="fi" id="wk-cat"><option value="of1">Oficial 1ª</option><option value="of2">Oficial 2ª</option><option value="pe">Peón E.</option><option value="enc">Encargado</option><option value="tec">Técnico</option><option value="adm">Administrador</option></select>
     </div>
     <div class="fg"><label class="fl">Situación</label>
-      <select class="fi" id="wk-s"><option value="active">Activo en obra</option><option value="admin">Administrativo</option><option value="ext">Externo</option><option value="baja">Baja</option><option value="noEmpresa">No en empresa</option></select>
+      <select class="fi" id="wk-s" onchange="toggleFechaBaja()">
+        <option value="active">✅ Activo en obra</option>
+        <option value="admin">🏢 Administrativo</option>
+        <option value="ext">🔄 Externo</option>
+        <option value="baja">🏥 Baja médica</option>
+        <option value="noEmpresa">🚪 Baja empresa (ya no pertenece)</option>
+      </select>
+    </div>
+    <div class="fg" id="wk-fechabaja-fg">
+      <label class="fl">Fecha baja empresa <span style="font-weight:400;color:var(--t3)">(opcional)</span></label>
+      <input class="fi" type="date" id="wk-fechabaja"/>
     </div>
     <div class="fg"><label class="fl">Obra asignada</label><select class="fi" id="wk-o"></select></div>
     <!-- Datos personales -->
@@ -651,7 +668,7 @@ const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','
 const AVC=['av0','av1','av2','av3','av4'];
 const ESTADOL={active:'En curso',paused:'Pausada',done:'Finalizada',pending:'Pendiente'};
 const ESTADOB={active:'ba',paused:'bp',done:'bd',pending:'bn'};
-const WEST={active:'Activo',admin:'Administrativo',ext:'Externo',baja:'Baja',noEmpresa:'No en empresa'};
+const WEST={active:'Activo',admin:'Administrativo',ext:'Externo',baja:'Baja médica',noEmpresa:'Baja empresa'};
 const WESTB={active:'ba',admin:'badm',ext:'bext',baja:'bbj',noEmpresa:'bne'};
 const CATL={of1:'Oficial 1ª',of2:'Oficial 2ª',pe:'Peón E.',enc:'Encargado',tec:'Técnico',adm:'Administrador'};
 const isOf=w=>['of1','of2','enc','tec'].includes(w.cat);
@@ -805,7 +822,14 @@ function ini(n){const p=n.replace(/,/g,' ').split(/\s+/).filter(Boolean);return(
 function fmtNombre(n){const p=n.split(',');if(p.length<2)return n;return(p[1].trim()+' '+p[0].trim()).trim();}
 function today(){return new Date().toISOString().split('T')[0];}
 // Convierte fecha dd/mm/aaaa a Date para comparar
-function parsefecha(f){if(!f)return null;const[d,m,y]=f.split('/');return new Date(y,m-1,d);}
+function parsefecha(f){
+  if(!f)return null;
+  // Formato yyyy-mm-dd (input type=date)
+  if(/^\d{4}-\d{2}-\d{2}$/.test(f)){const[y,m,d]=f.split('-');return new Date(y,m-1,d);}
+  // Formato dd/mm/aaaa
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(f)){const[d,m,y]=f.split('/');return new Date(y,m-1,d);}
+  return null;
+}
 function vencido(f){const d=parsefecha(f);return d&&d<new Date();}
 function proximo(f){const d=parsefecha(f);if(!d)return false;const en30=new Date();en30.setDate(en30.getDate()+30);return d>=new Date()&&d<=en30;}
 function avC(id){return AVC[id%5];}
@@ -1041,9 +1065,22 @@ function oCard(o){
 }
 
 // ── PERSONAL ──────────────────────────────────────────────────────
+function toggleFechaBaja(){
+  // Campo siempre visible — no hace nada
+}
+
 function rWorkers(){
   const q=(document.getElementById('srch-wk')?.value||'').toLowerCase();
-  const list=sW().filter(w=>!q||w.nombre.toLowerCase().includes(q));
+  const filtroEmp=document.getElementById('wk-filtro-empresa')?.value||'activos';
+  const enEmpresa=['active','admin','ext','baja'];
+  const noEnEmpresa=['noEmpresa'];
+
+  let list=sW().filter(w=>{
+    if(q&&!w.nombre.toLowerCase().includes(q))return false;
+    if(filtroEmp==='activos')return enEmpresa.includes(w.estado||'active');
+    if(filtroEmp==='exempresa')return noEnEmpresa.includes(w.estado||'active');
+    return true;
+  });
   document.getElementById('workers-list').innerHTML=list.length?list.map(w=>{
     const ob=obras.find(o=>o.id===w.obra);
     const es=w.estado||'active';
@@ -1053,7 +1090,11 @@ function rWorkers(){
     return`<div class="wc">
       <div class="av ${avC(w.id)}" onclick="openDW(${w.id})" style="cursor:pointer">${ini(w.nombre)}</div>
       <div class="wi" onclick="openDW(${w.id})" style="cursor:pointer">
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="wn">${w.nombre}</span><span class="bdg ${WESTB[es]}" style="font-size:10px">${WEST[es]}</span></div>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <span class="wn">${w.nombre}</span>
+          <span class="bdg ${WESTB[es]||'ba'}" style="font-size:10px">${WEST[es]||es}</span>
+          ${es==='noEmpresa'?`<span style="font-size:10px;color:#E24B4A">${w.fechaBaja||''}</span>`:''}
+        </div>
         <div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center">
           <span class="tag">${CATL[w.cat]||'—'}</span>
           <span class="wo" style="margin:0;max-width:160px">${ob?ob.nombre:(es==='admin'?'Administración':es==='baja'?'Baja':'Sin asignar')}</span>
@@ -1188,7 +1229,20 @@ function rHor(){
   const days=new Date(cY,cM+1,0).getDate();
 
   // Obtener lista filtrada
-  let list=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja');
+  // También mostrar trabajadores noEmpresa que causaron baja este mes
+  let list=sW().filter(w=>{
+    if(w.estado==='active'||w.estado==='ext'||w.estado==='baja')return true;
+    // noEmpresa: mostrar si causó baja este mes
+    if(w.estado==='noEmpresa'&&w.fechaBaja){
+      const fb=parsefecha(w.fechaBaja);
+      if(fb){
+        const inicioMes=new Date(cY,cM,1);
+        const finMes=new Date(cY,cM+1,0);
+        return fb>=inicioMes&&fb<=finMes;
+      }
+    }
+    return false;
+  });
   if(filtroObra){
     list=list.filter(w=>w.obra===filtroObra);
   }
@@ -1229,11 +1283,55 @@ function rHor(){
       }
     }
 
-    html+=`<tr><td class="nc" title="${w.nombre}">${w.nombre}${w.estado==='ext'?' *':''}</td>`;
+    html+=`<tr><td class="nc" title="${w.nombre}">${w.nombre}${w.estado==='ext'?' *':w.estado==='noEmpresa'?' 🚪':''}</td>`;
     for(let d=1;d<=days;d++){
       const val=hor[hKey(w.id,d)];
       const dow=new Date(cY,cM,d).getDay();
       const ds=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+      // Comprobar si el día está fuera del período del trabajador
+      const dFalta=w.falta?parsefecha(w.falta):null;
+      const dBaja=w.fechaBaja?parsefecha(w.fechaBaja):null;
+      const dDia=new Date(cY,cM,d);
+
+      // Antes de la fecha de alta → siempre X
+      const antesAlta=dFalta&&dDia<dFalta;
+      // Después de la baja → siempre X
+      const despuesBaja=dBaja&&dDia>dBaja;
+
+      // Entre alta y primer día con horas: buscar si hay alguna hora registrada en días anteriores del mes
+      let sinIniciar=false;
+      if(!antesAlta&&!despuesBaja&&dFalta){
+        // Comprobar si hay algún día con horas antes de este día este mes
+        let tieneHorasPrevias=false;
+        for(let dd=1;dd<d;dd++){
+          const vv=hor[hKey(w.id,dd)];
+          if(vv!==undefined&&vv!==null&&vv!==''){
+            // tiene algo registrado
+            if(typeof vv==='number'&&vv>0){tieneHorasPrevias=true;break;}
+            if(typeof vv==='object'&&(vv.n>0||vv.he>0)){tieneHorasPrevias=true;break;}
+          }
+        }
+        // Si no hay horas previas y tampoco en este día, es X
+        const vHoy=hor[hKey(w.id,d)];
+        const tieneHorasHoy=(typeof vHoy==='number'&&vHoy>0)||(typeof vHoy==='object'&&(vHoy?.n>0||vHoy?.he>0));
+        if(!tieneHorasPrevias&&!tieneHorasHoy)sinIniciar=true;
+      }
+
+      const fueraPeriodo=antesAlta||despuesBaja||sinIniciar;
+
+      if(fueraPeriodo&&!sinIniciar){
+        // Fuera del período real (antes alta o después baja) → X no editable
+        html+=`<td style="background:var(--bg);color:var(--t3);text-align:center;font-size:10px;${dow===0||dow===6?'opacity:.4':''}">✕</td>`;
+        continue;
+      }
+
+      if(sinIniciar){
+        // Aún no ha empezado — X editable (se puede registrar igual)
+        html+=`<td style="background:var(--bg);color:var(--t3);text-align:center;font-size:10px;cursor:pointer;${dow===0||dow===6?'opacity:.4':''}" onclick="eCell(${w.id},${d})">✕</td>`;
+        continue;
+      }
+
       const{cls,txt,sub}=cellDisp(val,ds);
       if(typeof val==='object'){rN+=val.n||0;rHE+=val.he||0;if(val.obra2){rN+=val.obra2.n||0;rHE+=val.obra2.he||0;}}
       else if(typeof val==='number')rN+=val;
@@ -1354,10 +1452,33 @@ function saveHor(){
       toast(msg);
     }
     svFB('horario',hor);CM();rHor();
+    // Si es la primera hora registrada del trabajador este mes y la fecha de alta
+    // es posterior, actualizar falta para que las X desaparezcan
+    if(w&&w.falta){
+      const dFalta=parsefecha(w.falta);
+      const dHoy=new Date(cY,cM,editCell.day);
+      if(dFalta&&dHoy<dFalta){
+        const nuevaFalta=`${String(editCell.day).padStart(2,'0')}/${String(cM+1).padStart(2,'0')}/${cY}`;
+        w.falta=nuevaFalta;
+        svFB('workers',workers);
+        rHor(); // redibujar con la nueva fecha de alta
+      }
+    }
   }else{
     hor[key]=nota?{tipo:tp,nota}:tp;
     const label=AUSENCIAS[tp]?.txt||tp;
-    svFB('horario',hor);CM();rHor();toast('✓ '+label+(nota?' 📝':''));
+    // BE = Baja Empresa → actualizar trabajador automáticamente
+    if(tp==='be'&&w){
+      const fechaBajaAuto=`${cY}-${String(cM+1).padStart(2,'0')}-${String(editCell.day).padStart(2,'0')}`;
+      w.estado='noEmpresa';
+      w.fechaBaja=fechaBajaAuto;
+      svFB('workers',workers);
+      if(isActive('personal'))rWorkers();
+      toast(`✓ BE — ${fmtNombre(w.nombre)} dado de baja el ${editCell.day}/${cM+1}/${cY}`);
+    }else{
+      toast('✓ '+label+(nota?' 📝':''));
+    }
+    svFB('horario',hor);CM();rHor();
   }
 }
 
@@ -2425,6 +2546,7 @@ function resetWorkers(){
         cn:existing.cn!==undefined?existing.cn:wd.cn,
         ce:existing.ce!==undefined?existing.ce:wd.ce,
         nFija:existing.nFija!==undefined?existing.nFija:(wd.nFija||0),
+        fechaBaja:existing.fechaBaja||wd.fechaBaja||'',
         obraHistory:existing.obraHistory||[],
         obraDesde:existing.obraDesde||'',
       };
@@ -2904,6 +3026,11 @@ function openEW(id){
   document.getElementById('wk-t').value=w?.tel||'';
   document.getElementById('wk-cat').value=w?.cat||'of1';
   document.getElementById('wk-s').value=w?.estado||'active';
+  // Convertir fechaBaja a formato yyyy-mm-dd si viene en dd/mm/aaaa
+  let fb=w?.fechaBaja||'';
+  if(fb&&/^\d{2}\/\d{2}\/\d{4}$/.test(fb)){const[d,m,y]=fb.split('/');fb=`${y}-${m}-${d}`;}
+  document.getElementById('wk-fechabaja').value=fb;
+  toggleFechaBaja();
   document.getElementById('wk-cn').value=w?.cn||'';
   document.getElementById('wk-ce').value=w?.ce||'';
   document.getElementById('wk-nfija').value=w?.nFija||'';
@@ -2938,6 +3065,7 @@ function saveWorker(){
     cn:parseFloat(document.getElementById('wk-cn').value)||0,
     ce:parseFloat(document.getElementById('wk-ce').value)||0,
     nFija:parseFloat(document.getElementById('wk-nfija').value)||0,
+    fechaBaja:document.getElementById('wk-fechabaja').value.trim(),
     irpfAplica:document.getElementById('wk-irpf-aplica').value,
     dni:document.getElementById('wk-dni').value.trim().toUpperCase(),
     vtodni:document.getElementById('wk-vtodni').value.trim(),
@@ -3122,6 +3250,7 @@ function openDW(id){
       ${w.fnac?`<div class="inrow"><span class="ik">Fecha nacimiento</span><span class="iv">${w.fnac}</span></div>`:''}
       ${w.vtodni?`<div class="inrow"><span class="ik">Vto. DNI</span><span class="iv" style="color:${vencido(w.vtodni)?'#E24B4A':proximo(w.vtodni)?'#EF9F27':'var(--t)'}">${w.vtodni}${vencido(w.vtodni)?' ⚠️ CADUCADO':proximo(w.vtodni)?' ⚠️ Próximo':''}</span></div>`:''}
       ${w.falta?`<div class="inrow"><span class="ik">Alta empresa</span><span class="iv">${w.falta}</span></div>`:''}
+      ${w.fechaBaja?`<div class="inrow"><span class="ik">Baja empresa</span><span class="iv" style="color:#E24B4A">${w.fechaBaja}</span></div>`:''}
       ${w.banco?`<div class="inrow"><span class="ik">Banco</span><span class="iv">${w.banco}</span></div>`:''}
       ${w.cuenta?`<div class="inrow"><span class="ik">IBAN</span><span class="iv" style="font-family:var(--fm);font-size:12px">${w.cuenta}</span></div>`:''}
     </div>
