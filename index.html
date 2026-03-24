@@ -225,6 +225,11 @@ textarea.fi{min-height:75px;resize:vertical}
       <div id="workers-list"></div>
     </div>
     <!-- HORARIO -->
+    <!-- BAJAS MÉDICAS -->
+    <div id="sec-bajas" class="sec">
+      <button class="btn btnp" style="width:100%;margin-bottom:14px" onclick="openNuevaBaja(null)">+ Nueva baja médica</button>
+      <div id="bajas-content"></div>
+    </div>
     <div id="sec-horario" class="sec">
       <div class="mnav">
         <button class="mbtn" onclick="chMonth(-1)">←</button>
@@ -281,7 +286,6 @@ textarea.fi{min-height:75px;resize:vertical}
       <div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid var(--br);padding-bottom:0">
         <button id="stab-nominas" onclick="setSueldosTab('nominas')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--g);color:var(--g);margin-bottom:-2px">💰 Nóminas</button>
         <button id="stab-resumen" onclick="setSueldosTab('resumen')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📊 Anticipos y Préstamos</button>
-        <button id="stab-prevision" onclick="setSueldosTab('prevision')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📅 Previsión</button>
         <button id="stab-prevision" onclick="setSueldosTab('prevision')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📅 Previsión</button>
       </div>
       <!-- Tab nóminas -->
@@ -408,6 +412,7 @@ textarea.fi{min-height:75px;resize:vertical}
     <button class="ni active" onclick="navTo('dashboard',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Inicio</button>
     <button class="ni" onclick="navTo('obras',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Obras</button>
     <button class="ni" onclick="navTo('personal',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Personal</button>
+    <button class="ni" onclick="navTo('bajas',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Bajas</button>
     <button class="ni" onclick="navTo('horario',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Horario</button>
     <button class="ni" onclick="navTo('facturacion',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Facturar</button>
     <button class="ni" onclick="navTo('comparativa',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Gráficas</button>
@@ -530,6 +535,14 @@ textarea.fi{min-height:75px;resize:vertical}
         </select>
       </div>
     </div>
+    <!-- Bajas médicas -->
+    <div style="background:var(--rl);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:#791F1F">🏥 Bajas médicas</div>
+        <button onclick="openNuevaBaja(currentEditWid)" class="btn btnsm" style="background:#791F1F;color:#fff;border:none">+ Nueva baja</button>
+      </div>
+      <div id="wk-bm-hist"></div>
+    </div>
     <div class="sact">
       <button class="btn btng" onclick="CM()">Cancelar</button>
       <button class="btn btnd btnsm" id="btn-del-worker" onclick="delWorker()" style="display:none">🗑 Eliminar</button>
@@ -537,8 +550,6 @@ textarea.fi{min-height:75px;resize:vertical}
     </div>
   </div>
 </div>
-
-<!-- MODAL PRÉSTAMO -->
 <div class="ov" id="modal-prestamo">
   <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-prestamo">Nuevo préstamo</div>
     <div class="fg"><label class="fl">Trabajador</label><select class="fi" id="prest-wid"></select></div>
@@ -815,7 +826,7 @@ const WD=[
 let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={},recordatorios=[],pagos={},prestamos=[],costesConfig={},bajasMedicas=[];
 let cM=new Date().getMonth(),cY=new Date().getFullYear();
 let fM=cM,fY=cY,compM=cM,compY=cY,sueldosM=cM,sueldosY=cY,notifM=cM,notifY=cY;
-let editObraId=null,editWkId=null,editCell={},copySourceDay=null;
+let editObraId=null,editWkId=null,editCell={},copySourceDay=null,currentEditWid=null;
 let obraTabFilter='active';
 let chartObra=null;
 let factMode='fact'; // 'fact' o 'benef'
@@ -861,7 +872,7 @@ async function initData(){
     });
     fbOnSnapshot('prestamos',s=>{if(s.exists){prestamos=s.data().list||[];if(isActive('sueldos'))rSueldos();}});
     fbOnSnapshot('costesConfig',s=>{if(s.exists){costesConfig=s.data()||{};if(isActive('costes'))rCostes();}});
-    fbOnSnapshot('bajasMedicas',s=>{if(s.exists){bajasMedicas=s.data().list||[];if(isActive('personal'))rWorkers();if(isActive('notificaciones'))rNotifs();}});
+    fbOnSnapshot('bajasMedicas',s=>{if(s.exists){bajasMedicas=s.data().list||[];if(isActive('bajas'))rBajas();if(isActive('personal'))rWorkers();if(isActive('notificaciones'))rNotifs();}});
   }catch(e){
     console.error(e);setSyncDot('err');
     obras=OD;workers=WD;festivos=FESTIVOS_DEFAULT;
@@ -1069,7 +1080,7 @@ function navTo(s,el){
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   document.getElementById('sec-'+s).classList.add('active');
   el?.classList.add('active');
-  ({dashboard:rDash,obras:rObras,personal:rWorkers,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,costes:rCostes,recordatorios:rRec,notificaciones:rNotifs,incidencias:rIncs,ajustes:rAjustes})[s]?.();
+  ({dashboard:rDash,obras:rObras,personal:rWorkers,bajas:rBajas,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,costes:rCostes,recordatorios:rRec,notificaciones:rNotifs,incidencias:rIncs,ajustes:rAjustes})[s]?.();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -1561,23 +1572,46 @@ function saveHor(){
       }
       if(limpiado){svFB('horario',hor);rHor();}
     }
+    // ── REINCORPORACIÓN AUTOMÁTICA ─────────────────────────────────
+    // Si el trabajador tiene baja médica activa → cerrarla y reactivar
+    if(w){
+      const bajaActiva=bajasMedicas.find(b=>b.wid===wid&&!b.fin);
+      if(bajaActiva){
+        // Fecha fin = día anterior al que registra horas
+        const dHoras=new Date(cY,cM,editCell.day);
+        const dFin=new Date(dHoras-86400000); // día anterior
+        const finStr=`${dFin.getFullYear()}-${String(dFin.getMonth()+1).padStart(2,'0')}-${String(dFin.getDate()).padStart(2,'0')}`;
+        bajaActiva.fin=finStr;
+        db.collection('app').doc('bajasMedicas').set({list:bajasMedicas}).then(()=>setSyncDot('ok'));
+        // Reactivar trabajador si estaba en baja
+        if(w.estado==='baja'){
+          w.estado='active';
+          svFB('workers',workers);
+          toast(`✓ ${fmtNombre(w.nombre)} reincorporado — baja cerrada el ${dFin.toLocaleDateString('es-ES')}`);
+        }else{
+          toast(`✓ Baja médica cerrada el ${dFin.toLocaleDateString('es-ES')}`);
+        }
+        if(isActive('bajas'))rBajas();
+      }
+    }
   }else{
     hor[key]=nota?{tipo:tp,nota}:tp;
     const label=AUSENCIAS[tp]?.txt||tp;
 
-    // B o M → marcar días siguientes como baja hasta fin de mes o hasta que ya haya algo
-    if((tp==='b'||tp==='m')&&w){
+    // B, M o BE → rellenar días siguientes con X hasta fin de mes
+    if((tp==='b'||tp==='m'||tp==='be')&&w){
       const diasMes=new Date(cY,cM+1,0).getDate();
       for(let dd=editCell.day+1;dd<=diasMes;dd++){
         const kk=`${cY}-${cM}-${wid}-${dd}`;
-        // Solo rellenar si la celda está vacía
-        if(hor[kk]===undefined||hor[kk]===null||hor[kk]===''){
-          hor[kk]={tipo:'xbaja',origen:tp}; // marcador virtual de baja
-        }else{
-          break; // si ya hay algo registrado, parar
+        const vActual=hor[kk];
+        // Solo rellenar si la celda está vacía o ya es un xbaja — no sobreescribir horas ni ausencias reales
+        const esVacia=vActual===undefined||vActual===null||vActual==='';
+        const esXbaja=typeof vActual==='object'&&vActual?.tipo==='xbaja';
+        if(esVacia||esXbaja){
+          hor[kk]={tipo:'xbaja',origen:tp};
         }
       }
-      toast(`✓ ${label} — días siguientes marcados como baja`);
+      if(tp!=='be')toast(`✓ ${label} — fila rellenada hasta fin de mes`);
     }
     // BE = Baja Empresa → actualizar trabajador automáticamente
     else if(tp==='be'&&w){
@@ -2690,10 +2724,135 @@ function setSueldosTab(tab){
 // ── BAJAS MÉDICAS ─────────────────────────────────────────────────
 let editBmId=null;
 
+function rBajas(){
+  const el=document.getElementById('bajas-content');
+  if(!el)return;
+
+  const activas=bajasMedicas.filter(b=>!b.fin).sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  const cerradas=bajasMedicas.filter(b=>b.fin).sort((a,b)=>b.inicio.localeCompare(a.inicio));
+
+  function bajCard(b){
+    const w=workers.find(x=>x.id===b.wid);
+    if(!w)return'';
+    const ini2=new Date(b.inicio+'T00:00:00').toLocaleDateString('es-ES');
+    const fin2=b.fin?new Date(b.fin+'T00:00:00').toLocaleDateString('es-ES'):null;
+    const dias=b.fin
+      ?Math.floor((parsefecha(b.fin)-parsefecha(b.inicio))/(1000*60*60*24))+1
+      :Math.floor((new Date()-parsefecha(b.inicio))/(1000*60*60*24));
+    const alerta=!b.fin&&dias>=15;
+    return`<div class="card" style="padding:12px 14px;margin-bottom:8px;border-left:3px solid ${!b.fin?'#E24B4A':'var(--br)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="av ${avC(w.id)}" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${ini(w.nombre)}</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">${fmtNombre(w.nombre)}</div>
+            <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}</div>
+          </div>
+        </div>
+        <button onclick="editBajaMedica(${b.id})" style="background:transparent;border:1px solid var(--br);border-radius:var(--rs);padding:3px 10px;font-size:11px;cursor:pointer;flex-shrink:0">✏️ Editar</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="background:${!b.fin?'var(--rl)':'var(--bg)'};color:${!b.fin?'#791F1F':'var(--t2)'};border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600">
+          ${!b.fin?'🏥 En curso':'✅ Finalizada'}
+        </span>
+        <span style="font-size:12px;color:var(--t2)">📅 ${ini2} → ${fin2||'hoy'}</span>
+        <span style="font-size:12px;font-weight:600;color:${alerta?'#E24B4A':'var(--t2)'}">
+          ${dias} día${dias!==1?'s':''}${alerta?' ⚠️':''}
+        </span>
+        ${b.motivo?`<span style="font-size:11px;color:var(--t3)">· ${b.motivo}</span>`:''}
+      </div>
+      ${alerta?`<div style="margin-top:8px;background:var(--rl);border-radius:var(--rs);padding:6px 10px;font-size:11px;color:#791F1F;font-weight:600">
+        ⚠️ Lleva ${dias} días consecutivos — revisar con asesoría
+      </div>`:''}
+    </div>`;
+  }
+
+  let html='';
+
+  // Resumen
+  const conAlerta=activas.filter(b=>Math.floor((new Date()-parsefecha(b.inicio))/(1000*60*60*24))>=15).length;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+    <div class="card" style="padding:12px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:#E24B4A">${activas.length}</div>
+      <div style="font-size:11px;color:var(--t3)">Bajas activas</div>
+    </div>
+    <div class="card" style="padding:12px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:${conAlerta>0?'#E24B4A':'var(--g)'}">${conAlerta}</div>
+      <div style="font-size:11px;color:var(--t3)">≥15 días</div>
+    </div>
+    <div class="card" style="padding:12px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--t2)">${cerradas.length}</div>
+      <div style="font-size:11px;color:var(--t3)">Finalizadas</div>
+    </div>
+  </div>`;
+
+  // Bajas activas
+  if(activas.length){
+    html+=`<div style="font-size:13px;font-weight:700;color:#E24B4A;margin-bottom:8px">🏥 Bajas activas (${activas.length})</div>`;
+    html+=activas.map(bajCard).join('');
+  }else{
+    html+=`<div class="card" style="padding:16px;text-align:center;color:var(--t3);font-size:13px;margin-bottom:16px">✅ No hay bajas médicas activas</div>`;
+  }
+
+  // Todos los trabajadores — para añadir baja rápido
+  html+=`<div style="font-size:13px;font-weight:700;color:var(--t2);margin-top:16px;margin-bottom:8px">👷 Añadir baja a trabajador</div>`;
+  const todos=workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='admin'||w.estado==='noEmpresa')
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  html+=`<div style="display:flex;flex-direction:column;gap:6px">`;
+  todos.forEach(w=>{
+    const tieneActiva=activas.find(b=>b.wid===w.id);
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bc);border-radius:var(--rs);padding:8px 12px;border:1px solid var(--br)">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="av ${avC(w.id)}" style="width:30px;height:30px;font-size:11px;flex-shrink:0">${ini(w.nombre)}</div>
+        <div>
+          <div style="font-size:12px;font-weight:600">${fmtNombre(w.nombre)}</div>
+          <div style="font-size:10px;color:var(--t3)">${CATL[w.cat]||'—'}</div>
+        </div>
+      </div>
+      ${tieneActiva
+        ?`<span style="font-size:10px;background:var(--rl);color:#791F1F;padding:2px 8px;border-radius:99px;font-weight:600">🏥 En baja</span>`
+        :`<button onclick="openNuevaBaja(${w.id})" style="background:var(--g);color:#fff;border:none;border-radius:var(--rs);padding:4px 10px;font-size:11px;cursor:pointer">+ Baja</button>`
+      }
+    </div>`;
+  });
+  html+=`</div>`;
+
+  // Historial
+  if(cerradas.length){
+    html+=`<div style="font-size:13px;font-weight:700;color:var(--t2);margin-top:16px;margin-bottom:8px">📋 Historial (${cerradas.length})</div>`;
+    html+=cerradas.map(bajCard).join('');
+  }
+
+  el.innerHTML=html;
+}
+
+function renderBajasHist(wid){
+  const el=document.getElementById('bm-hist-'+wid);
+  if(!el)return;
+  const bajas=getBajasMedicasWorker(wid);
+  if(!bajas.length){el.innerHTML='<div style="font-size:12px;color:var(--t3)">Sin bajas registradas</div>';return;}
+  el.innerHTML=bajas.map(b=>{
+    const ini2=b.inicio?new Date(b.inicio+'T00:00:00').toLocaleDateString('es-ES'):'?';
+    const fin2=b.fin?new Date(b.fin+'T00:00:00').toLocaleDateString('es-ES'):'En curso';
+    const dias=b.fin
+      ?Math.floor((parsefecha(b.fin)-parsefecha(b.inicio))/(1000*60*60*24))+1
+      :Math.floor((new Date()-parsefecha(b.inicio))/(1000*60*60*24));
+    return`<div style="background:${!b.fin?'var(--rl)':'var(--bg)'};border-radius:var(--rs);padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:${!b.fin?'#791F1F':'var(--t2)'}">${ini2} → ${fin2} <span style="font-weight:400">(${dias}d)</span></div>
+        ${b.motivo?`<div style="font-size:11px;color:var(--t3)">${b.motivo}</div>`:''}
+      </div>
+      <button onclick="editBajaMedica(${b.id})" style="background:transparent;border:1px solid var(--br);border-radius:var(--rs);padding:3px 8px;font-size:11px;cursor:pointer">✏️</button>
+    </div>`;
+  }).join('');
+}
+
 function openNuevaBaja(wid){
   editBmId=null;
   document.getElementById('ttl-baja-medica').textContent='Nueva baja médica';
-  document.getElementById('bm-wid').innerHTML=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='admin').map(w=>`<option value="${w.id}"${w.id===wid?' selected':''}>${fmtNombre(w.nombre)}</option>`).join('');
+  const opts=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='admin')
+    .map(w=>`<option value="${w.id}"${w.id===wid?' selected':''}>${fmtNombre(w.nombre)}</option>`).join('');
+  document.getElementById('bm-wid').innerHTML=opts;
   document.getElementById('bm-inicio').value=today();
   document.getElementById('bm-fin').value='';
   document.getElementById('bm-motivo').value='';
@@ -2725,16 +2884,29 @@ function saveBajaMedica(){
   if(editBmId){const idx=bajasMedicas.findIndex(b=>b.id===editBmId);if(idx>=0)bajasMedicas[idx]=data;}
   else bajasMedicas.push(data);
   db.collection('app').doc('bajasMedicas').set({list:bajasMedicas})
-    .then(()=>{setSyncDot('ok');CM();rWorkers();toast('✓ Baja guardada');})
+    .then(()=>{
+      setSyncDot('ok');CM();
+      if(isActive('bajas'))rBajas();
+      if(isActive('personal'))rWorkers();
+      renderBajasHist(data.wid);
+      toast('✓ Baja guardada');
+    })
     .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
 }
 
 function delBajaMedica(){
   if(!editBmId)return;
   if(!confirm('¿Eliminar esta baja médica?'))return;
+  const wid=bajasMedicas.find(b=>b.id===editBmId)?.wid;
   bajasMedicas=bajasMedicas.filter(b=>b.id!==editBmId);
   db.collection('app').doc('bajasMedicas').set({list:bajasMedicas})
-    .then(()=>{setSyncDot('ok');CM();rWorkers();toast('Baja eliminada');})
+    .then(()=>{
+      setSyncDot('ok');CM();
+      if(isActive('bajas'))rBajas();
+      if(isActive('personal'))rWorkers();
+      if(wid)renderBajasHist(wid);
+      toast('Baja eliminada');
+    })
     .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
 }
 
@@ -3618,79 +3790,6 @@ function delPrestamo(){
 }
 
 // ── PREVISIÓN NÓMINAS MES SIGUIENTE ───────────────────────────────
-function rPrevision(){
-  const el=document.getElementById('prevision-content');
-  if(!el)return;
-  let pM=sueldosM+1,pY=sueldosY;
-  if(pM>11){pM=0;pY++;}
-  const list=workers.filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&(w.nFija>0||w.cn>0)))
-    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
-  let html=`<div style="background:var(--bl);border-radius:var(--r);padding:12px 14px;margin-bottom:14px">
-    <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:4px">📅 Previsión — ${MESES[pM]} ${pY}</div>
-    <div style="font-size:11px;color:#0C447C">Estimación basada en la media de los últimos 2 meses. Los valores variables son orientativos.</div>
-  </div>`;
-  let totalPrev=0;
-  const filas=list.map(w=>{
-    const esNFija=!!(w.nFija>0);
-    const imp=w.imp||w.cn||0;
-    let salarioBase=0;
-    if(esNFija){
-      salarioBase=w.nFija;
-    }else{
-      const m1=calcWorkerMonth(w.id,sueldosM,sueldosY);
-      const mPrev=sueldosM>0?sueldosM-1:11;
-      const yPrev=sueldosM>0?sueldosY:sueldosY-1;
-      const m2=calcWorkerMonth(w.id,mPrev,yPrev);
-      const avg1=m1.hN*imp+m1.hE*(imp+2);
-      const avg2=m2.hN*imp+m2.hE*(imp+2);
-      salarioBase=avg1>0&&avg2>0?Math.round((avg1+avg2)/2*100)/100:avg1||avg2||0;
-    }
-    const pkey=getPagosKey(w.id);
-    const p=pagos[pkey]||{};
-    const irpfEur=parseFloat(p.irpfEur)||0;
-    const irpfAplica=w.irpfAplica||'si';
-    const irpfDesc=irpfAplica==='no'||irpfAplica==='becario'?0:irpfAplica==='empresa50'?Math.round(irpfEur*0.5*100)/100:irpfEur;
-    const prestNext=getPrestamosActivos(w.id,pM,pY);
-    const totalPrest=prestNext.reduce((s,pr)=>s+pr.cuotaMes,0);
-    const neto=Math.round((salarioBase-irpfDesc-totalPrest)*100)/100;
-    totalPrev+=Math.max(0,neto);
-    return{w,salarioBase,irpfDesc,totalPrest,prestNext,neto,esNFija};
-  }).filter(r=>r.salarioBase>0);
-
-  html+=`<div class="ftotal-bar" style="margin-bottom:14px">
-    <span class="ftotal-label">Previsión total ${MESES[pM]} ${pY}</span>
-    <span class="ftotal-val">${fmt(totalPrev)}</span>
-  </div><div style="display:flex;flex-direction:column;gap:8px">`;
-
-  filas.forEach(({w,salarioBase,irpfDesc,totalPrest,prestNext,neto,esNFija})=>{
-    const ob=obras.find(o=>o.id===w.obra);
-    const diasBaja=getBajasConsecutivasActuales(w.id);
-    html+=`<div class="card">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="av ${avC(w.id)}" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${ini(w.nombre)}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:13px">${fmtNombre(w.nombre)}</div>
-          <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}${ob?' · '+ob.nombre:''}${esNFija?' · <b style="color:#0C447C">Fija</b>':' · media 2 meses'}</div>
-          ${diasBaja>=3?`<div style="font-size:11px;color:#E24B4A;margin-top:2px">🏥 ${diasBaja} días consecutivos de baja</div>`:''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:10px;color:var(--t3)">Estimado</div>
-          <div style="font-size:16px;font-weight:700;color:var(--gd)">${fmt(Math.max(0,neto))}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;font-size:11px;background:var(--bg);border-radius:var(--rs);padding:7px">
-        <div><span style="color:var(--t3)">Bruto est.</span><br><b>${fmt(salarioBase)}</b></div>
-        <div><span style="color:var(--t3)">IRPF ref.</span><br><b style="color:#E24B4A">${irpfDesc>0?'-'+fmt(irpfDesc):'—'}</b></div>
-        <div><span style="color:var(--t3)">Préstamos</span><br><b style="color:#3C3489">${totalPrest>0?'-'+fmt(totalPrest):'—'}</b></div>
-      </div>
-      ${prestNext.length?`<div style="font-size:10px;color:#3C3489;margin-top:4px">${prestNext.map(p=>`💳 ${p.motivo||'Préstamo'} cuota ${p.cuotaActual}/${p.cuotasTotal}: ${fmt(p.cuotaMes)}`).join(' · ')}</div>`:''}
-    </div>`;
-  });
-  html+='</div>';
-  el.innerHTML=html;
-}
-
-// ── HISTORIAL Y ALERTA BAJAS MÉDICAS ─────────────────────────────
 function getBajasConsecutivasActuales(wid){
   const hoy=new Date();
   let consecutivos=0;
@@ -4226,13 +4325,14 @@ function delObra(id){
   svFB('obras',obras);svFB('workers',workers);rObras();rDash();toast('Obra eliminada');
 }
 function openEW(id){
-  editWkId=id||null;const w=id?workers.find(x=>x.id===id):{};
+  editWkId=id||null;
+  currentEditWid=id||null;
+  const w=id?workers.find(x=>x.id===id):{};
   document.getElementById('ttl-wk').textContent=id?'Editar trabajador':'Nuevo trabajador';
   document.getElementById('wk-n').value=w?.nombre||'';
   document.getElementById('wk-t').value=w?.tel||'';
   document.getElementById('wk-cat').value=w?.cat||'of1';
   document.getElementById('wk-s').value=w?.estado||'active';
-  // Convertir fechaBaja a formato yyyy-mm-dd si viene en dd/mm/aaaa
   let fb=w?.fechaBaja||'';
   if(fb&&/^\d{2}\/\d{2}\/\d{4}$/.test(fb)){const[d,m,y]=fb.split('/');fb=`${y}-${m}-${d}`;}
   document.getElementById('wk-fechabaja').value=fb;
@@ -4252,12 +4352,36 @@ function openEW(id){
   document.getElementById('wk-cuenta').value=w?.cuenta||'';
   document.getElementById('wk-rm').value=w?.rm||'';
   document.getElementById('wk-vtrm').value=w?.vtrm||'';
-  document.getElementById('wk-localidad').value=w?.localidad||'';
   document.getElementById('wk-correo').value=w?.correo||'';
   document.getElementById('wk-prl20').value=w?.prl20||'OK';
   document.getElementById('wk-cursos').value=w?.cursos||'';
   document.getElementById('wk-o').innerHTML='<option value="0">Sin asignar</option>'+sO().map(o=>`<option value="${o.id}"${w?.obra===o.id?' selected':''}>${o.nombre}</option>`).join('');
   document.getElementById('modal-worker').classList.add('open');
+  // Historial bajas médicas
+  if(id){
+    const el=document.getElementById('wk-bm-hist');
+    if(el){
+      const bajas=getBajasMedicasWorker(id);
+      if(!bajas.length){el.innerHTML='<div style="font-size:12px;color:#791F1F;opacity:.7">Sin bajas registradas</div>';}
+      else{
+        el.innerHTML=bajas.map(b=>{
+          const ini2=b.inicio?new Date(b.inicio+'T00:00:00').toLocaleDateString('es-ES'):'?';
+          const fin2=b.fin?new Date(b.fin+'T00:00:00').toLocaleDateString('es-ES'):'En curso';
+          const dias=b.fin?Math.floor((parsefecha(b.fin)-parsefecha(b.inicio))/(1000*60*60*24))+1:Math.floor((new Date()-parsefecha(b.inicio))/(1000*60*60*24));
+          return`<div style="background:rgba(255,255,255,.5);border-radius:var(--rs);padding:7px 10px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#791F1F">${ini2} → ${fin2} <span style="font-weight:400">(${dias}d)</span></div>
+              ${b.motivo?`<div style="font-size:11px;color:#791F1F;opacity:.8">${b.motivo}</div>`:''}
+            </div>
+            <button onclick="editBajaMedica(${b.id})" style="background:transparent;border:1px solid rgba(121,31,31,.3);border-radius:var(--rs);padding:3px 8px;font-size:11px;cursor:pointer;color:#791F1F">✏️</button>
+          </div>`;
+        }).join('');
+      }
+    }
+  }else{
+    const el=document.getElementById('wk-bm-hist');
+    if(el)el.innerHTML='<div style="font-size:12px;color:#791F1F;opacity:.7">Guarda primero el trabajador para añadir bajas</div>';
+  }
 }
 function saveWorker(){
   const n=document.getElementById('wk-n').value.trim().toUpperCase();if(!n){toast('Introduce el nombre');return;}
@@ -4463,22 +4587,7 @@ function openDW(id){
           <div style="font-size:12px;font-weight:600;color:var(--t2)">🏥 Bajas médicas</div>
           <button onclick="openNuevaBaja(${w.id})" class="btn btng btnsm">+ Nueva baja</button>
         </div>
-        ${(()=>{
-          const bajas=getBajasMedicasWorker(w.id);
-          if(!bajas.length)return`<div style="font-size:12px;color:var(--t3)">Sin bajas registradas</div>`;
-          return bajas.map(b=>{
-            const ini2=b.inicio?new Date(b.inicio+'T00:00:00').toLocaleDateString('es-ES'):'?';
-            const fin2=b.fin?new Date(b.fin+'T00:00:00').toLocaleDateString('es-ES'):'En curso';
-            const dias=b.fin?Math.floor((parsefecha(b.fin)-parsefecha(b.inicio))/(1000*60*60*24))+1:Math.floor((new Date()-parsefecha(b.inicio))/(1000*60*60*24));
-            return`<div style="background:${!b.fin?'var(--rl)':'var(--bg)'};border-radius:var(--rs);padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-size:12px;font-weight:600;color:${!b.fin?'#791F1F':'var(--t2)'}">${ini2} → ${fin2} <span style="font-weight:400">(${dias}d)</span></div>
-                ${b.motivo?`<div style="font-size:11px;color:var(--t3)">${b.motivo}</div>`:''}
-              </div>
-              <button onclick="editBajaMedica(${b.id})" style="background:transparent;border:1px solid var(--br);border-radius:var(--rs);padding:3px 8px;font-size:11px;cursor:pointer">✏️</button>
-            </div>`;
-          }).join('');
-        })()}
+        <div id="bm-hist-${w.id}"></div>
       </div>
       ${w.banco?`<div class="inrow"><span class="ik">Banco</span><span class="iv">${w.banco}</span></div>`:''}
       ${w.cuenta?`<div class="inrow"><span class="ik">IBAN</span><span class="iv" style="font-family:var(--fm);font-size:12px">${w.cuenta}</span></div>`:''}
@@ -4498,19 +4607,9 @@ function openDW(id){
       ${w.imp>0?`<div class="inrow"><span class="ik">€/h (imputación)</span><span class="iv" style="color:var(--g);font-weight:600">${w.imp}€</span></div>`:''}
     </div>
     ${histHTML?`<div class="dsec"><div class="dsectl">Historial 6 meses</div>${histHTML}</div>`:''}
-    ${(()=>{
-      const bajas=getHistorialBajas(w.id);
-      if(!bajas.length)return '';
-      const diasBajaConsec=getBajasConsecutivasActuales(w.id);
-      const alertaConsec=diasBajaConsec>=10?`<div style="background:var(--rl);border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;color:#791F1F;font-weight:600">⚠️ ${diasBajaConsec} días consecutivos de baja médica</div>`:'';
-      const filas=bajas.map(b=>`<div class="inrow">
-        <span class="ik">${b.mes} (${b.tipo==='m'?'Mutua':'Baja'})</span>
-        <span class="iv">Día ${b.inicio}–${b.fin} · ${b.dias} día${b.dias!==1?'s':''}</span>
-      </div>`).join('');
-      return`<div class="dsec">${alertaConsec}<div class="dsectl">🏥 Historial bajas médicas</div>${filas}</div>`;
-    })()}
   `;
   document.getElementById('dov-worker').classList.add('open');
+  renderBajasHist(w.id);
 }
 
 function CM(){document.querySelectorAll('.ov').forEach(m=>m.classList.remove('open'));}
