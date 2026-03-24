@@ -993,7 +993,7 @@ function calcWorkerMonth(wid,month,year){
 function calcObraMonth(obraId,month,year){
   let hN=0,hE=0,fact=0,coste=0;
   const wRows=[];
-  workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja').forEach(w=>{
+  workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa').forEach(w=>{
     const calc=calcWorkerMonth(w.id,month,year);
     const entry=calc.byObra[obraId];
     if(entry&&(entry.hN+entry.hE)>0){
@@ -1005,7 +1005,7 @@ function calcObraMonth(obraId,month,year){
 }
 
 function calcMonthTotal(month,year){
-  return workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja').reduce((acc,w)=>acc+calcWorkerMonth(w.id,month,year).fact,0);
+  return workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa').reduce((acc,w)=>acc+calcWorkerMonth(w.id,month,year).fact,0);
 }
 
 // ── SELECTOR DE MEDIAS HORAS ──────────────────────────────────────
