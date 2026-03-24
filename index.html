@@ -281,6 +281,8 @@ textarea.fi{min-height:75px;resize:vertical}
       <div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid var(--br);padding-bottom:0">
         <button id="stab-nominas" onclick="setSueldosTab('nominas')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--g);color:var(--g);margin-bottom:-2px">💰 Nóminas</button>
         <button id="stab-resumen" onclick="setSueldosTab('resumen')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📊 Anticipos y Préstamos</button>
+        <button id="stab-prevision" onclick="setSueldosTab('prevision')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📅 Previsión</button>
+        <button id="stab-prevision" onclick="setSueldosTab('prevision')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);margin-bottom:-2px">📅 Previsión</button>
       </div>
       <!-- Tab nóminas -->
       <div id="stab-content-nominas">
@@ -294,12 +296,24 @@ textarea.fi{min-height:75px;resize:vertical}
           </select>
           <button class="btn btng btnsm" onclick="exportSueldosPDF()" style="white-space:nowrap">📄 PDF resumen</button>
           <button class="btn btng btnsm" onclick="exportSueldosPDFDetalle()" style="white-space:nowrap">📄 PDF detalle</button>
+          <label class="btn btng btnsm" style="white-space:nowrap;cursor:pointer">
+            📥 Excel asesoría
+            <input type="file" accept=".xls,.xlsx" onchange="importarExcelAsesoria(event)" style="display:none"/>
+          </label>
         </div>
         <div id="sueldos-content"></div>
       </div>
       <!-- Tab resumen anticipos/préstamos -->
       <div id="stab-content-resumen" style="display:none">
         <div id="resumen-ant-prest-content"></div>
+      </div>
+      <!-- Tab previsión nóminas -->
+      <div id="stab-content-prevision" style="display:none">
+        <div id="prevision-content"></div>
+      </div>
+      <!-- Tab previsión nóminas -->
+      <div id="stab-content-prevision" style="display:none">
+        <div id="prevision-content"></div>
       </div>
     </div>
     <!-- COSTES -->
@@ -552,6 +566,22 @@ textarea.fi{min-height:75px;resize:vertical}
     </div>
   </div>
 </div>
+<!-- MODAL BAJA MÉDICA -->
+<div class="ov" id="modal-baja-medica">
+  <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-baja-medica">Nueva baja médica</div>
+    <div class="fg"><label class="fl">Trabajador</label><select class="fi" id="bm-wid"></select></div>
+    <div class="fgrid fg">
+      <div><label class="fl">Fecha inicio</label><input class="fi" type="date" id="bm-inicio"/></div>
+      <div><label class="fl">Fecha fin <span style="font-weight:400;color:var(--t3)">(vacío si sigue)</span></label><input class="fi" type="date" id="bm-fin"/></div>
+    </div>
+    <div class="fg"><label class="fl">Motivo / Diagnóstico <span style="font-weight:400;color:var(--t3)">(opcional)</span></label><input class="fi" id="bm-motivo" placeholder="Lumbar, gripe, accidente..."/></div>
+    <div class="sact">
+      <button class="btn btng" onclick="CM()">Cancelar</button>
+      <button class="btn btnd btnsm" id="btn-del-bm" onclick="delBajaMedica()" style="display:none">🗑 Eliminar</button>
+      <button class="btn btnp" onclick="saveBajaMedica()">Guardar</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL RECORDATORIO -->
 <div class="ov" id="modal-rec">
   <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-rec">Nuevo recordatorio</div>
@@ -782,7 +812,7 @@ const WD=[
   {id:34,nombre:'TESGHITI, MOHAMED',obra:0,estado:'active',cat:'of2',cn:10.5,ce:0,dni:'Y8500850H',fnac:'12/04/1993',vtodni:'18/12/2028',tel:'611705039',cuenta:'ES6700494988512716157971',banco:'',falta:'18/03/2026',rm:'',vtrm:'',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
 ];
 
-let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={},recordatorios=[],pagos={},prestamos=[],costesConfig={};
+let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={},recordatorios=[],pagos={},prestamos=[],costesConfig={},bajasMedicas=[];
 let cM=new Date().getMonth(),cY=new Date().getFullYear();
 let fM=cM,fY=cY,compM=cM,compY=cY,sueldosM=cM,sueldosY=cY,notifM=cM,notifY=cY;
 let editObraId=null,editWkId=null,editCell={},copySourceDay=null;
@@ -831,6 +861,7 @@ async function initData(){
     });
     fbOnSnapshot('prestamos',s=>{if(s.exists){prestamos=s.data().list||[];if(isActive('sueldos'))rSueldos();}});
     fbOnSnapshot('costesConfig',s=>{if(s.exists){costesConfig=s.data()||{};if(isActive('costes'))rCostes();}});
+    fbOnSnapshot('bajasMedicas',s=>{if(s.exists){bajasMedicas=s.data().list||[];if(isActive('personal'))rWorkers();if(isActive('notificaciones'))rNotifs();}});
   }catch(e){
     console.error(e);setSyncDot('err');
     obras=OD;workers=WD;festivos=FESTIVOS_DEFAULT;
@@ -2050,6 +2081,17 @@ function rNotifs(){
     }
   });
 
+  // Bajas médicas de larga duración (≥15 días)
+  workers.filter(w=>w.estado==='baja').forEach(w=>{
+    const dias=getDiasConsecutivosBaja(w.id);
+    if(dias>=15){
+      alertas.push({
+        key:`baja-larga-${w.id}`,tipo:'baja',icono:'🏥',color:'var(--rl)',colorTxt:'#791F1F',
+        nombre:fmtNombre(w.nombre),msg:`${dias} días consecutivos de baja médica`,
+      });
+    }
+  });
+
   // DNI y RM caducados o próximos
   function diasR(f){const d=parsefecha(f);if(!d)return null;return Math.ceil((d-new Date())/(1000*60*60*24));}
   workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='admin').forEach(w=>{
@@ -2636,13 +2678,147 @@ function rCostes(){
 
 // ── SUELDOS ───────────────────────────────────────────────────────
 function setSueldosTab(tab){
-  document.getElementById('stab-content-nominas').style.display=tab==='nominas'?'block':'none';
-  document.getElementById('stab-content-resumen').style.display=tab==='resumen'?'block':'none';
-  document.getElementById('stab-nominas').style.borderBottomColor=tab==='nominas'?'var(--g)':'transparent';
-  document.getElementById('stab-nominas').style.color=tab==='nominas'?'var(--g)':'var(--t3)';
-  document.getElementById('stab-resumen').style.borderBottomColor=tab==='resumen'?'var(--g)':'transparent';
-  document.getElementById('stab-resumen').style.color=tab==='resumen'?'var(--g)':'var(--t3)';
+  ['nominas','resumen','prevision'].forEach(t=>{
+    document.getElementById('stab-content-'+t).style.display=tab===t?'block':'none';
+    const btn=document.getElementById('stab-'+t);
+    if(btn){btn.style.borderBottomColor=tab===t?'var(--g)':'transparent';btn.style.color=tab===t?'var(--g)':'var(--t3)';}
+  });
   if(tab==='resumen')rResumenAntPrest();
+  if(tab==='prevision')rPrevision();
+}
+
+// ── BAJAS MÉDICAS ─────────────────────────────────────────────────
+let editBmId=null;
+
+function openNuevaBaja(wid){
+  editBmId=null;
+  document.getElementById('ttl-baja-medica').textContent='Nueva baja médica';
+  document.getElementById('bm-wid').innerHTML=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='admin').map(w=>`<option value="${w.id}"${w.id===wid?' selected':''}>${fmtNombre(w.nombre)}</option>`).join('');
+  document.getElementById('bm-inicio').value=today();
+  document.getElementById('bm-fin').value='';
+  document.getElementById('bm-motivo').value='';
+  document.getElementById('btn-del-bm').style.display='none';
+  document.getElementById('modal-baja-medica').classList.add('open');
+}
+
+function editBajaMedica(id){
+  const bm=bajasMedicas.find(b=>b.id===id);if(!bm)return;
+  editBmId=id;
+  document.getElementById('ttl-baja-medica').textContent='Editar baja médica';
+  document.getElementById('bm-wid').innerHTML=sW().map(w=>`<option value="${w.id}"${w.id===bm.wid?' selected':''}>${fmtNombre(w.nombre)}</option>`).join('');
+  document.getElementById('bm-inicio').value=bm.inicio||'';
+  document.getElementById('bm-fin').value=bm.fin||'';
+  document.getElementById('bm-motivo').value=bm.motivo||'';
+  document.getElementById('btn-del-bm').style.display='block';
+  document.getElementById('modal-baja-medica').classList.add('open');
+}
+
+function saveBajaMedica(){
+  const inicio=document.getElementById('bm-inicio').value;
+  if(!inicio){toast('Indica la fecha de inicio');return;}
+  const data={
+    id:editBmId||Date.now(),
+    wid:parseInt(document.getElementById('bm-wid').value),
+    inicio,fin:document.getElementById('bm-fin').value||null,
+    motivo:document.getElementById('bm-motivo').value.trim(),
+  };
+  if(editBmId){const idx=bajasMedicas.findIndex(b=>b.id===editBmId);if(idx>=0)bajasMedicas[idx]=data;}
+  else bajasMedicas.push(data);
+  db.collection('app').doc('bajasMedicas').set({list:bajasMedicas})
+    .then(()=>{setSyncDot('ok');CM();rWorkers();toast('✓ Baja guardada');})
+    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+}
+
+function delBajaMedica(){
+  if(!editBmId)return;
+  if(!confirm('¿Eliminar esta baja médica?'))return;
+  bajasMedicas=bajasMedicas.filter(b=>b.id!==editBmId);
+  db.collection('app').doc('bajasMedicas').set({list:bajasMedicas})
+    .then(()=>{setSyncDot('ok');CM();rWorkers();toast('Baja eliminada');})
+    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+}
+
+function getBajasMedicasWorker(wid){
+  return bajasMedicas.filter(b=>b.wid===wid).sort((a,b)=>b.inicio.localeCompare(a.inicio));
+}
+
+function getDiasConsecutivosBaja(wid){
+  const activa=bajasMedicas.find(b=>b.wid===wid&&!b.fin);
+  if(!activa)return 0;
+  const inicio=parsefecha(activa.inicio);
+  if(!inicio)return 0;
+  return Math.floor((new Date()-inicio)/(1000*60*60*24));
+}
+
+// ── PREVISIÓN NÓMINAS ─────────────────────────────────────────────
+function rPrevision(){
+  const el=document.getElementById('prevision-content');
+  if(!el)return;
+  let prevM=sueldosM+1,prevY=sueldosY;
+  if(prevM>11){prevM=0;prevY++;}
+  const list=workers.filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&(w.nFija>0||w.cn>0)))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+
+  const filas=list.map(w=>{
+    const calc=calcWorkerMonth(w.id,sueldosM,sueldosY);
+    const hN=calc.hN,hE=calc.hE;
+    const imp=w.imp||w.cn||0;
+    const esNFija=!!(w.nFija>0);
+    const salario=esNFija?w.nFija:((hN*imp)+(hE*(imp+2)));
+    const ss=parseFloat(costesConfig['ss_'+w.cat])||0;
+    const total=salario+ss;
+    const diasBaja=getDiasConsecutivosBaja(w.id);
+    return{w,hN,hE,imp,salario,ss,total,esNFija,diasBaja};
+  }).filter(r=>r.total>0||r.esNFija);
+
+  const totalPrev=filas.reduce((s,r)=>s+r.total,0);
+  const alertas=filas.filter(r=>r.diasBaja>=15);
+
+  let html=`<div style="font-size:13px;font-weight:700;margin-bottom:12px">
+    📅 Previsión ${MESES[prevM]} ${prevY}
+    <span style="font-size:11px;font-weight:400;color:var(--t3);margin-left:8px">Basada en horas de ${MESES[sueldosM]} ${sueldosY}</span>
+  </div>
+  <div class="ftotal-bar" style="margin-bottom:16px">
+    <span class="ftotal-label">Previsión total nóminas + SS</span>
+    <span class="ftotal-val">${fmt(totalPrev)}</span>
+  </div>`;
+
+  if(alertas.length){
+    html+=`<div style="background:var(--rl);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#791F1F;margin-bottom:8px">⚠️ Bajas médicas de larga duración (≥15 días)</div>
+      ${alertas.map(r=>`<div style="display:flex;justify-content:space-between;font-size:12px;color:#791F1F;margin-bottom:4px">
+        <span>🏥 ${fmtNombre(r.w.nombre)}</span><span><b>${r.diasBaja} días</b> consecutivos</span>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  html+=`<div style="display:flex;flex-direction:column;gap:8px">`;
+  filas.forEach(r=>{
+    const ob=obras.find(o=>o.id===r.w.obra);
+    html+=`<div class="card" style="padding:10px 14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="av ${avC(r.w.id)}" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${ini(r.w.nombre)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px">${fmtNombre(r.w.nombre)}
+            ${r.diasBaja>=15?`<span style="font-size:10px;background:var(--rl);color:#791F1F;padding:1px 5px;border-radius:99px;margin-left:4px">🏥 ${r.diasBaja}d</span>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--t3)">${CATL[r.w.cat]||'—'}${ob?' · '+ob.nombre:''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:700">${fmt(r.total)}</div>
+          <div style="font-size:10px;color:var(--t3)">${fmt(r.salario)} + SS ${fmt(r.ss)}</div>
+        </div>
+      </div>
+      ${!r.esNFija&&(r.hN+r.hE)>0?`<div style="font-size:11px;color:var(--t3);margin-top:5px;display:flex;gap:12px;flex-wrap:wrap">
+        <span>${fmtH(r.hN)}h × ${r.imp}€ = ${fmt(r.hN*r.imp)}</span>
+        ${r.hE>0?`<span>${fmtH(r.hE)}hE × ${r.imp+2}€ = ${fmt(r.hE*(r.imp+2))}</span>`:''}
+      </div>`:''}
+    </div>`;
+  });
+  html+=`</div><div style="font-size:11px;color:var(--t3);margin-top:12px;text-align:center">
+    Estimación basada en las horas de ${MESES[sueldosM]}. Las horas reales pueden variar.
+  </div>`;
+  el.innerHTML=html;
 }
 
 function rResumenAntPrest(){
@@ -2800,6 +2976,166 @@ function calcMesesTranscurridos(inicio){
   const ahora=new Date();
   return Math.max(0,(ahora.getFullYear()-y)*12+(ahora.getMonth()+1-m));
 }
+
+function importarExcelAsesoria(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  event.target.value='';
+  toast('Leyendo Excel...');
+
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:'array',cellStyles:true});
+      const datosAsesoria={};
+
+      wb.SheetNames.forEach(shName=>{
+        const ws=wb.Sheets[shName];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+
+        // Buscar fila cabecera
+        let cabFila=-1,colNombre=-1,colIrpf=-1,colLiquido=-1;
+        rows.forEach((row,i)=>{
+          const vals=row.map(v=>String(v).toUpperCase());
+          if(vals.includes('TRABAJADOR')&&vals.includes('IRPF')&&(vals.includes('LIQUIDO')||vals.includes('LÍQUIDO'))){
+            cabFila=i;
+            colNombre=vals.indexOf('TRABAJADOR');
+            colIrpf=vals.indexOf('IRPF');
+            colLiquido=vals.findIndex(v=>v==='LIQUIDO'||v==='LÍQUIDO');
+          }
+        });
+        if(cabFila===-1)return;
+
+        // Leer solo filas con fondo verde (FFCCFFCC)
+        for(let i=cabFila+1;i<rows.length;i++){
+          const row=rows[i];
+          const nombre=String(row[colNombre]||'').trim();
+          if(!nombre||nombre.toUpperCase().includes('TOTAL'))continue;
+
+          // Verificar color de la celda nombre
+          const excelRow=cabFila+2+i-cabFila-1; // fila real en Excel (1-based)
+          const cellAddr=XLSX.utils.encode_cell({r:i,c:colNombre});
+          const cell=ws[cellAddr];
+          const bgColor=cell?.s?.fgColor?.rgb||cell?.s?.bgColor?.rgb||'';
+          // Solo procesar filas verdes (FFCCFFCC) o si no hay info de color
+          const esVerde=bgColor==='FFCCFFCC'||bgColor==='CCFFCC';
+          const sinColor=!bgColor||bgColor==='00000000'||bgColor==='FFFFFFFF'||bgColor==='';
+          if(!esVerde&&!sinColor)continue; // saltar filas con otro color (no verdes)
+          if(bgColor==='00000000')continue; // sin relleno = ignorar duplicados
+
+          const irpfRaw=parseFloat(String(row[colIrpf]).replace(',','.'));
+          const liquidoRaw=parseFloat(String(row[colLiquido]).replace(',','.'));
+          if(isNaN(liquidoRaw)||liquidoRaw===0)continue;
+
+          const irpf=Math.abs(isNaN(irpfRaw)?0:irpfRaw);
+          const key=normalizarNombre(nombre);
+          datosAsesoria[key]={irpf,liquido:liquidoRaw,nombreOriginal:nombre};
+        }
+      });
+
+      // Matching con trabajadores
+      const matches=[];
+      const noEncontrados=[];
+
+      workers.forEach(w=>{
+        const keyW=normalizarNombre(w.nombre);
+        let match=datosAsesoria[keyW];
+        if(!match){
+          const tokensW=keyW.split(' ').slice(0,2).join(' ');
+          const matchKey=Object.keys(datosAsesoria).find(k=>{
+            const tokensK=k.split(' ').slice(0,2).join(' ');
+            return tokensK===tokensW||k.startsWith(tokensW)||tokensW.startsWith(tokensK);
+          });
+          if(matchKey)match=datosAsesoria[matchKey];
+        }
+        if(match)matches.push({w,irpf:match.irpf,liquido:match.liquido,nombreExcel:match.nombreOriginal});
+      });
+
+      Object.entries(datosAsesoria).forEach(([key,d])=>{
+        if(!matches.find(m=>normalizarNombre(m.nombreExcel)===key))
+          noEncontrados.push(d.nombreOriginal);
+      });
+
+      if(!matches.length){toast('No se encontraron coincidencias');return;}
+      mostrarPreviewAsesoria(matches,noEncontrados);
+
+    }catch(err){
+      console.error(err);
+      toast('Error: '+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function normalizarNombre(n){
+  return String(n).toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quitar tildes
+    .replace(/[^A-Z0-9 ]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+function mostrarPreviewAsesoria(matches,noEncontrados){
+  const mes=MESES[sueldosM];
+  let html=`<div style="font-size:14px;font-weight:700;margin-bottom:12px">📥 Importar datos de asesoría — ${mes} ${sueldosY}</div>`;
+
+  html+=`<div style="font-size:12px;color:var(--t3);margin-bottom:10px">Se van a actualizar <b>${matches.length} trabajadores</b>:</div>`;
+  html+=`<div style="max-height:50vh;overflow-y:auto;margin-bottom:12px">`;
+  matches.forEach(m=>{
+    const pkey=getPagosKey(m.w.id);
+    const p=pagos[pkey]||{};
+    const irpfActual=parseFloat(p.irpfEur)||0;
+    const nominaActual=parseFloat(p.nominaOficial)||0;
+    const cambiaIrpf=Math.abs(irpfActual-m.irpf)>0.01;
+    const cambiaNomina=Math.abs(nominaActual-m.liquido)>0.01;
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid var(--br);font-size:12px">
+      <div>
+        <div style="font-weight:600">${fmtNombre(m.w.nombre)}</div>
+        ${m.filas>1?`<div style="font-size:10px;color:var(--t3)">${m.filas} líneas sumadas del Excel</div>`:''}
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px">
+        <span style="color:${cambiaIrpf?'#E24B4A':'var(--t3)'}">IRPF: ${irpfActual>0?fmt(irpfActual)+'→':''}<b>${fmt(m.irpf)}</b></span>
+        <span style="color:${cambiaNomina?'var(--g)':'var(--t3)'}">Líquido: ${nominaActual>0?fmt(nominaActual)+'→':''}<b>${fmt(m.liquido)}</b></span>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  if(noEncontrados.length){
+    html+=`<div style="background:var(--al);border-radius:var(--rs);padding:8px 10px;margin-bottom:12px;font-size:11px;color:#633806">
+      <b>⚠️ No encontrados en la app (${noEncontrados.length}):</b> ${noEncontrados.join(', ')}
+    </div>`;
+  }
+
+  // Mostrar como modal de confirmación
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML=`<div style="background:var(--bc);border-radius:var(--r) var(--r) 0 0;padding:20px 16px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto">
+    ${html}
+    <div style="display:flex;gap:8px">
+      <button onclick="this.closest('[style*=fixed]').remove()" class="btn btng" style="flex:1">Cancelar</button>
+      <button onclick="confirmarImportAsesoria(${JSON.stringify(matches).replace(/"/g,'&quot;')});this.closest('[style*=fixed]').remove()" class="btn btnp" style="flex:1">✓ Confirmar e importar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function confirmarImportAsesoria(matches){
+  matches.forEach(m=>{
+    const key=getPagosKey(m.w.id);
+    if(!pagos[key])pagos[key]={};
+    pagos[key].irpfEur=m.irpf;
+    pagos[key].nominaOficial=m.liquido;
+  });
+  db.collection('app').doc('pagos').set({data:pagos})
+    .then(()=>{
+      setSyncDot('ok');
+      rSueldos();
+      toast(`✓ ${matches.length} trabajadores actualizados`);
+    })
+    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+}
+
 
 function chMonthS(d){
   sueldosM+=d;if(sueldosM>11){sueldosM=0;sueldosY++;}if(sueldosM<0){sueldosM=11;sueldosY--;}
@@ -3067,8 +3403,14 @@ function rSueldos(){
         ${prestMes.length>1?`<div style="border-top:1px solid var(--br);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-weight:700;color:#3C3489"><span>Total</span><span>-${fmt(totalPrest)}</span></div>`:''}
       </div>`:''}
       <div style="background:var(--bg);border-radius:var(--rs);padding:8px;margin-bottom:8px;font-size:11px;display:grid;grid-template-columns:1fr 1fr ${negativo>0?'1fr':''};gap:6px;text-align:center">
-        <div><div style="color:var(--t3)">Nómina</div><div style="font-weight:700">${fmt(nomina)}</div></div>
-        <div><div style="color:var(--t3)">Saldo</div><div style="font-weight:700;color:${saldo<0?'#E24B4A':'var(--t)'}">${fmt(saldo)}</div></div>
+        <div>
+          <div style="color:var(--t3)">Ganado/horas</div>
+          <div style="font-weight:700">${fmt(horasBruto)}</div>
+        </div>
+        <div>
+          <div style="color:var(--t3)">Saldo s/IRPF</div>
+          <div style="font-weight:700;color:${saldo<0?'#E24B4A':'var(--gd)'}">${fmt(Math.max(0,saldo))}</div>
+        </div>
         ${negativo>0?`<div><div style="color:#E24B4A;font-weight:600">⚠️ Negativo</div><div style="font-weight:700;color:#E24B4A">-${fmt(negativo)}</div></div>`:''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -3275,6 +3617,115 @@ function delPrestamo(){
     .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
 }
 
+// ── PREVISIÓN NÓMINAS MES SIGUIENTE ───────────────────────────────
+function rPrevision(){
+  const el=document.getElementById('prevision-content');
+  if(!el)return;
+  let pM=sueldosM+1,pY=sueldosY;
+  if(pM>11){pM=0;pY++;}
+  const list=workers.filter(w=>w.estado==='active'||w.estado==='ext'||(w.estado==='admin'&&(w.nFija>0||w.cn>0)))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  let html=`<div style="background:var(--bl);border-radius:var(--r);padding:12px 14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:4px">📅 Previsión — ${MESES[pM]} ${pY}</div>
+    <div style="font-size:11px;color:#0C447C">Estimación basada en la media de los últimos 2 meses. Los valores variables son orientativos.</div>
+  </div>`;
+  let totalPrev=0;
+  const filas=list.map(w=>{
+    const esNFija=!!(w.nFija>0);
+    const imp=w.imp||w.cn||0;
+    let salarioBase=0;
+    if(esNFija){
+      salarioBase=w.nFija;
+    }else{
+      const m1=calcWorkerMonth(w.id,sueldosM,sueldosY);
+      const mPrev=sueldosM>0?sueldosM-1:11;
+      const yPrev=sueldosM>0?sueldosY:sueldosY-1;
+      const m2=calcWorkerMonth(w.id,mPrev,yPrev);
+      const avg1=m1.hN*imp+m1.hE*(imp+2);
+      const avg2=m2.hN*imp+m2.hE*(imp+2);
+      salarioBase=avg1>0&&avg2>0?Math.round((avg1+avg2)/2*100)/100:avg1||avg2||0;
+    }
+    const pkey=getPagosKey(w.id);
+    const p=pagos[pkey]||{};
+    const irpfEur=parseFloat(p.irpfEur)||0;
+    const irpfAplica=w.irpfAplica||'si';
+    const irpfDesc=irpfAplica==='no'||irpfAplica==='becario'?0:irpfAplica==='empresa50'?Math.round(irpfEur*0.5*100)/100:irpfEur;
+    const prestNext=getPrestamosActivos(w.id,pM,pY);
+    const totalPrest=prestNext.reduce((s,pr)=>s+pr.cuotaMes,0);
+    const neto=Math.round((salarioBase-irpfDesc-totalPrest)*100)/100;
+    totalPrev+=Math.max(0,neto);
+    return{w,salarioBase,irpfDesc,totalPrest,prestNext,neto,esNFija};
+  }).filter(r=>r.salarioBase>0);
+
+  html+=`<div class="ftotal-bar" style="margin-bottom:14px">
+    <span class="ftotal-label">Previsión total ${MESES[pM]} ${pY}</span>
+    <span class="ftotal-val">${fmt(totalPrev)}</span>
+  </div><div style="display:flex;flex-direction:column;gap:8px">`;
+
+  filas.forEach(({w,salarioBase,irpfDesc,totalPrest,prestNext,neto,esNFija})=>{
+    const ob=obras.find(o=>o.id===w.obra);
+    const diasBaja=getBajasConsecutivasActuales(w.id);
+    html+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="av ${avC(w.id)}" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${ini(w.nombre)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px">${fmtNombre(w.nombre)}</div>
+          <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}${ob?' · '+ob.nombre:''}${esNFija?' · <b style="color:#0C447C">Fija</b>':' · media 2 meses'}</div>
+          ${diasBaja>=3?`<div style="font-size:11px;color:#E24B4A;margin-top:2px">🏥 ${diasBaja} días consecutivos de baja</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--t3)">Estimado</div>
+          <div style="font-size:16px;font-weight:700;color:var(--gd)">${fmt(Math.max(0,neto))}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;font-size:11px;background:var(--bg);border-radius:var(--rs);padding:7px">
+        <div><span style="color:var(--t3)">Bruto est.</span><br><b>${fmt(salarioBase)}</b></div>
+        <div><span style="color:var(--t3)">IRPF ref.</span><br><b style="color:#E24B4A">${irpfDesc>0?'-'+fmt(irpfDesc):'—'}</b></div>
+        <div><span style="color:var(--t3)">Préstamos</span><br><b style="color:#3C3489">${totalPrest>0?'-'+fmt(totalPrest):'—'}</b></div>
+      </div>
+      ${prestNext.length?`<div style="font-size:10px;color:#3C3489;margin-top:4px">${prestNext.map(p=>`💳 ${p.motivo||'Préstamo'} cuota ${p.cuotaActual}/${p.cuotasTotal}: ${fmt(p.cuotaMes)}`).join(' · ')}</div>`:''}
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+// ── HISTORIAL Y ALERTA BAJAS MÉDICAS ─────────────────────────────
+function getBajasConsecutivasActuales(wid){
+  const hoy=new Date();
+  let consecutivos=0;
+  for(let offset=0;offset<90;offset++){
+    const fecha=new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate()-offset);
+    const v=hor[`${fecha.getFullYear()}-${fecha.getMonth()}-${wid}-${fecha.getDate()}`];
+    const esBaja=(v==='b'||v==='m')||(typeof v==='object'&&(v?.tipo==='b'||v?.tipo==='m'||v?.tipo==='xbaja'));
+    if(esBaja)consecutivos++;
+    else if(offset>0)break;
+  }
+  return consecutivos;
+}
+
+function getHistorialBajas(wid){
+  // Recorre los últimos 12 meses buscando rachas de baja
+  const result=[];
+  const hoy=new Date();
+  for(let offset=0;offset<12;offset++){
+    let m=hoy.getMonth()-offset;
+    let y=hoy.getFullYear();
+    if(m<0){m+=12;y--;}
+    const dias=new Date(y,m+1,0).getDate();
+    let inicio=null,tipoBaja=null;
+    for(let d=1;d<=dias;d++){
+      const v=hor[`${y}-${m}-${wid}-${d}`];
+      const esBaja=(v==='b'||v==='m')||(typeof v==='object'&&(v?.tipo==='b'||v?.tipo==='m'||v?.tipo==='xbaja'));
+      const t=typeof v==='string'?v:(v?.tipo==='xbaja'?'b':v?.tipo||'b');
+      if(esBaja){if(!inicio){inicio=d;tipoBaja=t;}}
+      else{if(inicio){result.push({mes:MESES[m]+' '+y,inicio,fin:d-1,dias:d-inicio,tipo:tipoBaja});inicio=null;}}
+    }
+    if(inicio)result.push({mes:MESES[m]+' '+y,inicio,fin:dias,dias:dias-inicio+1,tipo:tipoBaja});
+  }
+  return result;
+}
+
 function chMonthC(d){compM+=d;if(compM>11){compM=0;compY++;}if(compM<0){compM=11;compY--;}rComp();}
 function rComp(){
   document.getElementById('mlab-c').textContent=MESES[compM]+' '+compY;
@@ -3454,47 +3905,48 @@ function exportSueldosPDF(){
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const PW=210,ML=14,MR=14;
   let y=20;
+  function n2(v){return v?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';}
 
-  // Cabecera
-  doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.setFontSize(13);doc.setFont('helvetica','bold');
   doc.text('INNOVACOR PROYECTOS Y OBRAS S.L.',ML,y);y+=7;
-  doc.setFontSize(10);doc.setFont('helvetica','normal');
-  doc.text(`Resumen de sueldos — ${MESES[sueldosM]} ${sueldosY}`,ML,y);y+=5;
-  doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`,ML,y);y+=6;
-  doc.setDrawColor(180);doc.line(ML,y,PW-MR,y);y+=5;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text(pdfTxt('Resumen de sueldos - '+MESES[sueldosM]+' '+sueldosY),ML,y);
+  doc.text(new Date().toLocaleDateString('es-ES'),PW-MR,y,{align:'right'});
+  y+=6;doc.setDrawColor(180);doc.line(ML,y,PW-MR,y);y+=5;
 
-  // Trabajadores ordenados alfabéticamente
   const list=workers
-    .filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||(w.estado==='admin'&&(w.nFija>0||w.cn>0))||(w.estado==='noEmpresa'&&(()=>{const c=calcWorkerMonth(w.id,sueldosM,sueldosY);const p=pagos[`${sueldosY}-${sueldosM}-${w.id}`]||{};return(c.hN+c.hE)>0||w.nFija>0||(parseFloat(p.nominaOficial)||0)>0;})()))
+    .filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'
+      ||(w.estado==='admin'&&(w.nFija>0||w.cn>0))
+      ||(w.estado==='noEmpresa'&&(()=>{const c=calcWorkerMonth(w.id,sueldosM,sueldosY);const p=pagos[sueldosY+'-'+sueldosM+'-'+w.id]||{};return(c.hN+c.hE)>0||w.nFija>0||(parseFloat(p.nominaOficial)||0)>0;})()))
     .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
 
+  const colN=68,colNom=28,colH=28,colAj=25,colT=29;
   // Cabecera tabla
-  const colNombre=70,colNomina=28,colHoras=28,colAjuste=25,colTransf=28;
-  doc.setFillColor(29,158,117);
-  doc.rect(ML,y,PW-ML-MR,7,'F');
+  doc.setFillColor(29,158,117);doc.rect(ML,y,PW-ML-MR,7,'F');
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(255);
   let x=ML+1;
-  doc.text('TRABAJADOR',x,y+4.5);x+=colNombre;
-  doc.text('NÓMINA',x,y+4.5);x+=colNomina;
-  doc.text('S/ HORAS',x,y+4.5);x+=colHoras;
-  doc.text('AJUSTE',x,y+4.5);x+=colAjuste;
+  doc.text('TRABAJADOR',x,y+4.5);x+=colN;
+  doc.text('NOMINA',x,y+4.5);x+=colNom;
+  doc.text('S/HORAS',x,y+4.5);x+=colH;
+  doc.text('AJUSTE',x,y+4.5);x+=colAj;
   doc.text('TRANSF.',x,y+4.5);
-  doc.setTextColor(0);
-  y+=7;
+  doc.setTextColor(0);y+=7;
 
-  let totalNominas=0,totalHoras=0,totalTransfs=0;
-  let fill=false;
+  let totNom=0,totH=0,totT=0;let fill=false;
 
   list.forEach(w=>{
     const calc=calcWorkerMonth(w.id,sueldosM,sueldosY);
     const hN=calc.hN,hE=calc.hE;
     const imp=w.imp||w.cn||0;
     const esNFija=!!(w.nFija>0);
-    const totalBruto=esNFija?w.nFija:((hN*imp)+(hE*(imp+2)));
-
-    const pkey=`${sueldosY}-${sueldosM}-${w.id}`;
+    const esBaja=w.estado==='baja';
+    const horasBruto=(hN*imp)+(hE*(imp+2));
+    const totalBruto=esNFija?w.nFija:horasBruto;
+    const pkey=sueldosY+'-'+sueldosM+'-'+w.id;
     const p=pagos[pkey]||{};
     const irpfEur=parseFloat(p.irpfEur)||0;
+    const irpfAplicaR=w.irpfAplica||'si';
+    const irpfDescR=irpfAplicaR==='no'||irpfAplicaR==='becario'?0:irpfAplicaR==='empresa50'?Math.round(irpfEur*0.5*100)/100:irpfEur;
     const nominaOficial=parseFloat(p.nominaOficial)||0;
     const desc=parseFloat(p.desc)||0;
     const gasoil=parseFloat(p.gasoil)||0;
@@ -3504,73 +3956,56 @@ function exportSueldosPDF(){
     const prestMes=getPrestamosActivos(w.id,sueldosM,sueldosY);
     const totalPrest=prestMes.reduce((s,pr)=>s+pr.cuotaMes,0);
 
-    const esBajaPDF=w.estado==='baja';
-    const totalBrutoPDF=esBajaPDF&&nominaOficial>0?(totalBruto>nominaOficial?totalBruto:nominaOficial):totalBruto;
-    const nominaPDF=Math.round((totalBrutoPDF-irpfEur-desc+gasoil)*100)/100;
+    const totalBrutoPDF=esBaja&&nominaOficial>0?(horasBruto>nominaOficial?horasBruto:nominaOficial):totalBruto;
+    const nominaPDF=Math.round((totalBrutoPDF-irpfDescR-desc+gasoil)*100)/100;
     const saldoPDF=Math.round((nominaPDF+sobre-totalPrest)*100)/100;
     const transfPDF=Math.max(0,Math.round((saldoPDF-anticipo)*100)/100);
-    const diferenciaPDF=nominaOficial>0?Math.round((totalBrutoPDF-nominaOficial)*100)/100:0;
 
-    const colNominaVal=nominaOficial>0?nominaOficial:nominaPDF;
-    const colHorasVal=esBajaPDF?totalBruto:totalBrutoPDF; // solo horas, sin sumar nómina oficial
-    const colAjusteVal=nominaOficial>0?diferenciaPDF:0;
+    const colNomVal=nominaOficial>0?nominaOficial:nominaPDF;
+    const colHVal=esBaja?totalBruto:totalBrutoPDF;
+    const ajuste=nominaOficial>0?Math.round((totalBrutoPDF-nominaOficial)*100)/100:0;
 
-    if(totalBrutoPDF===0&&nominaPDF===0&&transfPDF===0&&!esBajaPDF)return;
-
-    if(y>270){doc.addPage();y=20;}
+    if(totalBrutoPDF===0&&nominaPDF===0&&transfPDF===0&&!esBaja)return;
+    if(y>272){doc.addPage();y=20;}
 
     if(fill){doc.setFillColor(245,245,245);doc.rect(ML,y,PW-ML-MR,6,'F');}
     fill=!fill;
 
     doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(0);
     x=ML+1;
-    const nombre=pdfTxt(w.nombre.length>30?w.nombre.substring(0,29)+'...':w.nombre);
-    doc.text(pdfTxt(nombre),x,y+4);x+=colNombre;
-    doc.text(fmt(colNominaVal),x,y+4);x+=colNomina;
-    doc.text(esBajaPDF&&colHorasVal===0?'0,00€':fmt(colHorasVal),x,y+4);x+=colHoras;
-    if(colAjusteVal!==0){
-      doc.setTextColor(colAjusteVal>0?0:220,colAjusteVal>0?128:50,colAjusteVal>0?0:50);
-      doc.text((colAjusteVal>0?'+':'')+fmt(colAjusteVal),x,y+4);
-      doc.setTextColor(0);
-    }else{
-      doc.text('—',x,y+4);
-    }
-    x+=colAjuste;
-    doc.setFont('helvetica','bold');
-    doc.text(fmt(transfPDF),x,y+4);
-    doc.setFont('helvetica','normal');
+    doc.text(pdfTxt(w.nombre.length>30?w.nombre.substring(0,29)+'...':w.nombre),x,y+4);x+=colN;
+    doc.text(n2(colNomVal),x,y+4);x+=colNom;
+    doc.text(esBaja&&colHVal===0?'0,00':n2(colHVal),x,y+4);x+=colH;
+    if(ajuste!==0){
+      doc.setTextColor(ajuste>0?0:200,ajuste>0?120:30,ajuste>0?0:30);
+      doc.text((ajuste>0?'+':'')+n2(ajuste),x,y+4);doc.setTextColor(0);
+    }else doc.text('-',x,y+4);
+    x+=colAj;
+    doc.setFont('helvetica','bold');doc.text(n2(transfPDF),x,y+4);doc.setFont('helvetica','normal');
 
-    totalNominas+=colNominaVal;
-    totalHoras+=colHorasVal;
-    totalTransfs+=transfPDF;
+    totNom+=colNomVal;totH+=colHVal;totT+=transfPDF;
     y+=6;
   });
 
-  // Línea separadora
   doc.setDrawColor(100);doc.line(ML,y,PW-MR,y);y+=4;
-
-  // Totales
-  doc.setFillColor(29,158,117);
-  doc.rect(ML,y,PW-ML-MR,7,'F');
+  doc.setFillColor(29,158,117);doc.rect(ML,y,PW-ML-MR,7,'F');
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(255);
   x=ML+1;
-  doc.text('TOTAL',x,y+4.5);x+=colNombre;
-  doc.text(fmt(totalNominas),x,y+4.5);x+=colNomina;
-  doc.text(fmt(totalHoras),x,y+4.5);x+=colHoras;
-  doc.text('',x,y+4.5);x+=colAjuste;
-  doc.text(fmt(totalTransfs),x,y+4.5);
-  doc.setTextColor(0);
-  y+=12;
+  doc.text('TOTAL',x,y+4.5);x+=colN;
+  doc.text(n2(totNom),x,y+4.5);x+=colNom;
+  doc.text(n2(totH),x,y+4.5);x+=colH;
+  doc.text('',x,y+4.5);x+=colAj;
+  doc.text(n2(totT),x,y+4.5);
+  doc.setTextColor(0);y+=12;
 
-  // Nota al pie
   doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(150);
-  doc.text('NÓMINA = nómina oficial si está introducida, o cálculo por horas',ML,y);y+=4;
-  doc.text('S/ HORAS = calculado según horas trabajadas × tarifa',ML,y);y+=4;
-  doc.text('AJUSTE = diferencia entre horas reales y nómina oficial',ML,y);y+=4;
-  doc.text(`Obras360 — Generado ${new Date().toLocaleString('es-ES')}`,ML,y);
+  doc.text('NOMINA = nomina oficial de asesoria o calculo por horas',ML,y);y+=4;
+  doc.text('S/HORAS = horas trabajadas x tarifa',ML,y);y+=4;
+  doc.text('AJUSTE = diferencia entre horas reales y nomina oficial',ML,y);y+=4;
+  doc.text('Obras360 - '+new Date().toLocaleString('es-ES'),ML,y);
 
-  doc.save(`Sueldos_${MESES[sueldosM]}_${sueldosY}.pdf`);
-  toast('PDF generado ✓');
+  doc.save('Sueldos_'+MESES[sueldosM]+'_'+sueldosY+'.pdf');
+  toast('PDF generado');
 }
 
 function exportSueldosPDFDetalle(){
@@ -3578,59 +4013,47 @@ function exportSueldosPDFDetalle(){
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
   const PW=287,ML=6,MR=6;
   let y=14;
+  function n2(v){return v?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'';}
+  function cC(val,bold,clr,xi,wi,yy){
+    if(bold)doc.setFont('helvetica','bold');
+    if(clr)doc.setTextColor(...clr);
+    const s=val===null||val===undefined||val===0?'':String(val);
+    doc.text(s,xi+wi/2,yy,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setTextColor(0);
+  }
 
-  // ── CABECERA ──────────────────────────────────────────────────────
   doc.setFontSize(11);doc.setFont('helvetica','bold');
   doc.text('INNOVACOR PROYECTOS Y OBRAS S.L.',ML,y);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(pdfTxt(`SUELDOS ${MESES[sueldosM].toUpperCase()} ${sueldosY}`),PW/2,y,{align:'center'});
+  doc.text(pdfTxt('SUELDOS '+MESES[sueldosM].toUpperCase()+' '+sueldosY),PW/2,y,{align:'center'});
   doc.text(new Date().toLocaleDateString('es-ES'),PW-MR,y,{align:'right'});
   y+=5;doc.setDrawColor(150);doc.line(ML,y,PW-MR,y);y+=4;
 
-  // ── DEFINICIÓN DE COLUMNAS ────────────────────────────────────────
   const cols=[
-    {h:'TRABAJADOR',      w:40},
-    {h:'IMP',             w:8},
-    {h:'HORAS',           w:10},
-    {h:'PARCIAL',         w:13},
-    {h:'H.EXT',           w:10},
-    {h:'TOTAL',           w:13},
-    {h:'DESC',            w:11},
-    {h:'SUMA',            w:11},
-    {h:'IRPF',            w:12},
-    {h:'SOBRE',           w:12},
-    {h:'NÓMINA',          w:14},
-    {h:'NEGATIVO',        w:13},
-    {h:'RESTO',           w:12},
-    {h:'ANTICIPOS',       w:14},
-    {h:'TRANSF.',         w:14},
-    {h:'A/C',             w:11},
-    {h:'OBS',             w:0},
+    {h:'TRABAJADOR',w:40},{h:'IMP',w:8},{h:'HORAS',w:10},{h:'PARCIAL',w:13},
+    {h:'H.EXT',w:10},{h:'TOTAL',w:13},{h:'DESC',w:11},{h:'SUMA',w:11},
+    {h:'IRPF',w:12},{h:'SOBRE',w:12},{h:'NOMINA',w:14},{h:'NEGATIVO',w:13},
+    {h:'RESTO',w:12},{h:'ANTICIPOS',w:14},{h:'TRANSF.',w:14},{h:'A/C',w:11},{h:'OBS',w:0},
   ];
-  // calcular ancho OBS con lo que quede
   const fixedW=cols.slice(0,-1).reduce((s,c)=>s+c.w,0);
   cols[cols.length-1].w=PW-ML-MR-fixedW;
+  const ROW=5.5;
 
-  const ROW=5.5; // altura fila
+  function drawHeader(yy){
+    doc.setFillColor(29,158,117);doc.rect(ML,yy,PW-ML-MR,ROW,'F');
+    doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(255);
+    let xi=ML;cols.forEach(c=>{doc.text(c.h,xi+c.w/2,yy+3.8,{align:'center'});xi+=c.w;});
+    doc.setTextColor(0);
+  }
+  drawHeader(y);y+=ROW;
 
-  // ── CABECERA TABLA ────────────────────────────────────────────────
-  doc.setFillColor(29,158,117);
-  doc.rect(ML,y,PW-ML-MR,ROW,'F');
-  doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(255);
-  let x=ML;
-  cols.forEach(c=>{
-    doc.text(c.h,x+c.w/2,y+3.8,{align:'center'});
-    x+=c.w;
-  });
-  doc.setTextColor(0);
-  y+=ROW;
-
-  // ── DATOS ─────────────────────────────────────────────────────────
   const list=workers
-    .filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||(w.estado==='admin'&&(w.nFija>0||w.cn>0))||(w.estado==='noEmpresa'&&(()=>{const c=calcWorkerMonth(w.id,sueldosM,sueldosY);const p=pagos[`${sueldosY}-${sueldosM}-${w.id}`]||{};return(c.hN+c.hE)>0||w.nFija>0||(parseFloat(p.nominaOficial)||0)>0;})()))
+    .filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'
+      ||(w.estado==='admin'&&(w.nFija>0||w.cn>0))
+      ||(w.estado==='noEmpresa'&&(()=>{const c=calcWorkerMonth(w.id,sueldosM,sueldosY);const p=pagos[sueldosY+'-'+sueldosM+'-'+w.id]||{};return(c.hN+c.hE)>0||w.nFija>0||(parseFloat(p.nominaOficial)||0)>0;})()))
     .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
 
-  let totHoras=0,totParcial=0,totHext=0,totTotal=0,totDesc=0,totSuma=0,totIrpf=0,totNomina=0,totNeg=0,totAnt=0,totTransf=0;
+  let totH=0,totP=0,totHE=0,totT=0,totD=0,totS=0,totI=0,totN=0,totNeg=0,totAnt=0,totTr=0;
   let fill=false;
 
   list.forEach(w=>{
@@ -3641,10 +4064,11 @@ function exportSueldosPDFDetalle(){
     const parcial=hN*imp;
     const hExtImporte=hE*(imp+2);
     const totalBruto=esNFija?w.nFija:(parcial+hExtImporte);
-
-    const pkey=`${sueldosY}-${sueldosM}-${w.id}`;
+    const pkey=sueldosY+'-'+sueldosM+'-'+w.id;
     const p=pagos[pkey]||{};
     const irpfEur=parseFloat(p.irpfEur)||0;
+    const irpfAplicaW=w.irpfAplica||'si';
+    const irpfDescW=irpfAplicaW==='no'||irpfAplicaW==='becario'?0:irpfAplicaW==='empresa50'?Math.round(irpfEur*0.5*100)/100:irpfEur;
     const nominaOficial=parseFloat(p.nominaOficial)||0;
     const desc=parseFloat(p.desc)||0;
     const gasoil=parseFloat(p.gasoil)||0;
@@ -3654,150 +4078,105 @@ function exportSueldosPDFDetalle(){
     const anticipo=anticiposList.reduce((s,a)=>s+(parseFloat(a.importe)||0),0);
     const prestMes=getPrestamosActivos(w.id,sueldosM,sueldosY);
     const totalPrest=prestMes.reduce((s,pr)=>s+pr.cuotaMes,0);
-
-    const nomina=Math.round((totalBruto-irpfEur-desc+gasoil)*100)/100;
+    const nomina=Math.round((totalBruto-irpfDescW-desc+gasoil)*100)/100;
     const saldo=Math.round((nomina+sobre-totalPrest)*100)/100;
     const negativo=saldo<0?Math.abs(saldo):0;
     const transf=Math.max(0,Math.round((saldo-anticipo)*100)/100);
-    const resto=saldo>0&&anticipo>0?Math.max(0,saldo-anticipo):0; // resto a cobrar
-    const acExtra=nominaOficial>0?Math.round((totalBruto-nominaOficial)*100)/100:0;
+    const resto=saldo>anticipo?Math.round((saldo-anticipo)*100)/100:0;
+    const transfNomina=nominaOficial>0?Math.max(0,nominaOficial):null;
+    const acExtra=transfNomina!==null?Math.round((transf-transfNomina)*100)/100:0;
+    const nominaPDF=nominaOficial>0?nominaOficial:nomina;
 
     if(totalBruto===0&&nomina===0)return;
 
-    if(y>188){
-      doc.addPage();y=14;
-      // repetir cabecera
-      doc.setFillColor(29,158,117);
-      doc.rect(ML,y,PW-ML-MR,ROW,'F');
-      doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(255);
-      let xi=ML;
-      cols.forEach(c=>{doc.text(c.h,xi+c.w/2,y+3.8,{align:'center'});xi+=c.w;});
-      doc.setTextColor(0);y+=ROW;
-    }
-
-    if(fill){doc.setFillColor(247,247,247);doc.rect(ML,y,PW-ML-MR,ROW,'F');}
-    fill=!fill;
-
-    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(0);
-    x=ML;
-
-    function cell(val,bold,color,xi,wi){
-      if(bold)doc.setFont('helvetica','bold');
-      if(color)doc.setTextColor(...color);
-      const s=val===null||val===undefined||val===0?'':String(val);
-      doc.text(s,xi+wi/2,y+3.8,{align:'center'});
-      doc.setFont('helvetica','normal');doc.setTextColor(0);
-    }
-
-    function fmtN(v){return v?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'';}
-
-    // Construir observaciones antes para calcular altura de fila
+    // Construir OBS
     const obsPartes=[];
-    if(anticiposList.length>0){
-      anticiposList.forEach(a=>{
-        if(parseFloat(a.importe)>0){
-          const f=a.fecha?new Date(a.fecha+'T00:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}):'-';
-          obsPartes.push(`ANT ${f}:${fmtN(parseFloat(a.importe))}`);
-        }
-      });
-    }
-    if(prestMes.length>0){
-      prestMes.forEach(pr=>{
-        obsPartes.push(`PREST ${pdfTxt(pr.motivo||'Prestamo')}(${pr.cuotaActual}/${pr.cuotasTotal}):${fmtN(pr.cuotaMes)}`);
-      });
-    }
+    anticiposList.forEach(a=>{
+      if(parseFloat(a.importe)>0){
+        const f=a.fecha?new Date(a.fecha+'T00:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}):'-';
+        obsPartes.push('ANT '+f+':'+n2(parseFloat(a.importe)));
+      }
+    });
+    prestMes.forEach(pr=>{
+      obsPartes.push('PREST '+pdfTxt(pr.motivo||'Prestamo')+'('+pr.cuotaActual+'/'+pr.cuotasTotal+'):'+n2(pr.cuotaMes));
+    });
     if(desc>0){
-      const obsLower=(obs||'').toLowerCase();
-      const tipoDesc=obsLower.includes('embargo')?'EMBARGO':obsLower.includes('prest')||obsLower.includes('pres.')?'PREST.':obsLower.includes('neg')?'NEG.ANT':obsLower.includes('cuota')?'CUOTA':'DTO';
-      obsPartes.push(`${tipoDesc}:${fmtN(desc)}`);
+      const ol=(obs||'').toLowerCase();
+      const td=ol.includes('embargo')?'EMBARGO':ol.includes('prest')||ol.includes('pres.')?'PREST.':ol.includes('neg')?'NEG.ANT':ol.includes('cuota')?'CUOTA':'DTO';
+      obsPartes.push(td+':'+n2(desc));
     }
     if(obs)obsPartes.push(pdfTxt(obs));
     const obsStr=obsPartes.join(' | ');
 
-    // Fondo fila normal
+    if(y>188){doc.addPage();y=14;drawHeader(y);y+=ROW;}
+
     if(fill){doc.setFillColor(247,247,247);}else{doc.setFillColor(255,255,255);}
     doc.rect(ML,y,PW-ML-MR,ROW,'F');
     fill=!fill;
 
     doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(0);
-
-    function cellC(val,bold,color,xi,wi){
-      if(bold)doc.setFont('helvetica','bold');
-      if(color)doc.setTextColor(...color);
-      const s=val===null||val===undefined||val===0?'':String(val);
-      doc.text(s,xi+wi/2,y+3.8,{align:'center'});
-      doc.setFont('helvetica','normal');doc.setTextColor(0);
-    }
-
+    const yC=y+3.8;
     let xc=ML;
-    cellC(pdfTxt(w.nombre.length>24?w.nombre.substring(0,23)+'...':w.nombre),true,null,xc,cols[0].w);xc+=cols[0].w;
-    cellC(imp?imp:'',false,null,xc,cols[1].w);xc+=cols[1].w;
-    cellC(hN?fmtN(hN):'',false,null,xc,cols[2].w);xc+=cols[2].w;
-    cellC(parcial?fmtN(parcial):'',false,null,xc,cols[3].w);xc+=cols[3].w;
-    cellC(hExtImporte?fmtN(hExtImporte):'',false,null,xc,cols[4].w);xc+=cols[4].w;
-    cellC(totalBruto?fmtN(totalBruto):'',true,null,xc,cols[5].w);xc+=cols[5].w;
-    cellC(desc?fmtN(desc):'',false,[180,30,30],xc,cols[6].w);xc+=cols[6].w;
-    cellC(gasoil?fmtN(gasoil):'',false,[0,128,0],xc,cols[7].w);xc+=cols[7].w;
-    cellC(irpfEur?fmtN(irpfEur):'',false,[180,30,30],xc,cols[8].w);xc+=cols[8].w;
-    cellC(sobre?fmtN(sobre):'',false,sobre<0?[180,30,30]:[0,100,0],xc,cols[9].w);xc+=cols[9].w;
-    const nominaPDF=nominaOficial>0?nominaOficial:nomina;
-    cellC(nominaPDF?fmtN(nominaPDF):'',true,[0,80,160],xc,cols[10].w);xc+=cols[10].w;
-    cellC(negativo?fmtN(negativo):'',false,[180,30,30],xc,cols[11].w);xc+=cols[11].w;
-    cellC(resto?fmtN(resto):'',false,[0,100,0],xc,cols[12].w);xc+=cols[12].w;
-    cellC(anticipo?fmtN(anticipo):'',false,[160,90,0],xc,cols[13].w);xc+=cols[13].w;
-    cellC(transf?fmtN(transf):'',true,[0,100,0],xc,cols[14].w);xc+=cols[14].w;
-    const acExtraStr=acExtra>0?'+'+fmtN(acExtra):acExtra<0?fmtN(acExtra):'';
-    cellC(acExtraStr,false,acExtra>0?[0,128,0]:acExtra<0?[180,30,30]:null,xc,cols[15].w);xc+=cols[15].w;
-
-    // OBS — una sola línea con todo el ancho disponible
+    cC(pdfTxt(w.nombre.length>24?w.nombre.substring(0,23)+'...':w.nombre),true,null,xc,cols[0].w,yC);xc+=cols[0].w;
+    cC(imp||'',false,null,xc,cols[1].w,yC);xc+=cols[1].w;
+    cC(hN?n2(hN):'',false,null,xc,cols[2].w,yC);xc+=cols[2].w;
+    cC(parcial?n2(parcial):'',false,null,xc,cols[3].w,yC);xc+=cols[3].w;
+    cC(hExtImporte?n2(hExtImporte):'',false,null,xc,cols[4].w,yC);xc+=cols[4].w;
+    cC(totalBruto?n2(totalBruto):'',true,null,xc,cols[5].w,yC);xc+=cols[5].w;
+    cC(desc?n2(desc):'',false,[180,30,30],xc,cols[6].w,yC);xc+=cols[6].w;
+    cC(gasoil?n2(gasoil):'',false,[0,128,0],xc,cols[7].w,yC);xc+=cols[7].w;
+    cC(irpfDescW?n2(irpfDescW):'',false,[180,30,30],xc,cols[8].w,yC);xc+=cols[8].w;
+    cC(sobre?n2(sobre):'',false,sobre<0?[180,30,30]:[0,100,0],xc,cols[9].w,yC);xc+=cols[9].w;
+    cC(nominaPDF?n2(nominaPDF):'',true,[0,80,160],xc,cols[10].w,yC);xc+=cols[10].w;
+    cC(negativo?n2(negativo):'',false,[180,30,30],xc,cols[11].w,yC);xc+=cols[11].w;
+    cC(resto?n2(resto):'',false,[0,100,0],xc,cols[12].w,yC);xc+=cols[12].w;
+    cC(anticipo?n2(anticipo):'',false,[160,90,0],xc,cols[13].w,yC);xc+=cols[13].w;
+    cC(transf?n2(transf):'',true,[0,100,0],xc,cols[14].w,yC);xc+=cols[14].w;
+    const acStr=acExtra>0?'+'+n2(acExtra):acExtra<0?n2(acExtra):'';
+    cC(acStr,false,acExtra>0?[0,128,0]:acExtra<0?[180,30,30]:null,xc,cols[15].w,yC);xc+=cols[15].w;
     doc.setFontSize(5.5);doc.setTextColor(60,60,60);
-    if(obsStr)doc.text(obsStr,xc+1,y+3.8,{maxWidth:cols[16].w-2});
+    if(obsStr)doc.text(obsStr,xc+1,yC,{maxWidth:cols[16].w-2});
     doc.setFontSize(6.5);doc.setTextColor(0);
-
     doc.setDrawColor(220);doc.line(ML,y+ROW,PW-MR,y+ROW);
-    totHoras+=hN;totParcial+=parcial;totHext+=hE;totTotal+=totalBruto;
-    totDesc+=desc;totSuma+=gasoil;totIrpf+=irpfEur;
-    totNomina+=(nominaOficial>0?nominaOficial:nomina);
-    totNeg+=negativo;totAnt+=anticipo;totTransf+=transf;
+
+    totH+=hN;totP+=parcial;totHE+=hE;totT+=totalBruto;
+    totD+=desc;totS+=gasoil;totI+=irpfDescW;
+    totN+=nominaPDF;totNeg+=negativo;totAnt+=anticipo;totTr+=transf;
     y+=ROW;
   });
 
-  // ── FILA TOTALES ──────────────────────────────────────────────────
-  doc.setFillColor(29,158,117);
-  doc.rect(ML,y,PW-ML-MR,ROW,'F');
+  // Totales
+  doc.setFillColor(29,158,117);doc.rect(ML,y,PW-ML-MR,ROW,'F');
   doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(255);
-  x=ML;
-  function fmtN(v){return v?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'';}
-  function totCell(val,xi,wi){const s=val?fmtN(val):'';doc.text(s,xi+wi/2,y+3.8,{align:'center'});}
-
-  doc.text('TOTALES',x+cols[0].w/2,y+3.8,{align:'center'});x+=cols[0].w;
-  x+=cols[1].w; // IMP vacío
-  totCell(totHoras,x,cols[2].w);x+=cols[2].w;
-  totCell(totParcial,x,cols[3].w);x+=cols[3].w;
-  totCell(totHext,x,cols[4].w);x+=cols[4].w;
-  totCell(totTotal,x,cols[5].w);x+=cols[5].w;
-  totCell(totDesc,x,cols[6].w);x+=cols[6].w;
-  totCell(totSuma,x,cols[7].w);x+=cols[7].w;
-  totCell(totIrpf,x,cols[8].w);x+=cols[8].w;
-  x+=cols[9].w; // SOBRE vacío
-  totCell(totNomina,x,cols[10].w);x+=cols[10].w;
-  totCell(totNeg,x,cols[11].w);x+=cols[11].w;
-  x+=cols[12].w; // RESTO vacío
-  totCell(totAnt,x,cols[13].w);x+=cols[13].w;
-  totCell(totTransf,x,cols[14].w);
+  let xT=ML;
+  function tC(v,xi,wi){doc.text(v?n2(v):'',xi+wi/2,y+3.8,{align:'center'});}
+  doc.text('TOTALES',xT+cols[0].w/2,y+3.8,{align:'center'});xT+=cols[0].w;
+  xT+=cols[1].w;
+  tC(totH,xT,cols[2].w);xT+=cols[2].w;
+  tC(totP,xT,cols[3].w);xT+=cols[3].w;
+  tC(totHE,xT,cols[4].w);xT+=cols[4].w;
+  tC(totT,xT,cols[5].w);xT+=cols[5].w;
+  tC(totD,xT,cols[6].w);xT+=cols[6].w;
+  tC(totS,xT,cols[7].w);xT+=cols[7].w;
+  tC(totI,xT,cols[8].w);xT+=cols[8].w;
+  xT+=cols[9].w;
+  tC(totN,xT,cols[10].w);xT+=cols[10].w;
+  tC(totNeg,xT,cols[11].w);xT+=cols[11].w;
+  xT+=cols[12].w;
+  tC(totAnt,xT,cols[13].w);xT+=cols[13].w;
+  tC(totTr,xT,cols[14].w);
   doc.setTextColor(0);
 
-  // Pie
-  const totalPages=doc.internal.getNumberOfPages();
-  for(let i=1;i<=totalPages;i++){
+  const nPags=doc.internal.getNumberOfPages();
+  for(let i=1;i<=nPags;i++){
     doc.setPage(i);
     doc.setFontSize(6);doc.setFont('helvetica','normal');doc.setTextColor(150);
-    doc.text(`Obras360 — ${MESES[sueldosM]} ${sueldosY} — Pág. ${i}/${totalPages}`,PW/2,200,{align:'center'});
+    doc.text('Obras360 - '+MESES[sueldosM]+' '+sueldosY+' - Pag. '+i+'/'+nPags,PW/2,200,{align:'center'});
   }
-
-  doc.save(`Sueldos_Detalle_${MESES[sueldosM]}_${sueldosY}.pdf`);
-  toast('PDF detalle generado ✓');
+  doc.save('Sueldos_Detalle_'+MESES[sueldosM]+'_'+sueldosY+'.pdf');
+  toast('PDF detalle generado');
 }
+
 
 function exportBackup(){
   const data={obras,workers,incs,hor,festivos,exportedAt:new Date().toISOString()};
@@ -4078,6 +4457,29 @@ function openDW(id){
       ${w.vtodni?`<div class="inrow"><span class="ik">Vto. DNI</span><span class="iv" style="color:${vencido(w.vtodni)?'#E24B4A':proximo(w.vtodni)?'#EF9F27':'var(--t)'}">${w.vtodni}${vencido(w.vtodni)?' ⚠️ CADUCADO':proximo(w.vtodni)?' ⚠️ Próximo':''}</span></div>`:''}
       ${w.falta?`<div class="inrow"><span class="ik">Alta empresa</span><span class="iv">${w.falta}</span></div>`:''}
       ${w.fechaBaja?`<div class="inrow"><span class="ik">Baja empresa</span><span class="iv" style="color:#E24B4A">${w.fechaBaja}</span></div>`:''}
+      <!-- Historial bajas médicas -->
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--t2)">🏥 Bajas médicas</div>
+          <button onclick="openNuevaBaja(${w.id})" class="btn btng btnsm">+ Nueva baja</button>
+        </div>
+        ${(()=>{
+          const bajas=getBajasMedicasWorker(w.id);
+          if(!bajas.length)return`<div style="font-size:12px;color:var(--t3)">Sin bajas registradas</div>`;
+          return bajas.map(b=>{
+            const ini2=b.inicio?new Date(b.inicio+'T00:00:00').toLocaleDateString('es-ES'):'?';
+            const fin2=b.fin?new Date(b.fin+'T00:00:00').toLocaleDateString('es-ES'):'En curso';
+            const dias=b.fin?Math.floor((parsefecha(b.fin)-parsefecha(b.inicio))/(1000*60*60*24))+1:Math.floor((new Date()-parsefecha(b.inicio))/(1000*60*60*24));
+            return`<div style="background:${!b.fin?'var(--rl)':'var(--bg)'};border-radius:var(--rs);padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:${!b.fin?'#791F1F':'var(--t2)'}">${ini2} → ${fin2} <span style="font-weight:400">(${dias}d)</span></div>
+                ${b.motivo?`<div style="font-size:11px;color:var(--t3)">${b.motivo}</div>`:''}
+              </div>
+              <button onclick="editBajaMedica(${b.id})" style="background:transparent;border:1px solid var(--br);border-radius:var(--rs);padding:3px 8px;font-size:11px;cursor:pointer">✏️</button>
+            </div>`;
+          }).join('');
+        })()}
+      </div>
       ${w.banco?`<div class="inrow"><span class="ik">Banco</span><span class="iv">${w.banco}</span></div>`:''}
       ${w.cuenta?`<div class="inrow"><span class="ik">IBAN</span><span class="iv" style="font-family:var(--fm);font-size:12px">${w.cuenta}</span></div>`:''}
     </div>
@@ -4096,6 +4498,17 @@ function openDW(id){
       ${w.imp>0?`<div class="inrow"><span class="ik">€/h (imputación)</span><span class="iv" style="color:var(--g);font-weight:600">${w.imp}€</span></div>`:''}
     </div>
     ${histHTML?`<div class="dsec"><div class="dsectl">Historial 6 meses</div>${histHTML}</div>`:''}
+    ${(()=>{
+      const bajas=getHistorialBajas(w.id);
+      if(!bajas.length)return '';
+      const diasBajaConsec=getBajasConsecutivasActuales(w.id);
+      const alertaConsec=diasBajaConsec>=10?`<div style="background:var(--rl);border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;color:#791F1F;font-weight:600">⚠️ ${diasBajaConsec} días consecutivos de baja médica</div>`:'';
+      const filas=bajas.map(b=>`<div class="inrow">
+        <span class="ik">${b.mes} (${b.tipo==='m'?'Mutua':'Baja'})</span>
+        <span class="iv">Día ${b.inicio}–${b.fin} · ${b.dias} día${b.dias!==1?'s':''}</span>
+      </div>`).join('');
+      return`<div class="dsec">${alertaConsec}<div class="dsectl">🏥 Historial bajas médicas</div>${filas}</div>`;
+    })()}
   `;
   document.getElementById('dov-worker').classList.add('open');
 }
