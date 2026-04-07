@@ -356,6 +356,15 @@ textarea.fi{min-height:75px;resize:vertical}
       <div id="inc-list"></div>
     </div>
     <!-- AJUSTES -->
+    <!-- INFORMES -->
+    <div id="sec-informes" class="sec">
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px">📊 Informes</div>
+      <!-- Selector de informe -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button id="inf-tab-horas" class="btn btng btnsm" onclick="setInformeTab('horas')" style="background:var(--g);color:#fff">📅 Horas por obra/mes</button>
+      </div>
+      <div id="informes-content"></div>
+    </div>
     <div id="sec-ajustes" class="sec">
       <div class="sh"><div class="st">Ajustes</div></div>
       <div class="card">
@@ -425,6 +434,7 @@ textarea.fi{min-height:75px;resize:vertical}
     <button class="ni" onclick="navTo('recordatorios',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/></svg>Agenda</button>
     <button class="ni" onclick="navTo('notificaciones',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Avisos</button>
     <button class="ni" onclick="navTo('incidencias',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Alertas</button>
+    <button class="ni" onclick="navTo('informes',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Informes</button>
     <button class="ni" onclick="navTo('ajustes',this)"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ajustes</button>
   </nav>
 </div><!-- fin #app -->
@@ -439,7 +449,17 @@ textarea.fi{min-height:75px;resize:vertical}
       <div><label class="fl">Tarifa Oficial €/h</label><input class="fi" type="number" step="0.5" id="ob-tof" placeholder="23"/></div>
       <div><label class="fl">Tarifa Peón €/h</label><input class="fi" type="number" step="0.5" id="ob-tpe" placeholder="21"/></div>
     </div>
+    <div class="fgrid fg">
+      <div><label class="fl">Tarifa Maquinista €/h</label><input class="fi" type="number" step="0.5" id="ob-tmaq" placeholder="25"/></div>
+      <div></div>
+    </div>
     <div class="fg"><label class="fl">Estado</label><select class="fi" id="ob-s"><option value="active">En curso</option><option value="pending">Pendiente</option><option value="paused">Pausada</option><option value="done">Finalizada</option></select></div>
+    <!-- Tarifas especiales por trabajador -->
+    <div style="background:var(--bg);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">⭐ Tarifas especiales por trabajador <span style="font-weight:400;color:var(--t3)">(sobreescribe la tarifa general)</span></div>
+      <div id="ob-tarifas-esp" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <button onclick="addTarifaEsp()" class="btn btng btnsm">+ Añadir trabajador</button>
+    </div>
     <div class="sact"><button class="btn btng" onclick="CM()">Cancelar</button><button class="btn btnp" onclick="saveObra()">Guardar</button></div>
   </div>
 </div>
@@ -449,7 +469,7 @@ textarea.fi{min-height:75px;resize:vertical}
   <div class="sh2"><div class="shdl"></div><div class="shtl" id="ttl-wk">Nuevo trabajador</div>
     <div class="fg"><label class="fl">Nombre</label><input class="fi" id="wk-n" placeholder="APELLIDO, NOMBRE"/></div>
     <div class="fg"><label class="fl">Categoría</label>
-      <select class="fi" id="wk-cat"><option value="of1">Oficial 1ª</option><option value="of2">Oficial 2ª</option><option value="pe">Peón E.</option><option value="enc">Encargado</option><option value="tec">Técnico</option><option value="adm">Administrador</option><option value="bm">Becario Máster</option></select>
+      <select class="fi" id="wk-cat"><option value="of1">Oficial 1ª</option><option value="of2">Oficial 2ª</option><option value="pe">Peón E.</option><option value="enc">Encargado</option><option value="tec">Técnico</option><option value="adm">Administrador</option><option value="bm">Becario Máster</option><option value="maq">Maquinista</option></select>
     </div>
     <div class="fg"><label class="fl">Situación</label>
       <select class="fi" id="wk-s" onchange="toggleFechaBaja()">
@@ -463,6 +483,16 @@ textarea.fi{min-height:75px;resize:vertical}
     <div class="fg" id="wk-fechabaja-fg">
       <label class="fl">Fecha baja empresa <span style="font-weight:400;color:var(--t3)">(opcional)</span></label>
       <input class="fi" type="date" id="wk-fechabaja"/>
+    </div>
+    <div class="fg" id="wk-finiquito-fg" style="display:none">
+      <div style="background:var(--rl);border-radius:var(--rs);padding:12px">
+        <div style="font-size:12px;font-weight:700;color:#791F1F;margin-bottom:8px">💼 Finiquito</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="wk-finiquitado" style="width:16px;height:16px;cursor:pointer"/>
+          <span>Se le ha pagado todo lo que se le debía (finiquitado)</span>
+        </label>
+        <div style="font-size:11px;color:#791F1F;margin-top:6px">La transferencia se calcula automáticamente según horas, IRPF, descuentos y anticipos.</div>
+      </div>
     </div>
     <div class="fg"><label class="fl">Obra asignada</label><select class="fi" id="wk-o"></select></div>
     <!-- Datos personales -->
@@ -809,8 +839,10 @@ const ESTADOL={active:'En curso',paused:'Pausada',done:'Finalizada',pending:'Pen
 const ESTADOB={active:'ba',paused:'bp',done:'bd',pending:'bn'};
 const WEST={active:'Activo',admin:'Administrativo',ext:'Externo',baja:'Baja médica',noEmpresa:'Baja empresa'};
 const WESTB={active:'ba',admin:'badm',ext:'bext',baja:'bbj',noEmpresa:'bne'};
-const CATL={of1:'Oficial 1ª',of2:'Oficial 2ª',pe:'Peón E.',enc:'Encargado',tec:'Técnico',adm:'Administrador',bm:'Becario Máster'};
-const isOf=w=>['of1','of2','enc','tec'].includes(w.cat);
+const CATL={of1:'Oficial 1ª',of2:'Oficial 2ª',pe:'Peón E.',enc:'Encargado',tec:'Técnico',adm:'Administrador',bm:'Becario Máster',maq:'Maquinista'};
+// Coste SS diario por categoría (peón 27,54€ / oficial 28,27€)
+const SS_DIARIO={of1:28.27,of2:28.27,pe:27.54,enc:28.27,tec:28.27,adm:28.27,bm:27.54,maq:28.27};
+const isOf=w=>['of1','of2','enc','tec','maq'].includes(w.cat);
 const INCL={high:'Alta',med:'Media',low:'Baja'};
 const INCB={high:'bhigh',med:'bmed',low:'blow'};
 const DAYS_SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -889,7 +921,64 @@ const WD=[
   {id:34,nombre:'TESGHITI, MOHAMED',obra:0,estado:'active',cat:'of2',cn:10.5,ce:0,dni:'Y8500850H',fnac:'12/04/1993',vtodni:'18/12/2028',tel:'611705039',cuenta:'ES6700494988512716157971',banco:'',falta:'18/03/2026',rm:'',vtrm:'',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
 ];
 
-let obras=[],workers=[],incs=[],hor={},festivos=[],notifs={},recordatorios=[],pagos={},prestamos=[],costesConfig={},bajasMedicas=[];
+let obras=[
+  {id:1,tpe:21.5,tof:23,empresa:"DELTA",nombre:"AV. J. RIBERA Y C/ ESQUILO TEATINOS",dir:"Teatinos, Málaga",estado:"active",the:25},
+  {dir:"Málaga",the:25,estado:"active",tof:23,tpe:21.5,id:2,nombre:"AVDA. ESPAÑA",empresa:"PAMASA S.A."},
+  {the:25,estado:"active",dir:"Málaga",nombre:"CIERRE MALLA AVDA. VELÁZQUEZ",empresa:"PAV. MORALES",tof:23,tpe:21,id:3},
+  {dir:"Málaga",the:25,estado:"active",tof:23,tpe:22,id:4,nombre:"CONSERVACIÓN DISTRITO ESTE",empresa:"A7GR"},
+  {empresa:"UTE METRO (PAMASA)",nombre:"METRO MÁLAGA LÍNEA 2",id:5,tpe:21.5,tof:23,estado:"active",the:25,dir:"Málaga"},
+  {tof:0,tpe:0,id:6,nombre:"OBRA ALMOGÍA",empresa:"PARTICULAR",dir:"Almogía, Málaga",the:25,estado:"active"},
+  {id:7,tof:24,tpe:22,empresa:"SARDESA",nombre:"OBRA BENALMÁDENA",dir:"Benalmádena, Málaga",estado:"active",the:25},
+  {dir:"Rincón de la Victoria",the:25,id:8,tpe:22.5,empresa:"A7GR",tarifasEsp:{'26': 24},estado:"active",tof:23,nombre:"PARQUE BOMBEROS RINCÓN"},
+  {dir:"Pedregalejo, Málaga",the:25,estado:"active",tpe:22,tof:24,id:9,nombre:"PASEO MARÍTIMO PEDREGALEJO",empresa:"IOTE"},
+  {empresa:"DELTA",nombre:"PASO PEATONAL BRIANA DE ACUÑA (C/ PAVERO)",id:10,tof:23,tpe:21.5,estado:"active",the:25,dir:"Málaga"},
+  {estado:"active",the:25,dir:"Málaga",empresa:"GUAMAR",nombre:"SECTOR HUELIN-AYALA",id:11,tof:23,tpe:22},
+  {the:25,estado:"active",dir:"Mijas, Málaga",nombre:"TANQUE DE TORMENTAS MIJAS",empresa:"NAXFOR",tpe:21,tof:22.5,id:12},
+  {nombre:"URBANIZACIÓN COLINAS DEL CHAPARRAL",empresa:"RIALSA",tpe:22,tof:24,id:13,the:25,estado:"active",dir:"Málaga"},
+  {tof:0,tpe:0,id:14,nombre:"LOS NUÑEZ",empresa:"PARTICULAR",dir:"Pendiente",the:25,estado:"active"},
+  {empresa:"A7GR",nombre:"OBRA CHURRIANA DISTRITO 8",id:1774947664762,tpe:22.5,tof:23,estado:"active",dir:"Málaga"},
+  {estado:"active",dir:"Málaga",nombre:"PARQUE CLAVERO",empresa:"A7GR",tof:23,tpe:22.5,id:1774947785579},
+  {empresa:"IOTE",nombre:"REFORMA ARTURO CAMPOS",id:1775029283113,tof:24,tpe:22,estado:"active",dir:"Málaga"},
+  {estado:"active",dir:"",empresa:"PAMASA S.A.",nombre:"EMERGENCIA VIAS PECUARIAS",id:1775465714152,tof:23,tpe:21.5},
+  {dir:"",estado:"active",tpe:21.5,tof:23,id:1775465758919,nombre:"CONSERVACION CARRETERAS ZONA SUR MALAGA",empresa:"PAMASA S.A."}
+];
+let workers=[
+  {irpfAplica:"no",nombre:"ARRABAL MORENO, ANTONIO",cat:"tec",fnac:"15/02/1973",nFija:1500,ce:0,correo:"antonioarrabalmoreno@gmail.com",fechaBaja:"",obra:0,estado:"admin",falta:"01/01/2026",imp:0,obraDesde:"",banco:"CAJAMAR",tel:"606728218",cn:0,cursos:"",obraHistory:[],id:1,localidad:"ALMOGIA",dni:"25681690M",cuenta:"ES7330580990272753262465",vtodni:"15/03/2033",rm:"",prl20:"NO",vtrm:""},
+  {vtrm:"08/04/2026",prl20:"OK",rm:"08/04/2025",vtodni:"12/04/2026",cuenta:"ES1621032076030010048758",dni:"45491478P",id:2,localidad:"ANTEQUERA",obraHistory:[],cursos:"8H PRL - 6H ESTRUC. TUBUL.",cn:0,tel:"644889738",obraDesde:"",banco:"UNICAJA",imp:0,falta:"02/02/2026",estado:"active",obra:12,correo:"",fechaBaja:"",ce:0,nFija:1600,fnac:"31/08/1976",cat:"of1",nombre:"CUEVAS MORILLAS, DAVID",irpfAplica:"si"},
+  {vtrm:"05/03/2027",rm:"05/03/2026",prl20:"OK",vtodni:"21/09/2027",dni:"76434727T",cuenta:"ES9401824106700201753461",obraHistory:[],id:3,localidad:"MALAGA",tel:"662472598",cn:11,cursos:"20H APAR. ELEV. - 8H DUMPER",falta:"24/02/2026",obraDesde:"",imp:11,banco:"",obra:13,estado:"active",nFija:0,ce:0,fechaBaja:"",correo:"",fnac:"16/01/1987",cat:"of1",nombre:"DE LA RUBIA MARTIN, ISMAEL",irpfAplica:"si"},
+  {dni:"74838560X",cuenta:"ES7321030108980010028375",rm:"04/09/2025",prl20:"OK",vtodni:"29/09/2033",vtrm:"04/09/2026",nombre:"DIAZ GARCIA, CARLOS",irpfAplica:"si",ce:0,nFija:0,fechaBaja:"",correo:"",cat:"of1",fnac:"24/05/1981",banco:"UNICAJA",imp:12,obraDesde:"",falta:"27/08/2025",estado:"noEmpresa",obra:13,localidad:"ALMOGIA",id:4,obraHistory:[],tel:"633207685",cursos:"",cn:12},
+  {rm:"16/12/2025",prl20:"OK",vtodni:"17/07/2033",vtrm:"16/12/2026",dni:"74848273V",cuenta:"ES4921004083562100740439",falta:"28/01/2026",banco:"",imp:10.5,obraDesde:"",obra:1775029283113,estado:"active",obraHistory:[],localidad:"MALAGA",id:5,tel:"631087840",cn:10.5,cursos:"",nombre:"DIAZ RODRIGUEZ, MIGUEL ANGEL",irpfAplica:"no",nFija:0,ce:0,correo:"",fechaBaja:"",fnac:"28/09/1982",cat:"of1"},
+  {estado:"noEmpresa",obra:13,imp:9.5,banco:"ABANCA",obraDesde:"",falta:"28/08/2025",tel:"",cursos:"",cn:9.5,id:6,localidad:"ALMOGIA",obraHistory:[],irpfAplica:"si",nombre:"DIAZ URBANO, JESUS",fnac:"24/10/1998",cat:"pe",ce:0,nFija:0,fechaBaja:"",correo:"",vtodni:"04/01/2030",rm:"04/09/2025",prl20:"OK",vtrm:"04/09/2026",dni:"77227135N",cuenta:"ES3620801134203040168220"},
+  {dni:"74883119H",cuenta:"ES8130580768182810729581",vtrm:"",rm:"",prl20:"NO",vtodni:"09/05/2028",nFija:800,ce:0,fechaBaja:"",correo:"",cat:"adm",fnac:"29/10/1984",nombre:"DOMINGUEZ RUIZ, JOSE CARLOS",irpfAplica:"si",obraHistory:[],id:7,localidad:"ALMOGIA",tel:"667822795",cn:0,cursos:"",falta:"01/11/2024",imp:0,obraDesde:"",banco:"CAJAMAR",obra:0,estado:"admin"},
+  {ce:0,nFija:0,fechaBaja:"",correo:"",fnac:"06/10/2006",cat:"pe",nombre:"EL MASOUDI SFAIHI, HANZA",irpfAplica:"no",id:8,localidad:"VELEZ-MALAGA",obraHistory:[],tel:"641557448",cursos:"6H MOV. TIERRAS",cn:9,imp:9,obraDesde:"",banco:"",falta:"26/02/2026",estado:"active",obra:7,dni:"13453645W",cuenta:"ES8601827363140201711548",vtrm:"12/03/2027",rm:"12/03/2026",prl20:"OK",vtodni:"04/07/2028"},
+  {vtodni:"16/05/2030",rm:"17/06/2025",prl20:"OK",vtrm:"17/06/2026",dni:"X1235949K",cuenta:"ES3121002573280110601608",obra:7,estado:"active",falta:"12/01/2026",imp:11,banco:"LA CAIXA",obraDesde:"",tel:"602189665",cn:11,cursos:"",obraHistory:[],id:9,localidad:"MALAGA",irpfAplica:"no",nombre:"EL MASOUDI, HASSAN",fnac:"01/01/1964",cat:"of1",nFija:0,ce:0,fechaBaja:"",correo:""},
+  {dni:"X3401527B",cuenta:"ES8830230063046332072716",vtodni:"04/02/2036",rm:"17/06/2025",prl20:"OK",vtrm:"17/06/2026",irpfAplica:"no",nombre:"EL OUAD, SELLAM",cat:"of1",fnac:"01/01/1962",ce:0,nFija:0,fechaBaja:"",correo:"",estado:"active",obra:0,banco:"C.R. GRANADA",obraDesde:"",imp:11,falta:"24/09/2025",tel:"631204729",cursos:"6H ENCOF.",cn:11,localidad:"MALAGA",id:10,obraHistory:[]},
+  {tel:"678005598",cursos:"",cn:0,localidad:"MALAGA",id:11,obraHistory:[{"obraId": 2, "desde": "2020-01-01", "hasta": "2026-03-18"}, {"obraId": 9, "hasta": "2026-03-18", "desde": "2026-03-18"}, {"hasta": "2026-03-25", "desde": "2026-03-18", "obraId": 2}, {"obraId": 9, "desde": "2026-03-25", "hasta": null}],estado:"active",obra:9,imp:0,banco:"",obraDesde:"2026-03-25",falta:"02/03/2026",fnac:"19/01/1972",cat:"of1",ce:0,nFija:0,fechaBaja:"",correo:"",irpfAplica:"si",nombre:"FEDASH, VOLODYMYR",vtrm:"12/03/2027",vtodni:"27/07/2028",rm:"12/03/2026",prl20:"OK",dni:"X9764677G",cuenta:"ES6901824106780201634694"},
+  {vtrm:"22/10/2026",vtodni:"18/06/2028",rm:"22/10/2025",prl20:"NO OK",dni:"76435156S",cuenta:"ES2701824106760201742733",tel:"617899319",cn:9,cursos:"",obraHistory:[],localidad:"MALAGA",id:12,obra:0,estado:"baja",falta:"09/10/2025",obraDesde:"",imp:9,banco:"",fnac:"24/06/1987",cat:"pe",nFija:0,ce:0,correo:"",fechaBaja:"",irpfAplica:"si",nombre:"FERNANDEZ FERNANDEZ, ADRIAN"},
+  {nFija:0,ce:0,fechaBaja:"",correo:"",fnac:"01/01/2002",cat:"pe",nombre:"FOFANA, ISSA",irpfAplica:"si",obraHistory:[],id:13,localidad:"MALAGA",tel:"662434804",cn:8.5,cursos:"",falta:"26/09/2025",obraDesde:"",banco:"",imp:8.5,obra:12,estado:"active",dni:"Z2084739R",cuenta:"ES4801825332140000146417",vtrm:"09/10/2026",rm:"09/10/2025",prl20:"OK",vtodni:"26/12/2029"},
+  {dni:"74820706G",cuenta:"ES0801825332180206361957",rm:"03/02/2026",prl20:"OK",vtodni:"07/04/2027",vtrm:"03/02/2027",nombre:"FORTES ALMELLONES, PEDRO",irpfAplica:"empresa50",ce:0,nFija:0,fechaBaja:"",correo:"pedro75fortes@gmail.com",cat:"of2",fnac:"20/05/1975",obraDesde:"",imp:11,banco:"BBVA",falta:"06/10/2025",estado:"active",obra:9,id:14,localidad:"MALAGA",obraHistory:[],tel:"685094103",cursos:"",cn:11},
+  {irpfAplica:"si",nombre:"GARRIDO RUIZ, JORGE",cat:"of1",fnac:"06/11/1980",correo:"",fechaBaja:"",ce:0,nFija:0,estado:"active",obra:6,banco:"",obraDesde:"",imp:0,falta:"11/03/2026",cursos:"",cn:0,tel:"609939376",id:15,localidad:"ALMOGIA",obraHistory:[],cuenta:"",dni:"74837925L",vtodni:"01/12/2031",prl20:"OK",rm:"",vtrm:""},
+  {vtodni:"29/10/2031",rm:"18/07/2025",prl20:"OK",vtrm:"18/07/2026",dni:"76437818D",cuenta:"ES2521030236510010071508",estado:"active",obra:7,obraDesde:"",imp:9.5,banco:"UNICAJA",falta:"12/01/2026",tel:"632067058",cursos:"",cn:9.5,localidad:"MALAGA",id:16,obraHistory:[],irpfAplica:"no",nombre:"GOMEZ ADROUN, MOHAMED",cat:"pe",fnac:"23/09/1986",ce:0,nFija:0,fechaBaja:"",correo:""},
+  {dni:"Y8535535L",cuenta:"ES7330230010006975645612",vtrm:"28/08/2026",vtodni:"06/05/2030",rm:"28/08/2025",prl20:"OK",fnac:"27/12/1988",cat:"of1",nFija:0,ce:0,fechaBaja:"",correo:"",irpfAplica:"no",nombre:"HAMMADI, YASSINE",tel:"632417321",cn:11,cursos:"",obraHistory:[{"obraId": 3, "hasta": "2026-03-20", "desde": "2020-01-01"}, {"hasta": null, "desde": "2026-03-20", "obraId": 9}],id:17,localidad:"MALAGA",obra:9,estado:"active",falta:"24/09/2025",obraDesde:"2026-03-20",banco:"C.R. GRANADA",imp:11},
+  {cuenta:"ES4330580762252720005249",dni:"33369113T",vtrm:"18/11/2026",prl20:"OK",rm:"18/11/2025",vtodni:"27/03/2033",correo:"fizquierdo79@gmail.com",fechaBaja:"",ce:0,nFija:0,fnac:"03/09/1969",cat:"pe",nombre:"IZQUIERDO EXPOSITO, FERNANDO",irpfAplica:"si",localidad:"RINCON DE LA VICTORIA",id:18,obraHistory:[],cursos:"24H ELEV. TELESC.",cn:8.5,tel:"697626756",banco:"CAJAMAR",obraDesde:"",imp:8.5,falta:"18/11/2024",estado:"active",obra:8},
+  {irpfAplica:"no",nombre:"KHIMCHAK, VASYL",fnac:"27/12/1963",cat:"of1",ce:0,nFija:0,fechaBaja:"",correo:"khimchak1963@gmail.com",estado:"ext",obra:14,imp:11,banco:"LA CAIXA",obraDesde:"",falta:"10/01/2026",tel:"673570059",cursos:"",cn:11,id:19,localidad:"MALAGA",obraHistory:[],dni:"X5084152W",cuenta:"ES7921006453170200039066",vtodni:"19/05/2029",rm:"14/01/2025",prl20:"OK",vtrm:"14/01/2026"},
+  {vtodni:"14/02/1933",prl20:"OK",rm:"17/02/2026",vtrm:"17/02/2027",cuenta:"ES8015830001189000805953",dni:"76437628A",obra:9,estado:"active",falta:"19/01/2026",imp:9,obraDesde:"",banco:"",cn:9,cursos:"20H MOV. TIERRAS",tel:"610158729",obraHistory:[],id:20,localidad:"MALAGA",irpfAplica:"si",nombre:"LEAL MORALES, LUIS MANUEL",cat:"pe",fnac:"06/11/1991",correo:"",fechaBaja:"",nFija:0,ce:0},
+  {fnac:"07/01/1978",cat:"pe",fechaBaja:"",correo:"",nFija:0,ce:0,irpfAplica:"si",nombre:"MARTIN BENAVIDES, DANIEL",cn:0,cursos:"",tel:"642375460",obraHistory:[],localidad:"FUENGIROLA",id:21,obra:2,estado:"active",falta:"02/03/2026",banco:"",imp:0,obraDesde:"",cuenta:"ES4714650270391747578891",dni:"74844717A",vtrm:"12/03/2027",vtodni:"13/04/2034",prl20:"OK",rm:"12/03/2026"},
+  {vtrm:"05/03/2027",vtodni:"05/11/2028",prl20:"OK",rm:"05/03/2026",cuenta:"ES3721030246260040003016",dni:"74833441C",cn:9.5,cursos:"",tel:"625647917",obraHistory:[],id:22,localidad:"MALAGA",obra:13,estado:"active",falta:"24/02/2026",banco:"",obraDesde:"",imp:9.5,cat:"pe",fnac:"19/07/1984",fechaBaja:"",correo:"",nFija:0,ce:0,irpfAplica:"si",nombre:"MARTIN CASTILLO, ALBERTO"},
+  {vtrm:"",prl20:"NO",rm:"",vtodni:"06/05/2026",cuenta:"ES1921004989542100000481",dni:"30822248V",obraHistory:[],id:23,localidad:"ALMOGIA",cn:0,cursos:"60H PRL - 10H DIRECTIVO",tel:"655606879",falta:"23/10/2025",banco:"LA CAIXA",obraDesde:"",imp:0,obra:0,estado:"admin",correo:"",fechaBaja:"",nFija:1157,ce:0,fnac:"24/01/1975",cat:"enc",nombre:"MORENO DOMINGUEZ, JUAN",irpfAplica:"no"},
+  {nombre:"MORENO DOMINGUEZ, SALVADOR",irpfAplica:"si",ce:0,nFija:0,fechaBaja:"",correo:"",fnac:"29/04/1978",cat:"of1",banco:"",imp:10.5,obraDesde:"",falta:"26/01/2026",estado:"active",obra:1775029283113,id:24,localidad:"PUERTO DE LA TORRE",obraHistory:[],tel:"614486651",cursos:"",cn:10.5,dni:"74831876L",cuenta:"ES9814650100981754120412",rm:"02/12/2025",prl20:"OK",vtodni:"27/07/2031",vtrm:"02/12/2026"},
+  {estado:"admin",obra:0,obraDesde:"",imp:0,banco:"LA CAIXA",falta:"24/11/2026",tel:"609196964",cursos:"",cn:0,id:25,localidad:"ALMOGIA",obraHistory:[],irpfAplica:"becario",nombre:"MORENO TORREBLANCA, IVAN",fnac:"17/07/2003",cat:"adm",ce:0,nFija:600,fechaBaja:"",correo:"",vtodni:"15/05/2029",rm:"",prl20:"NO",vtrm:"",dni:"77190471X",cuenta:"ES3021002904070258857977"},
+  {fechaBaja:"",correo:"",ce:0,nFija:0,fnac:"22/04/1968",cat:"of1",nombre:"PEREZ BALLESTEROS, MANUEL",irpfAplica:"si",id:26,localidad:"MALAGA",obraHistory:[],cursos:"",cn:12,tel:"653703515",banco:"LA CAIXA",obraDesde:"",imp:12,falta:"14/07/2025",estado:"active",obra:8,cuenta:"ES2021002573200110678634",dni:"52582055F",vtrm:"10/07/2026",prl20:"NO OK",rm:"10/07/2025",vtodni:"31/01/2033"},
+  {vtrm:"02/12/2026",rm:"02/12/2025",prl20:"OK",vtodni:"30/03/2033",dni:"26812854Y",cuenta:"ES8600493375042714036160",id:27,localidad:"MALAGA",obraHistory:[],tel:"691550360",cursos:"6H MOV. TIERRAS - 6H APAR. ELEV.",cn:9.5,obraDesde:"",banco:"",imp:9.5,falta:"25/11/2025",estado:"active",obra:1,ce:0,nFija:0,correo:"",fechaBaja:"",cat:"pe",fnac:"09/12/1992",nombre:"RAMIREZ DEL PINO, FRANCISCO RUBEN",irpfAplica:"empresa50"},
+  {vtrm:"24/06/2026",vtodni:"25/12/2029",prl20:"OK",rm:"24/06/2025",cuenta:"ES0601825332130208805765",dni:"Z2085177W",cursos:"",cn:9,tel:"672063516",localidad:"MALAGA",id:28,obraHistory:[],estado:"active",obra:5,banco:"BBVA",imp:9,obraDesde:"",falta:"12/06/2025",cat:"pe",fnac:"08/11/1991",fechaBaja:"",correo:"mohamed.sang686@gmail.com",ce:0,nFija:0,irpfAplica:"si",nombre:"SANGARE, MOHAMED"},
+  {cuenta:"ES9821002904030288431764",dni:"74865537P",vtrm:"18/07/2026",prl20:"OK",rm:"18/07/2025",vtodni:"25/08/2032",correo:"",fechaBaja:"2026-03-21",ce:0,nFija:0,fnac:"02/11/1980",cat:"pe",nombre:"SOTO HEREDIA, MANUEL",irpfAplica:"si",id:29,localidad:"MALAGA",obraHistory:[],cursos:"",cn:9.5,tel:"744733271",imp:9.5,banco:"LA CAIXA",obraDesde:"",falta:"15/07/2025",estado:"noEmpresa",obra:12},
+  {irpfAplica:"si",nombre:"URBANO DE LA CRUZ, YERAY",fnac:"29/07/2006",cat:"pe",ce:0,nFija:0,fechaBaja:"",correo:"",estado:"active",obra:9,obraDesde:"",imp:9,banco:"",falta:"20/10/2025",tel:"633918492",cursos:"",cn:9,localidad:"MALAGA",id:30,obraHistory:[],dni:"79380628S",cuenta:"ES3001824106780201724539",vtodni:"07/03/2031",rm:"30/10/2025",prl20:"OK",vtrm:"30/10/2026"},
+  {dni:"25687523L",cuenta:"ES6231870424135886284420",rm:"23/09/2025",prl20:"NO OK",vtodni:"02/06/2026",vtrm:"23/09/2026",nombre:"VAZQUEZ HERNANDEZ, JUAN JOSE",irpfAplica:"si",nFija:0,ce:0,fechaBaja:"",correo:"",fnac:"16/08/1972",cat:"pe",falta:"16/09/2025",imp:9.5,banco:"",obraDesde:"",obra:3,estado:"active",obraHistory:[],id:31,localidad:"MALAGA",tel:"643481423",cn:9.5,cursos:"6H MOV. TIERRAS - 20H CARRET. Y TELESCOPICA"},
+  {fnac:"19/07/1974",cat:"of1",nFija:0,ce:0,fechaBaja:"",correo:"carlosvega1974@gmail.com",irpfAplica:"si",nombre:"VEGA CANTOS, CARLOS",tel:"655143241",cn:10.5,cursos:"8H CARR. ELE. - 8H DUMPER",obraHistory:[],localidad:"MALAGA",id:32,obra:9,estado:"active",falta:"20/01/2025",obraDesde:"",banco:"UNICAJA",imp:10.5,dni:"53686486R",cuenta:"ES4721030240520010074064",vtrm:"03/02/2027",vtodni:"22/03/2026",rm:"03/02/2026",prl20:"OK"},
+  {prl20:"OK",rm:"03/02/2026",vtodni:"18/07/2027",vtrm:"03/02/2027",cuenta:"ES2721033067150010059726",dni:"26831694D",falta:"09/01/2025",banco:"UNICAJA",imp:9.5,obraDesde:"2026-03-16",obra:1774947785579,estado:"active",obraHistory:[{"desde": "2020-01-01", "hasta": "2026-03-02", "obraId": 4}, {"obraId": 1774947664762, "desde": "2026-03-02", "hasta": "2026-03-09"}, {"obraId": 4, "desde": "2026-03-09", "hasta": "2026-03-16"}, {"obraId": 1774947785579, "hasta": null, "desde": "2026-03-16"}],localidad:"CAMPANILLAS",id:33,cn:9.5,cursos:"20H APAR. ELEV. - 6H MOV. TIERRAS",tel:"625784107",nombre:"VIRUEL ALARCON, PEDRO",irpfAplica:"empresa50",correo:"pedroviruelalarcon@gmail.com",fechaBaja:"",nFija:0,ce:0,cat:"of2",fnac:"13/12/1994"},
+  {fnac:"12/04/1993",cat:"of2",fechaBaja:"",correo:"",ce:0,nFija:0,irpfAplica:"si",nombre:"TESGHITI, MOHAMED",cursos:"",cn:10.5,tel:"611705039",id:34,localidad:"MALAGA",obraHistory:[{"desde": "2026-03-18", "hasta": null, "obraId": 8}],estado:"active",obra:8,banco:"",obraDesde:"2026-03-18",imp:10.5,falta:"18/03/2026",cuenta:"ES6700494988512716157971",dni:"Y8500850H",vtrm:"",vtodni:"18/12/2028",prl20:"OK",rm:""}
+];
+let incs=[],hor={},festivos=[],notifs={},recordatorios=[],pagos={},prestamos=[],costesConfig={},bajasMedicas=[];
 let cM=new Date().getMonth(),cY=new Date().getFullYear();
 let fM=cM,fY=cY,compM=cM,compY=cY,sueldosM=cM,sueldosY=cY,notifM=cM,notifY=cY;
 let editObraId=null,editWkId=null,editCell={},copySourceDay=null,currentEditWid=null;
@@ -1020,7 +1109,13 @@ function autoDistribuir(h,dayType){
 
 // ── TARIFA FACTURACIÓN (lo que cobras al cliente — igual normal y extra) ──
 function getTarifaFact(w,obra,tipo){
-  if(!obra||(!obra.tof&&!obra.tpe))return 0;
+  if(!obra)return 0;
+  // Tarifa especial por trabajador en esta obra (prioridad máxima)
+  const esp=obra.tarifasEsp&&(obra.tarifasEsp[w.id]||obra.tarifasEsp[String(w.id)]);
+  if(esp&&esp>0)return esp;
+  // Maquinista: tarifa propia de la obra
+  if(w.cat==='maq')return obra.tmaq||obra.tof||0;
+  if(!obra.tof&&!obra.tpe)return 0;
   return isOf(w)?(obra.tof||0):(obra.tpe||0);
 }
 
@@ -1146,7 +1241,7 @@ function navTo(s,el){
   document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   document.getElementById('sec-'+s).classList.add('active');
   el?.classList.add('active');
-  ({dashboard:rDash,obras:rObras,personal:rWorkers,bajas:rBajas,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,costes:rCostes,recordatorios:rRec,notificaciones:rNotifs,incidencias:rIncs,ajustes:rAjustes})[s]?.();
+  ({dashboard:rDash,obras:rObras,personal:rWorkers,bajas:rBajas,horario:rHor,facturacion:rFact,comparativa:rComp,sueldos:rSueldos,costes:rCostes,recordatorios:rRec,notificaciones:rNotifs,incidencias:rIncs,informes:()=>setInformeTab('horas'),ajustes:rAjustes})[s]?.();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -1193,7 +1288,11 @@ function rDash(){
 }
 function getNP(wid,month,year){
   const days=new Date(year,month+1,0).getDate();
-  let np=0;for(let d=1;d<=days;d++){if(hor[`${year}-${month}-${wid}-${d}`]==='np')np++;}
+  let np=0;
+  for(let d=1;d<=days;d++){
+    const v=hor[`${year}-${month}-${wid}-${d}`];
+    if(v==='np'||(v&&typeof v==='object'&&v.tipo==='np'))np++;
+  }
   return np;
 }
 
@@ -1231,7 +1330,10 @@ function oCard(o){
 
 // ── PERSONAL ──────────────────────────────────────────────────────
 function toggleFechaBaja(){
-  // Campo siempre visible — no hace nada
+  const estado=document.getElementById('wk-s')?.value||'';
+  const esNoEmpresa=estado==='noEmpresa';
+  const fq=document.getElementById('wk-finiquito-fg');
+  if(fq)fq.style.display=esNoEmpresa?'block':'none';
 }
 
 function rWorkers(){
@@ -1258,7 +1360,7 @@ function rWorkers(){
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
           <span class="wn">${w.nombre}</span>
           <span class="bdg ${WESTB[es]||'ba'}" style="font-size:10px">${WEST[es]||es}</span>
-          ${es==='noEmpresa'?`<span style="font-size:10px;color:#E24B4A">${w.fechaBaja||''}</span>`:''}
+          ${es==='noEmpresa'?`<span style="font-size:10px;color:#E24B4A">${w.fechaBaja||''}</span> ${w.finiquitado?'<span style="font-size:10px;background:#E8F8F0;color:#0F6E56;padding:1px 5px;border-radius:99px">✓ Finiquitado</span>':'<span style="font-size:10px;background:var(--rl);color:#791F1F;padding:1px 5px;border-radius:99px">⏳ Sin finiquitar</span>'}`:''}
         </div>
         <div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center">
           <span class="tag">${CATL[w.cat]||'—'}</span>
@@ -1393,10 +1495,10 @@ function rHor(){
     filtroObraEl.value=filtroObraVal;
   }
 
-  // Poblar filtro de trabajador
+  // Poblar filtro de trabajador — siempre repoblar para capturar nuevos trabajadores
   const filtroWorkerEl=document.getElementById('hor-filtro-worker');
   const filtroWorkerVal=filtroWorkerEl?.value||'';
-  if(filtroWorkerEl&&filtroWorkerEl.options.length<=1){
+  if(filtroWorkerEl){
     filtroWorkerEl.innerHTML='<option value="">Todos los trabajadores</option>'+
       sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa')
         .map(w=>`<option value="${w.id}">${fmtNombre(w.nombre)}</option>`).join('');
@@ -1463,26 +1565,32 @@ function rHor(){
       }
     }
 
-    // Calcular si el mes está completo
-    let mesCompleto=true;
-    for(let d=1;d<=days;d++){
-      const dDia2=new Date(cY,cM,d);
-      const dFalta2=w.falta?parsefecha(w.falta):null;
-      const dBaja2=w.fechaBaja?parsefecha(w.fechaBaja):null;
-      // Fuera del período → cuenta como OK
-      if((dFalta2&&dDia2<dFalta2)||(dBaja2&&dDia2>dBaja2)){continue;}
-      const v=hor[hKey(w.id,d)];
-      // Festivo → OK
-      const ds2=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      if(isFestivo(ds2)){continue;}
-      // Fin de semana → OK
-      const dow2=new Date(cY,cM,d).getDay();
-      if(dow2===0||dow2===6){continue;}
-      // Día laborable sin registrar → incompleto
-      if(v===undefined||v===null||v===''){mesCompleto=false;break;}
+    // Calcular si el mes está completo (auto o manual)
+    const claveManual=`${cY}-${cM}-${w.id}-COMPLETO`;
+    const marcadoManual=hor[claveManual]===true;
+    let mesCompleto=marcadoManual;
+    if(!marcadoManual){
+      mesCompleto=true;
+      for(let d=1;d<=days;d++){
+        const dDia2=new Date(cY,cM,d);
+        const dFalta2=w.falta?parsefecha(w.falta):null;
+        const dBaja2=w.fechaBaja?parsefecha(w.fechaBaja):null;
+        if((dFalta2&&dDia2<dFalta2)||(dBaja2&&dDia2>dBaja2)){continue;}
+        const v=hor[hKey(w.id,d)];
+        const ds2=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if(isFestivo(ds2)){continue;}
+        const dow2=new Date(cY,cM,d).getDay();
+        if(dow2===0||dow2===6){continue;}
+        if(v===undefined||v===null||v===''){mesCompleto=false;break;}
+      }
     }
 
-    html+=`<tr><td class="nc" title="${w.nombre}" style="${mesCompleto?'background:var(--gl);color:var(--gp);font-weight:700;':''}">${w.nombre}${w.estado==='ext'?' *':w.estado==='noEmpresa'?' 🚪':''}${mesCompleto?' ✓':''}</td>`;
+    html+=`<tr><td class="nc" title="${w.nombre}" style="${mesCompleto?'background:var(--gl);color:var(--gp);font-weight:700;':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.nombre}${w.estado==='ext'?' *':w.estado==='noEmpresa'?' 🚪':''}</span>
+        <button onclick="toggleMesCompleto(${w.id})" title="${mesCompleto?'Quitar marca':'Marcar como completo'}" style="background:${mesCompleto?'var(--gd)':'var(--br)'};color:${mesCompleto?'#fff':'var(--t3)'};border:none;border-radius:4px;width:18px;height:18px;font-size:10px;cursor:pointer;flex-shrink:0;line-height:1">✓</button>
+      </div>
+    </td>`;
     for(let d=1;d<=days;d++){
       const val=hor[hKey(w.id,d)];
       const dow=new Date(cY,cM,d).getDay();
@@ -1660,13 +1768,16 @@ function saveHor(){
     }
 
     // ── OBRA EN CELDA ─────────────────────────────────────────────
-    // La obra diferente ya queda guardada en obraId de la celda (línea anterior)
-    // NO se modifica w.obra para no afectar horas de otros días
     const obraNueva=obras.find(o=>o.id===obraSelId);
-    const msg=obraSelId&&obraSelId!==w?.obra
-      ?`✓ Horas guardadas en ${obraNueva?.nombre||'obra seleccionada'}`
-      :dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
-    toast(msg);
+    // Si la obra seleccionada es diferente a la asignada → reasignar automáticamente
+    if(obraSelId&&obraSelId!==w?.obra&&w){
+      w.obra=obraSelId;
+      svFB('workers',workers);
+      toast(`✓ Horas en ${obraNueva?.nombre||'obra'} — ${fmtNombre(w.nombre)} reasignado`);
+    }else{
+      const msg=dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
+      toast(msg);
+    }
     svFB('horario',hor);CM();rHor();
     // Si es la primera hora registrada del trabajador este mes y la fecha de alta
     // es posterior, actualizar falta para que las X desaparezcan
@@ -1761,6 +1872,144 @@ function delHor(){
 }
 
 // ── COPIAR DÍA ────────────────────────────────────────────────────
+// ── TARIFAS ESPECIALES EN OBRA ────────────────────────────────────
+let tarifasEspTemp={}; // {wid: tarifa}
+
+function addTarifaEsp(wid,tarifa){
+  const el=document.getElementById('ob-tarifas-esp');if(!el)return;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:8px;align-items:center';
+  const selId='tesp-w-'+Date.now();
+  const opts=sW().map(w=>`<option value="${w.id}"${w.id===wid?' selected':''}>${fmtNombre(w.nombre)}</option>`).join('');
+  div.innerHTML=`<select class="fi" id="${selId}" style="flex:2;padding:6px">${opts}</select>
+    <input type="number" step="0.5" placeholder="€/h" value="${tarifa||''}" style="width:70px;border:1px solid var(--br);border-radius:var(--rs);padding:6px;font-size:13px;background:transparent;color:var(--t)"/>
+    <button onclick="this.parentElement.remove()" style="background:transparent;border:none;color:#E24B4A;font-size:18px;cursor:pointer">×</button>`;
+  el.appendChild(div);
+}
+
+function getTarifasEspFromModal(){
+  const esp={};
+  const rows=document.getElementById('ob-tarifas-esp')?.children||[];
+  for(const row of rows){
+    const sel=row.querySelector('select');
+    const inp=row.querySelector('input[type="number"]');
+    const wid=sel?parseInt(sel.value):0;
+    const tarifa=inp?parseFloat(inp.value):0;
+    if(wid>0&&tarifa>0){
+      esp[String(wid)]=tarifa;
+    }
+  }
+  console.log('Tarifas especiales guardadas:',esp);
+  return esp;
+}
+
+// ── INFORMES ──────────────────────────────────────────────────────
+function setInformeTab(tab){
+  if(tab==='horas')rInformeHoras();
+}
+
+function rInformeHoras(){
+  const el=document.getElementById('informes-content');
+  if(!el)return;
+  const hoy=new Date();
+  const mAct=hoy.getMonth(),yAct=hoy.getFullYear();
+  const filtroObraId=parseInt(document.getElementById('inf-filtro-obra')?.value||0)||0;
+
+  const meses=[];
+  for(let i=5;i>=0;i--){
+    let m=mAct-i,y=yAct;
+    if(m<0){m+=12;y--;}
+    meses.push({m,y,label:MESES[m].substring(0,3)+' '+y});
+  }
+  const obrasActivas=obras.filter(o=>(o.estado==='active'||o.estado==='done')&&(!filtroObraId||o.id===filtroObraId));
+
+  // ── FILTRO ────────────────────────────────────────────────────
+  let html=`<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+    <select class="fi" id="inf-filtro-obra" onchange="rInformeHoras()" style="flex:1;min-width:160px;padding:7px 10px;font-size:12px">
+      <option value="">Todas las obras</option>
+      ${obras.filter(o=>o.estado==='active'||o.estado==='done').map(o=>`<option value="${o.id}"${o.id===filtroObraId?' selected':''}>${o.nombre}</option>`).join('')}
+    </select>
+  </div>`;
+
+  // ── TABLA RESUMEN ─────────────────────────────────────────────
+  html+=`<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Resumen por obra</div>
+  <div style="overflow-x:auto;margin-bottom:20px"><table style="width:100%;border-collapse:collapse;font-size:11px">
+  <thead><tr style="background:var(--g)">
+    <th style="text-align:left;padding:8px 10px;color:#fff;min-width:150px">Obra</th>
+    ${meses.map(({label})=>`<th style="padding:8px 6px;color:#fff;text-align:center;white-space:nowrap;min-width:55px">${label}</th>`).join('')}
+    <th style="padding:8px 8px;color:#fff;text-align:center;font-size:12px">TOTAL</th>
+  </tr></thead><tbody>`;
+
+  let totalesMes=meses.map(()=>0);
+  let granTotal=0;
+
+  obrasActivas.forEach((o,oi)=>{
+    const horasMes=meses.map(({m,y})=>{const c=calcObraMonth(o.id,m,y);return c.hN+c.hE;});
+    const totalObra=horasMes.reduce((s,h)=>s+h,0);
+    if(totalObra===0)return;
+    horasMes.forEach((h,i)=>totalesMes[i]+=h);
+    granTotal+=totalObra;
+    const oc=getObraColor(o.id);
+    html+=`<tr style="background:${oi%2===0?'var(--bc)':'var(--bg)'};border-bottom:1px solid var(--br)">
+      <td style="padding:8px 10px">
+        ${oc?`<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${oc.bg};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>`:''}
+        <span style="font-weight:700;font-size:12px">${o.nombre}</span>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">${o.empresa||''}</div>
+      </td>
+      ${horasMes.map(h=>`<td style="padding:8px 6px;text-align:center;font-family:var(--fm);color:${h>0?'var(--t)':'var(--t3)'};font-size:12px">${h>0?fmtH(h):'—'}</td>`).join('')}
+      <td style="padding:8px 8px;text-align:center;font-weight:800;color:var(--g);font-size:13px">${fmtH(totalObra)}</td>
+    </tr>`;
+  });
+
+  html+=`<tr style="background:var(--g)">
+    <td style="padding:8px 10px;font-weight:800;color:#fff;font-size:12px">TOTAL</td>
+    ${totalesMes.map(h=>`<td style="padding:8px 6px;text-align:center;font-weight:700;color:#fff;font-family:var(--fm)">${h>0?fmtH(h):'—'}</td>`).join('')}
+    <td style="padding:8px 8px;text-align:center;font-weight:800;color:#fff;font-size:14px">${fmtH(granTotal)}</td>
+  </tr></tbody></table></div>`;
+
+  // ── DESGLOSE POR TRABAJADOR ───────────────────────────────────
+  html+=`<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Desglose por trabajador</div>`;
+
+  obrasActivas.forEach(o=>{
+    const oc=getObraColor(o.id);
+    const filas=workers.filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa').map(w=>{
+      const horasMes=meses.map(({m,y})=>{const c=calcWorkerMonth(w.id,m,y);return(c.byObra[o.id]?.hN||0)+(c.byObra[o.id]?.hE||0);});
+      const total=horasMes.reduce((s,h)=>s+h,0);
+      return{w,horasMes,total};
+    }).filter(r=>r.total>0);
+    if(!filas.length)return;
+
+    // Cabecera de obra destacada
+    html+=`<div style="margin-bottom:16px">
+      <div style="background:${oc?oc.bg:'var(--bg)'};border-radius:var(--rs);padding:10px 14px;margin-bottom:6px;border-left:4px solid ${oc?oc.txt:'var(--g)'}">
+        <div style="font-size:14px;font-weight:800;color:${oc?oc.txt:'var(--t)'}">${o.nombre}</div>
+        <div style="font-size:11px;color:${oc?oc.txt:'var(--t3)'};opacity:.8;margin-top:2px">${o.empresa||''}</div>
+      </div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:${oc?oc.bg:'var(--br)'};border-bottom:2px solid ${oc?oc.txt:'var(--br)'}">
+        <th style="text-align:left;padding:6px 10px;color:${oc?oc.txt:'var(--t2)'};min-width:130px;font-weight:700">Trabajador</th>
+        ${meses.map(({label})=>`<th style="padding:6px 4px;text-align:center;color:${oc?oc.txt:'var(--t2)'};white-space:nowrap;font-size:10px">${label}</th>`).join('')}
+        <th style="padding:6px 6px;text-align:center;color:${oc?oc.txt:'var(--t2)'};font-weight:700">Total</th>
+      </tr></thead><tbody>
+      ${filas.map((r,i)=>`<tr style="background:${i%2===0?'var(--bc)':'var(--bg)'};border-bottom:1px solid var(--br)">
+        <td style="padding:6px 10px;font-weight:600;font-size:12px">${fmtNombre(r.w.nombre)}</td>
+        ${r.horasMes.map(h=>`<td style="padding:6px 4px;text-align:center;font-family:var(--fm);color:${h>0?'var(--t)':'var(--t3)'}">${h>0?fmtH(h):'—'}</td>`).join('')}
+        <td style="padding:6px 6px;text-align:center;font-weight:700;color:var(--g)">${fmtH(r.total)}</td>
+      </tr>`).join('')}
+      </tbody></table></div>
+    </div>`;
+  });
+
+  el.innerHTML=html;
+}
+
+function toggleMesCompleto(wid){
+  const clave=`${cY}-${cM}-${wid}-COMPLETO`;
+  if(hor[clave]===true) delete hor[clave];
+  else hor[clave]=true;
+  svFB('horario',hor);rHor();
+}
+
 function openCopiarCelda(){
   const wid=editCell.wid;
   const day=editCell.day;
@@ -1884,7 +2133,7 @@ function rFact(){
     }
     html+=`<div style="font-size:11px;color:var(--t3);margin-bottom:6px">${fmtH(hN)} norm.${hE>0?' + '+fmtH(hE)+' extra':''} · ${wRows.length} trabajador${wRows.length!==1?'es':''}</div>`;
     wRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).forEach(({w,hN:wN,hE:wE,fact:wF,coste:wC})=>{
-      const tar=isOf(w)?o.tof:o.tpe;
+      const tar=getTarifaFact(w,o,'h');
       let det='';
       if(wN>0&&wE>0)det=`${fmtH(wN+wE)}h×${tar}€`;
       else if(wN>0)det=`${fmtH(wN)}h×${tar}€`;
@@ -1925,7 +2174,7 @@ function exportPDF(){
     doc2.setTextColor(0);y+=6;
     wRows.sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es')).forEach(({w,hN:wN,hE:wE,fact:wF})=>{
       if(y>270){doc2.addPage();y=20;}
-      const tar=isOf(w)?o.tof:o.tpe;
+      const tar=getTarifaFact(w,o,'h');
       let det='';
       if(wN>0&&wE>0)det=`${fmtH(wN+wE)}h×${tar}€`;
       else if(wN>0)det=`${fmtH(wN)}h×${tar}€`;
@@ -3488,6 +3737,15 @@ function confirmarImportAsesoria(matches){
 }
 
 
+function guardarNpDesc(wid,n){
+  const key=getPagosKey(wid);
+  if(!pagos[key])pagos[key]={};
+  pagos[key].npDesc=n;
+  db.collection('app').doc('pagos').set({data:pagos})
+    .then(()=>{setSyncDot('ok');rSueldos();})
+    .catch(e=>{setSyncDot('err');console.error(e);});
+}
+
 function chMonthS(d){
   sueldosM+=d;if(sueldosM>11){sueldosM=0;sueldosY++;}if(sueldosM<0){sueldosM=11;sueldosY--;}
   const el=document.getElementById('sueldos-filtro-obra');
@@ -3603,18 +3861,13 @@ function rSueldos(){
     const pkey=getPagosKey(w.id);
     const p=pagos[pkey]||{};
     const nominaOficial=parseFloat(p.nominaOficial)||0;
-    // Lógica de totalBruto:
-    // 1. Nómina fija → siempre la nómina fija
-    // 2. Con nómina oficial → se usa la nómina oficial, SALVO que las horas sean mayores
-    // 3. Sin nómina oficial → se calcula por horas
+    const esNoEmpresa=w.estado==='noEmpresa';
     let totalBruto;
     if(esNFija){
       totalBruto=w.nFija;
     }else if(esBaja&&nominaOficial>0){
-      // Baja médica: cobra lo mayor entre horas trabajadas y nómina oficial
       totalBruto=horasBruto>nominaOficial?horasBruto:nominaOficial;
     }else{
-      // Resto: siempre por horas (nómina oficial es solo informativa)
       totalBruto=horasBruto;
     }
     const irpfEur=parseFloat(p.irpfEur)||0;
@@ -3631,10 +3884,14 @@ function rSueldos(){
     const anticipo=anticipos.reduce((s,a)=>s+(parseFloat(a.importe)||0),0);
     const sobre=parseFloat(p.sobre)||0;
     const obs=p.obs||'';
+    const npCount=getNP(w.id,sueldosM,sueldosY);
+    const npDesc=parseInt(p.npDesc)||0; // cuántos NP descontar (elegido por usuario)
+    const ssDiario=SS_DIARIO[w.cat]||27.54;
+    const npImporte=Math.round(npDesc*ssDiario*100)/100;
     const prestMes=getPrestamosActivos(w.id,sueldosM,sueldosY);
     const totalPrest=prestMes.reduce((s,pr)=>s+pr.cuotaMes,0);
     const baseCalculo=totalBruto;
-    const nomina=Math.round((baseCalculo-irpfDescuentoW-desc+gasoil)*100)/100;
+    const nomina=Math.round((baseCalculo-irpfDescuentoW-desc-npImporte+gasoil)*100)/100;
     const saldo=Math.round((nomina+sobre-totalPrest)*100)/100;
     const negativo=saldo<0?Math.abs(saldo):0;
     const difTransf=(transferirDif&&diferencia>0)?diferencia:0;
@@ -3642,32 +3899,70 @@ function rSueldos(){
     const transfNomina=nominaOficial>0?Math.max(0,Math.round(nominaOficial*100)/100):null;
     // Transferencia total = lo calculado por horas con todos los ajustes
     const ajuste=nominaOficial>0?Math.round((transf-transfNomina)*100)/100:null;
-    return{w,hN,hE,imp,tarHE,parcial,totalBruto,esNFija,esBaja,horasBruto,irpfEur,irpfDescuentoW,irpfAplica,nominaOficial:nominaOficialDisplay,diferencia,transferirDif,desc,gasoil,anticipos,anticipo,sobre,obs,prestMes,totalPrest,nomina,saldo,negativo,transf,transfNomina,ajuste};
+    return{w,hN,hE,imp,tarHE,parcial,totalBruto,esNFija,esBaja,esNoEmpresa,horasBruto,irpfEur,irpfDescuentoW,irpfAplica,nominaOficial:nominaOficialDisplay,diferencia,transferirDif,desc,gasoil,anticipos,anticipo,sobre,obs,npCount,npDesc,npImporte,ssDiario,prestMes,totalPrest,nomina,saldo,negativo,transf,transfNomina,ajuste};
   }).filter(r=>r.esNFija||r.hN+r.hE>0||r.w.cn>0||r.w.nFija>0);
 
-  // No reordenar — se respeta el orden elegido por el usuario
   const totalBrutoAll=resumen.reduce((s,r)=>s+r.totalBruto,0);
   const totalTransf=resumen.reduce((s,r)=>s+r.transf,0);
   const totalAnticipos=resumen.reduce((s,r)=>s+r.anticipo,0);
   const totalNomina=resumen.reduce((s,r)=>s+r.nomina,0);
   const totalPrestAll=resumen.reduce((s,r)=>s+r.totalPrest,0);
+  const totalIrpfW=resumen.reduce((s,r)=>s+r.irpfDescuentoW,0);
+  const totalDesc=resumen.reduce((s,r)=>s+r.desc,0);
+  const totalNpImporte=resumen.reduce((s,r)=>s+r.npImporte,0);
+  const totalGasoil=resumen.reduce((s,r)=>s+r.gasoil,0);
+  const totalSobre=resumen.reduce((s,r)=>s+r.sobre,0);
+  const totalNeg=resumen.reduce((s,r)=>s+r.negativo,0);
+  // Verificar cuadre: bruto - irpf - desc + gasoil + sobre - prest - anticipos - negativos = transf
+  const totalCalculado=Math.round((totalBrutoAll-totalIrpfW-totalDesc+totalGasoil+totalSobre-totalPrestAll-totalAnticipos-totalNeg)*100)/100;
 
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <div style="font-size:14px;font-weight:600">Sueldos ${MESES[sueldosM]} ${sueldosY}</div>
     <button class="btn btng btnsm" onclick="openNuevoPrestamo()">💳 Nuevo préstamo</button>
   </div>
-  <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:16px">
+  <div style="display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:16px">
     <div style="background:var(--bc);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:12px;color:var(--t3)">Total bruto</span>
+      <span style="font-size:12px;color:var(--t3)">Total bruto (horas)</span>
       <span style="font-size:16px;font-weight:700">${fmt(totalBrutoAll)}</span>
     </div>
-    ${totalAnticipos>0?`<div style="background:var(--al);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:12px;color:#633806">− Anticipos</span>
-      <span style="font-size:14px;font-weight:700;color:#633806">−${fmt(totalAnticipos)}</span>
+    ${totalIrpfW>0?`<div style="background:var(--rl);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:#791F1F">− IRPF trabajadores</span>
+      <span style="font-size:14px;font-weight:700;color:#791F1F">−${fmt(totalIrpfW)}</span>
+    </div>`:''}
+    ${totalDesc>0?`<div style="background:var(--rl);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:#791F1F">− Descuentos</span>
+      <span style="font-size:14px;font-weight:700;color:#791F1F">−${fmt(totalDesc)}</span>
+    </div>`:''}
+    ${totalNpImporte>0?`<div style="background:var(--gl);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--gp)">✂️ Ahorro NP (en costes, no afecta transferencia)</span>
+      <span style="font-size:14px;font-weight:700;color:var(--gp)">−${fmt(totalNpImporte)}</span>
+    </div>`:''}
+    ${totalGasoil>0?`<div style="background:var(--gl);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--gp)">+ Gasoil/Extras</span>
+      <span style="font-size:14px;font-weight:700;color:var(--gp)">+${fmt(totalGasoil)}</span>
+    </div>`:''}
+    ${totalSobre!==0?`<div style="background:var(--al);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:#633806">${totalSobre>0?'+':'−'} Saldo anterior</span>
+      <span style="font-size:14px;font-weight:700;color:#633806">${totalSobre>0?'+':'−'}${fmt(Math.abs(totalSobre))}</span>
+    </div>`:''}
+    ${totalNeg>0?`<div style="background:var(--rl);border-radius:var(--rs);padding:8px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:#791F1F;font-weight:600">− Saldos negativos acumulados</span>
+        <span style="font-size:14px;font-weight:700;color:#791F1F">−${fmt(totalNeg)}</span>
+      </div>
+      ${resumen.filter(r=>r.negativo>0).map(r=>`
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#791F1F;padding:2px 0;border-top:1px solid rgba(121,31,31,.15)">
+          <span>${fmtNombre(r.w.nombre)}</span>
+          <span>−${fmt(r.negativo)}</span>
+        </div>`).join('')}
     </div>`:''}
     ${totalPrestAll>0?`<div style="background:var(--pl);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:12px;color:#3C3489">− Cuotas préstamos</span>
       <span style="font-size:14px;font-weight:700;color:#3C3489">−${fmt(totalPrestAll)}</span>
+    </div>`:''}
+    ${totalAnticipos>0?`<div style="background:var(--al);border-radius:var(--rs);padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:#633806">− Anticipos</span>
+      <span style="font-size:14px;font-weight:700;color:#633806">−${fmt(totalAnticipos)}</span>
     </div>`:''}
     <div style="background:var(--gl);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border:2px solid var(--g)">
       <span style="font-size:12px;color:var(--gp);font-weight:600">= Total transferencias</span>
@@ -3689,7 +3984,7 @@ function rSueldos(){
 
   html+='<div style="display:flex;flex-direction:column;gap:12px">';
   resumen.forEach(r=>{
-    const{w,hN,hE,imp,tarHE,parcial,totalBruto,esNFija,esBaja,horasBruto,irpfEur,irpfDescuentoW,irpfAplica,nominaOficial,diferencia,transferirDif,desc,gasoil,anticipos,anticipo,sobre,obs,prestMes,totalPrest,nomina,saldo,negativo,transf,transfNomina,ajuste}=r;
+    const{w,hN,hE,imp,tarHE,parcial,totalBruto,esNFija,esBaja,esNoEmpresa,horasBruto,irpfEur,irpfDescuentoW,irpfAplica,nominaOficial,diferencia,transferirDif,desc,gasoil,anticipos,anticipo,sobre,obs,npCount,npDesc,npImporte,ssDiario,prestMes,totalPrest,nomina,saldo,negativo,transf,transfNomina,ajuste}=r;
     const ob=obras.find(o=>o.id===w.obra);
     const sinTarifa=!esNFija&&!w.cn&&!w.nFija;
     html+=`<div class="card">
@@ -3697,12 +3992,13 @@ function rSueldos(){
         <div class="av ${avC(w.id)}" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${ini(w.nombre)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:14px">${fmtNombre(w.nombre)}</div>
-          <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}${ob?' · '+ob.nombre:''}${esBaja?' · <span style="color:#791F1F;font-weight:600">🏥 Baja médica</span>':''}</div>
+          <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}${ob?' · '+ob.nombre:''}${esBaja?' · <span style="color:#791F1F;font-weight:600">🏥 Baja médica</span>':''}${esNoEmpresa?' · <span style="color:#E24B4A;font-weight:600">🚪 Baja empresa</span>':''}</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:10px;color:var(--t3)">Calculado</div>
           <div style="font-size:15px;font-weight:700">${fmt(totalBruto)}</div>
           ${esNFija?`<span style="font-size:10px;background:var(--bl);color:#0C447C;padding:1px 5px;border-radius:99px;font-weight:600">Fija</span>`:''}
+          ${esNoEmpresa?`<span style="font-size:10px;background:${w.finiquitado?'var(--gl)':'var(--rl)'};color:${w.finiquitado?'var(--gp)':'#791F1F'};padding:1px 5px;border-radius:99px;font-weight:600">${w.finiquitado?'✓ Finiquitado':'⏳ Sin finiquitar'}</span>`:''}
         </div>
       </div>
       ${sinTarifa?`<div style="font-size:11px;color:#E24B4A">⚠️ Sin tarifa configurada</div>`:`
@@ -3763,6 +4059,20 @@ function rSueldos(){
           <div style="color:var(--t3);font-weight:600">↩ Saldo ant.</div>${inp(w.id,'sobre',sobre,'0','5','#633806')}
         </div>
       </div>
+      ${npCount>0?`<div style="background:${npDesc>0?'var(--rl)':'var(--bg)'};border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;font-size:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-weight:600;color:${npDesc>0?'#791F1F':'var(--t2)'}">🚫 Descuento NP (${npCount} falta${npCount!==1?'s':''})</div>
+          <div style="font-size:10px;color:var(--t3)">${fmt(ssDiario)}/día</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--t3)">Descontar:</span>
+          ${Array.from({length:npCount+1},(_,n)=>`
+            <button onclick="guardarNpDesc(${w.id},${n})" style="min-width:32px;padding:4px 8px;border-radius:var(--rs);border:2px solid ${n===npDesc?'#E24B4A':'var(--br)'};background:${n===npDesc?'var(--rl)':'var(--bc)'};color:${n===npDesc?'#791F1F':'var(--t2)'};font-weight:${n===npDesc?'700':'400'};font-size:12px;cursor:pointer">${n}</button>
+          `).join('')}
+          ${npDesc>0?`<span style="font-size:12px;font-weight:700;color:#791F1F;margin-left:4px">-${fmt(npImporte)}</span>`:''}
+        </div>
+      </div>`:''}
+
       ${prestMes.length?`<div style="background:var(--pl);border-radius:var(--rs);padding:8px;margin-bottom:10px;font-size:11px">
         <div style="font-weight:600;color:#3C3489;margin-bottom:4px">💳 Préstamos este mes</div>
         ${prestMes.map(pr=>`<div style="display:flex;justify-content:space-between;color:#3C3489"><span>${pr.motivo||'Préstamo'}${pr.fecha?` <span style="font-size:10px;opacity:.7">(${pr.fecha})</span>`:''} (${pr.cuotaActual}/${pr.cuotasTotal})</span><b>-${fmt(pr.cuotaMes)}</b></div>`).join('')}
@@ -4068,34 +4378,40 @@ window.delFestivo=delFestivo;
 
 // ── BACKUP ────────────────────────────────────────────────────────
 function resetWorkers(){
-  if(!confirm('¿Actualizar datos de todos los trabajadores?\n\nSe actualizarán: DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL y cursos.\n\nLas obras asignadas, horas e historial NO se modifican.'))return;
+  if(!confirm('¿Actualizar datos de todos los trabajadores desde el código?\n\nSe actualizarán: nombre, categoría, DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL, cursos.\n\nSe preservan de Firebase: obra, estado, cn, ce, nFija, irpfAplica, fechaBaja, finiquitado, finiquitaNota, obraHistory, obraDesde, imp y bajas.'))return;
   const current=[...workers];
   const updated=WD.map(wd=>{
-    const existing=current.find(w=>w.id===wd.id);
-    if(existing){
+    const ex=current.find(w=>w.id===wd.id);
+    if(ex){
       return{
-        ...wd,
-        obra:existing.obra??wd.obra,
-        estado:existing.estado??wd.estado,
-        cn:existing.cn!==undefined?existing.cn:wd.cn,
-        ce:existing.ce!==undefined?existing.ce:wd.ce,
-        nFija:existing.nFija!==undefined?existing.nFija:(wd.nFija||0),
-        irpfAplica:existing.irpfAplica||wd.irpfAplica||'si',
-        fechaBaja:existing.fechaBaja||wd.fechaBaja||'',
-        obraHistory:existing.obraHistory||[],
-        obraDesde:existing.obraDesde||'',
+        ...wd,                                          // base del código (nombre, dni, tel, cuenta...)
+        // Preservar de Firebase:
+        obra:ex.obra??wd.obra,
+        estado:ex.estado??wd.estado,
+        cn:ex.cn!==undefined?ex.cn:wd.cn,
+        ce:ex.ce!==undefined?ex.ce:wd.ce,
+        imp:ex.imp!==undefined?ex.imp:wd.imp,
+        nFija:ex.nFija!==undefined?ex.nFija:(wd.nFija||0),
+        irpfAplica:ex.irpfAplica||wd.irpfAplica||'si',
+        fechaBaja:ex.fechaBaja||wd.fechaBaja||'',
+        finiquitado:ex.finiquitado||false,
+        finiquitaNota:ex.finiquitaNota||'',
+        obraHistory:ex.obraHistory||[],
+        obraDesde:ex.obraDesde||'',
       };
     }
-    return wd;
+    return wd; // trabajador nuevo del código
   });
-  // Test: medir tamaño del objeto
+  // Preservar trabajadores de Firebase que no están en WD
+  current.forEach(w=>{
+    if(!updated.find(u=>u.id===w.id))updated.push(w);
+  });
   const json=JSON.stringify({list:updated});
   const kb=Math.round(json.length/1024);
-  console.log('Tamaño workers a guardar:',kb,'KB');
   if(kb>900){toast('Error: datos demasiado grandes ('+kb+'KB)');return;}
   workers=updated;
   db.collection('app').doc('workers').set({list:workers})
-    .then(()=>{setSyncDot('ok');rWorkers();toast('✓ Trabajadores actualizados');})
+    .then(()=>{setSyncDot('ok');rWorkers();toast('✓ '+updated.length+' trabajadores actualizados');})
     .catch(e=>{setSyncDot('err');console.error(e);toast('Error Firebase: '+(e.message||e.code));});
 }
 
@@ -4503,12 +4819,23 @@ function openEO(id){
   document.getElementById('ob-d').value=o?.dir||'';
   document.getElementById('ob-tof').value=o?.tof||'';
   document.getElementById('ob-tpe').value=o?.tpe||'';
+  document.getElementById('ob-tmaq').value=o?.tmaq||'';
   document.getElementById('ob-s').value=o?.estado||'active';
+  // Cargar tarifas especiales
+  const cont=document.getElementById('ob-tarifas-esp');
+  if(cont){
+    cont.innerHTML='';
+    const esp=o?.tarifasEsp||{};
+    Object.entries(esp).forEach(([wid,tarifa])=>{
+      if(tarifa>0)addTarifaEsp(parseInt(wid),parseFloat(tarifa));
+    });
+  }
   document.getElementById('modal-obra').classList.add('open');
 }
 function saveObra(){
   const n=document.getElementById('ob-n').value.trim().toUpperCase();if(!n){toast('Introduce el nombre');return;}
-  const data={nombre:n,empresa:document.getElementById('ob-e').value.trim().toUpperCase(),dir:document.getElementById('ob-d').value.trim(),tof:parseFloat(document.getElementById('ob-tof').value)||0,tpe:parseFloat(document.getElementById('ob-tpe').value)||0,estado:document.getElementById('ob-s').value};
+  const tarifasEsp=getTarifasEspFromModal();
+  const data={nombre:n,empresa:document.getElementById('ob-e').value.trim().toUpperCase(),dir:document.getElementById('ob-d').value.trim(),tof:parseFloat(document.getElementById('ob-tof').value)||0,tpe:parseFloat(document.getElementById('ob-tpe').value)||0,tmaq:parseFloat(document.getElementById('ob-tmaq').value)||0,estado:document.getElementById('ob-s').value,tarifasEsp};
   if(editObraId){const o=obras.find(x=>x.id===editObraId);if(o)Object.assign(o,data);}
   else obras.push({id:Date.now(),...data});
   svFB('obras',obras);CM();rObras();rDash();toast('Obra guardada ✓');
@@ -4531,6 +4858,7 @@ function openEW(id){
   if(fb&&/^\d{2}\/\d{2}\/\d{4}$/.test(fb)){const[d,m,y]=fb.split('/');fb=`${y}-${m}-${d}`;}
   document.getElementById('wk-fechabaja').value=fb;
   toggleFechaBaja();
+  document.getElementById('wk-finiquitado').checked=w?.finiquitado||false;
   document.getElementById('wk-cn').value=w?.cn||'';
   document.getElementById('wk-ce').value=w?.ce||'';
   document.getElementById('wk-nfija').value=w?.nFija||'';
@@ -4590,6 +4918,7 @@ function saveWorker(){
     ce:parseFloat(document.getElementById('wk-ce').value)||0,
     nFija:parseFloat(document.getElementById('wk-nfija').value)||0,
     fechaBaja:document.getElementById('wk-fechabaja').value.trim(),
+    finiquitado:document.getElementById('wk-finiquitado')?.checked||false,
     irpfAplica:document.getElementById('wk-irpf-aplica').value,
     dni:document.getElementById('wk-dni').value.trim().toUpperCase(),
     vtodni:document.getElementById('wk-vtodni').value.trim(),
@@ -4671,7 +5000,7 @@ function openDO(id){
   const trasladadosRows=wRows.filter(({w})=>w.obra!==id);
 
   function wRowHTML({w,hN:wN,hE:wE,fact:wF,coste:wC},esTraslado){
-    const tar=isOf(w)?o.tof:o.tpe;
+    const tar=getTarifaFact(w,o,'h');
     const obraActual=obras.find(ob=>ob.id===w.obra);
     return`<div class="wc" style="margin-bottom:8px;${esTraslado?'opacity:.75':''}">
       <div class="av ${avC(w.id)}">${ini(w.nombre)}</div>
@@ -4705,11 +5034,41 @@ function openDO(id){
       <div class="inrow"><span class="ik">Estado</span><span class="iv">${ESTADOL[o.estado]||o.estado}</span></div>
       <div class="inrow"><span class="ik">Tarifa Oficial</span><span class="iv">${o.tof>0?o.tof+'€/h':'—'}</span></div>
       <div class="inrow"><span class="ik">Tarifa Peón</span><span class="iv">${o.tpe>0?o.tpe+'€/h':'—'}</span></div>
+      ${o.tmaq>0?`<div class="inrow"><span class="ik">Tarifa Maquinista</span><span class="iv">${o.tmaq}€/h</span></div>`:''}
     </div>
     ${activosHTML?`<div class="dsec"><div class="dsectl">✅ En esta obra este mes (${activosRows.length})</div>${activosHTML}</div>`:''}
     ${asignadosSinHoras.length?`<div class="dsec"><div class="dsectl">Asignados sin horas este mes (${asignadosSinHoras.length})</div>${asignadosSinHoras.map(w=>`<div class="wc" style="margin-bottom:8px"><div class="av ${avC(w.id)}">${ini(w.nombre)}</div><div class="wi"><div class="wn">${w.nombre}</div><div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}</div></div></div>`).join('')}</div>`:''}
     ${trasladadosHTML?`<div class="dsec"><div class="dsectl">🔄 Trasladados — trabajaron aquí este mes (${trasladadosRows.length})</div>${trasladadosHTML}</div>`:''}
     ${!wRows.length&&!asignadosSinHoras.length?'<div class="empty" style="padding:20px"><div class="empty-text">Sin trabajadores este mes</div></div>':''}
+    <div class="dsec"><div class="dsectl">📅 Historial de meses</div>
+      ${(()=>{
+        let histHtml='';
+        let totalHist=0,totalFact=0;
+        for(let i=11;i>=0;i--){
+          let hm=mA-i,hy=yA;if(hm<0){hm+=12;hy--;}
+          const ch=calcObraMonth(id,hm,hy);
+          if(ch.hN+ch.hE===0)continue;
+          const hTotal=ch.hN+ch.hE;
+          totalHist+=hTotal;totalFact+=ch.fact;
+          const ben=ch.fact-ch.coste;
+          histHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--br)">
+            <div>
+              <div style="font-size:13px;font-weight:600">${MESES[hm]} ${hy}</div>
+              <div style="font-size:11px;color:var(--t3)">${ch.wRows.map(r=>fmtNombre(r.w.nombre)).join(', ')}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:13px;font-weight:700;font-family:var(--fm)">${fmtH(hTotal)}</div>
+              ${ch.fact>0?`<div style="font-size:11px;color:var(--gp)">${fmt(ch.fact)} <span style="color:${ben>=0?'var(--gp)':'#E24B4A'};font-size:10px">${ben>=0?'+':''}${fmt(ben)}</span></div>`:''}
+            </div>
+          </div>`;
+        }
+        if(!histHtml)return'<div style="color:var(--t3);font-size:12px">Sin historial registrado</div>';
+        return histHtml+`<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700">
+          <span>Total 12 meses</span>
+          <span style="font-family:var(--fm);color:var(--g)">${fmtH(totalHist)} · ${fmt(totalFact)}</span>
+        </div>`;
+      })()}
+    </div>
   `;
   document.getElementById('dov-obra').classList.add('open');
 }
@@ -4775,6 +5134,14 @@ function openDW(id){
       ${w.vtodni?`<div class="inrow"><span class="ik">Vto. DNI</span><span class="iv" style="color:${vencido(w.vtodni)?'#E24B4A':proximo(w.vtodni)?'#EF9F27':'var(--t)'}">${w.vtodni}${vencido(w.vtodni)?' ⚠️ CADUCADO':proximo(w.vtodni)?' ⚠️ Próximo':''}</span></div>`:''}
       ${w.falta?`<div class="inrow"><span class="ik">Alta empresa</span><span class="iv">${w.falta}</span></div>`:''}
       ${w.fechaBaja?`<div class="inrow"><span class="ik">Baja empresa</span><span class="iv" style="color:#E24B4A">${w.fechaBaja}</span></div>`:''}
+      ${w.estado==='noEmpresa'?`<div class="inrow">
+        <span class="ik">Finiquito</span>
+        <span class="iv">
+          ${w.finiquitado
+            ?`<span style="color:var(--gd);font-weight:600">✓ Finiquitado</span>`
+            :`<span style="color:#E24B4A;font-weight:600">⏳ Pendiente</span>`}
+        </span>
+      </div>`:''}
       <!-- Historial bajas médicas -->
       <div style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
