@@ -405,6 +405,7 @@ textarea.fi{min-height:75px;resize:vertical}
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">🔄 Actualizar datos de trabajadores</div>
         <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Sobrescribe los datos de Firebase con la información actualizada del código (DNI, teléfonos, cuentas, cursos, etc.). Las horas y horarios no se modifican.</div>
         <button class="btn btnp btnsm" onclick="resetWorkers()">🔄 Actualizar trabajadores desde código</button>
+        <button class="btn btng btnsm" onclick="migrarObraIdHorario()" style="margin-top:8px">🔧 Reparar obraId en horario histórico</button>
       </div>
       <div class="card">
         <div style="font-size:14px;font-weight:600;margin-bottom:8px">📊 Certificación PDF por obra</div>
@@ -1757,23 +1758,40 @@ function saveHor(){
       const ob2Id=parseInt(document.getElementById('hor-obra2')?.value||0);
       if(ob2Id){const{n:n2,he:he2}=autoDistribuir(selHoras2,dayType);obra2={obraId:ob2Id,n:n2,he:he2};}
     }
-    if(!obraIdExtra&&!obra2&&!nota){
-      hor[key]=he>0?{n,he}:n;
-    }else{
-      const val={n,he:he||0};
-      if(obraIdExtra)val.obraId=obraIdExtra;
-      if(obra2)val.obra2=obra2;
-      if(nota)val.nota=nota;
-      hor[key]=val;
-    }
+    const obraActivaId=obraSelId||w?.obra||0;
+    // SIEMPRE guardar como objeto con obraId — blindar histórico completamente
+    const val={n,obraId:obraActivaId};
+    if(he>0)val.he=he;
+    if(obra2)val.obra2=obra2;
+    if(nota)val.nota=nota;
+    hor[key]=val;
 
     // ── OBRA EN CELDA ─────────────────────────────────────────────
     const obraNueva=obras.find(o=>o.id===obraSelId);
-    // Si la obra seleccionada es diferente a la asignada → reasignar automáticamente
-    if(obraSelId&&obraSelId!==w?.obra&&w){
+    // Si la obra del selector es distinta a la asignada → reasignar con historial
+    if(w&&obraSelId&&obraSelId!==w.obra){
+      const obraViejaId=w.obra;
+      const dateStr=`${cY}-${String(cM+1).padStart(2,'0')}-${String(editCell.day).padStart(2,'0')}`;
+      // Fijar obraId en celdas anteriores del mes que no lo tengan (para que no cambien)
+      for(let dd=1;dd<editCell.day;dd++){
+        const kk=`${cY}-${cM}-${wid}-${dd}`;
+        const vv=hor[kk];
+        if(typeof vv==='number'&&vv>0){
+          hor[kk]={n:vv,he:0,obraId:obraViejaId};
+        }else if(vv&&typeof vv==='object'&&!vv.obraId&&!vv.tipo){
+          vv.obraId=obraViejaId;
+        }
+      }
+      // Actualizar historial
+      const hist=w.obraHistory||[];
+      const last=hist[hist.length-1];
+      if(last&&!last.hasta)last.hasta=dateStr;
+      hist.push({obraId:obraSelId,desde:dateStr,hasta:null});
+      w.obraHistory=hist;
+      w.obraDesde=dateStr;
       w.obra=obraSelId;
       svFB('workers',workers);
-      toast(`✓ Horas en ${obraNueva?.nombre||'obra'} — ${fmtNombre(w.nombre)} reasignado`);
+      toast(`✓ ${obraNueva?.nombre||'obra'} — ${fmtNombre(w.nombre)} reasignado desde día ${editCell.day}`);
     }else{
       const msg=dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
       toast(msg);
@@ -2048,14 +2066,24 @@ function selLaboralesCopia(){
 function confirmarCopiarCelda(){
   const wid=editCell.wid;
   const day=editCell.day;
-  const val=hor[`${cY}-${cM}-${wid}-${day}`];
+  const w=workers.find(x=>x.id===wid);
+  let val=hor[`${cY}-${cM}-${wid}-${day}`];
   if(val===undefined||val===null){toast('No hay jornada en el día origen');return;}
+  // Asegurar que val tiene obraId
+  if(typeof val==='number'){
+    val={n:val,obraId:w?.obra||0};
+  }else if(typeof val==='object'&&!val.obraId&&!val.tipo){
+    val={...val,obraId:w?.obra||0};
+  }
   const checks=document.querySelectorAll('.copia-dia-check:checked');
   if(!checks.length){toast('Selecciona al menos un día');return;}
   let n=0;
   checks.forEach(c=>{
     const d=parseInt(c.value);
-    hor[`${cY}-${cM}-${wid}-${d}`]=val;
+    // Actualizar obraId según la obra del trabajador en ese día destino
+    const obraEnDestino=getObraEnFecha(w,cY,cM,d);
+    const valDest={...val,obraId:obraEnDestino?.id||val.obraId};
+    hor[`${cY}-${cM}-${wid}-${d}`]=valDest;
     n++;
   });
   svFB('horario',hor);
@@ -2079,7 +2107,20 @@ function pasteDay(){
   const dest=parseInt(document.getElementById('copy-dest').value);
   if(src===dest){toast('Mismo día');return;}
   let n=0;
-  workers.forEach(w=>{const v=hor[hKey(w.id,src)];if(v!==undefined&&v!==null){hor[hKey(w.id,dest)]=v;n++;}});
+  workers.forEach(w=>{
+    const v=hor[hKey(w.id,src)];
+    if(v===undefined||v===null)return;
+    let vDest=v;
+    // Asegurar obraId
+    const obraEnDestino=getObraEnFecha(w,cY,cM,dest);
+    if(typeof v==='number'){
+      vDest={n:v,obraId:obraEnDestino?.id||w.obra||0};
+    }else if(typeof v==='object'&&!v.tipo){
+      vDest={...v,obraId:obraEnDestino?.id||v.obraId||w.obra||0};
+    }
+    hor[hKey(w.id,dest)]=vDest;
+    n++;
+  });
   svFB('horario',hor);CM();rHor();toast(`Día ${src} → ${dest} (${n}) ✓`);
 }
 
@@ -2208,10 +2249,12 @@ function exportInformeMensual(){
   const periodoStr=`01-${String(month+1).padStart(2,'0')}-${year} AL ${String(days).padStart(2,'0')}-${String(month+1).padStart(2,'0')}-${year}`;
 
   // ── CABECERA ──────────────────────────────────────────────────────
+  // Logo INNOVACOR
+  const logoB64='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';
+  try{doc.addImage(logoB64,'JPEG',ML,4,38,9.4);}catch(e){console.warn('Logo no cargado',e);}
   doc.setFontSize(10);doc.setFont('helvetica','bold');
-  doc.text('CERTIFICACION - LISTADO HORAS ADMINISTRACIÓN',ML,10);
+  doc.text('CERTIFICACION - LISTADO HORAS ADMINISTRACIÓN',ML+40,10);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text('INNOVACOR PROYECTOS Y OBRAS S.L.',ML,15);
   doc.text(`CLIENTE: ${o.empresa}`,ML,20);
   doc.text(`OBRA: ${o.nombre}`,ML,25);
   doc.text(`CERTIFICACIÓN: ${numCert} (DEL ${periodoStr})`,ML,30);
@@ -2220,8 +2263,8 @@ function exportInformeMensual(){
   // ── TABLA ─────────────────────────────────────────────────────────
   const tableTop=40;
   const colCat=8;    // ancho columna CAT
-  const colName=38;  // ancho columna nombre
-  const colDay=5.8;  // ancho cada día
+  const colName=52;  // ancho columna nombre (ampliado para nombre completo)
+  const colDay=5.2;  // ancho cada día
   const colH=12;     // ancho columna HORAS
   const colEH=8;     // ancho €/H
   const colTot=14;   // ancho TOTAL
@@ -2232,13 +2275,28 @@ function exportInformeMensual(){
   const oficiales=wRows.filter(({w})=>isOf(w)).sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es'));
   const peones=wRows.filter(({w})=>!isOf(w)).sort((a,b)=>a.w.nombre.localeCompare(b.w.nombre,'es'));
 
-  // Función helper: obtener horas de un trabajador en un día
+  // Función helper: obtener horas de un trabajador en un día SOLO para esta obra
   function getHorasDia(wid,d){
     const val=hor[`${year}-${month}-${wid}-${d}`];
     if(!val&&val!==0)return null;
     if(typeof val==='object'&&val.tipo)return null; // ausencia
-    if(typeof val==='object')return(val.n||0)+(val.he||0);
-    if(typeof val==='number')return val;
+    if(typeof val==='object'){
+      let h=0;
+      // Obra principal: contar solo si es la obra de la certificación
+      const celdaObraId=val.obraId||0;
+      const w=workers.find(x=>x.id===wid);
+      const obraRealId=celdaObraId||getObraEnFecha(w,year,month,d)?.id||0;
+      if(obraRealId===obraId) h+=(val.n||0)+(val.he||0);
+      // Segunda obra
+      if(val.obra2&&val.obra2.obraId===obraId) h+=(val.obra2.n||0)+(val.obra2.he||0);
+      return h>0?h:null;
+    }
+    if(typeof val==='number'){
+      // Número simple: verificar obra via historial
+      const w=workers.find(x=>x.id===wid);
+      const obraRealId=getObraEnFecha(w,year,month,d)?.id||0;
+      return obraRealId===obraId?val:null;
+    }
     return null;
   }
 
@@ -2269,7 +2327,7 @@ function exportInformeMensual(){
     let x=ML;
     doc.text(catLabel,x+1,y+3.5);x+=colCat;
     // Nombre: apellido, nombre abreviado
-    const nombre=w.nombre.length>22?w.nombre.substring(0,21)+'…':w.nombre;
+    const nombre=w.nombre;
     doc.text(nombre,x+1,y+3.5);x+=colName;
     let totalH=0;
     for(let d=1;d<=days;d++){
@@ -2785,7 +2843,7 @@ function exportCostesPDF(){
 
     doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(0);
     x=ML;
-    const nombre=pdfTxt(r.w.nombre.length>24?r.w.nombre.substring(0,23)+'...':r.w.nombre);
+    const nombre=pdfTxt(r.w.nombre);
     doc.text(nombre+(r.esBaja?' (Baja)':''),x+1,y+3.8);x+=cols[0].w;
     doc.text(r.hTotal?fmtH(r.hTotal):'—',x+cols[1].w/2,y+3.8,{align:'center'});x+=cols[1].w;
     doc.text(r.salario?r.salario.toFixed(2):'—',x+cols[2].w-1,y+3.8,{align:'right'});x+=cols[2].w;
@@ -3083,7 +3141,7 @@ function rCostes(){
         const costePorHoraConInd=r.hTotal>0?Math.round(costeTotalConInd/r.hTotal*100)/100:0;
         return`<tr style="background:${i%2===0?'var(--bc)':'var(--bg)'};border-bottom:1px solid var(--br)">
           <td style="padding:8px 10px;font-weight:600">
-            ${fmtNombre(r.w.nombre)}
+            ${r.w.nombre}
             <div style="font-size:10px;color:var(--t3);font-weight:400">${CATL[r.w.cat]||''}${r.esNFija?' · Fija':''}${r.esBaja?' · <span style="color:#791F1F">🏥 Baja médica</span>':''}</div>
             ${r.esBaja&&!r.nominaOficial?`<div style="font-size:10px;color:#E24B4A">⚠️ Introduce nómina en Sueldos</div>`:''}
           </td>
@@ -3497,7 +3555,7 @@ function rResumenAntPrest(){
         return `${f}: ${fmt(d.importe)}`;
       }).join(' · ');
       html+=`<tr style="background:${i%2===0?'var(--bg)':'#FFF8F0'};border-bottom:1px solid var(--br)">
-        <td style="padding:8px 10px;font-weight:600">${fmtNombre(w.nombre)}</td>
+        <td style="padding:8px 10px;font-weight:600">${w.nombre}</td>
         <td style="padding:8px 10px;text-align:right;font-weight:700;color:#633806">${fmt(data.total)}</td>
         <td style="padding:8px 10px;color:var(--t3);font-size:11px">${detTxt}</td>
       </tr>`;
@@ -3538,7 +3596,7 @@ function rResumenAntPrest(){
         const pct=Math.round(cuotasPagadas/p.cuotas.length*100);
         const cuotasStr=p.cuotas.map((c,ci)=>`<span style="background:${ci<cuotasPagadas?'var(--gl)':'var(--bg)'};border:1px solid var(--br);border-radius:3px;padding:1px 4px;font-size:10px;margin:1px;display:inline-block;color:${ci<cuotasPagadas?'var(--gp)':'var(--t3)'}">${fmt(c)}</span>`).join('');
         html+=`<tr style="background:${(i+pi)%2===0?'var(--bg)':'#F5F4FF'};border-bottom:1px solid var(--br)">
-          ${pi===0?`<td style="padding:8px 10px;font-weight:600" rowspan="${prests.length}">${fmtNombre(w.nombre)}</td>`:''}
+          ${pi===0?`<td style="padding:8px 10px;font-weight:600" rowspan="${prests.length}">${w.nombre}</td>`:''}
           <td style="padding:8px 10px;color:var(--t3)">${p.motivo||'Préstamo'}</td>
           <td style="padding:8px 10px;text-align:right">${fmt(p.total)}</td>
           <td style="padding:8px 10px;text-align:right;color:var(--gp)">${fmt(p.pagado)}</td>
@@ -3690,7 +3748,7 @@ function mostrarPreviewAsesoria(matches,noEncontrados){
     const cambiaNomina=Math.abs(nominaActual-m.liquido)>0.01;
     html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid var(--br);font-size:12px">
       <div>
-        <div style="font-weight:600">${fmtNombre(m.w.nombre)}</div>
+        <div style="font-weight:600">${m.w.nombre}</div>
         ${m.filas>1?`<div style="font-size:10px;color:var(--t3)">${m.filas} líneas sumadas del Excel</div>`:''}
       </div>
       <div style="display:flex;gap:12px;font-size:11px">
@@ -3952,7 +4010,7 @@ function rSueldos(){
       </div>
       ${resumen.filter(r=>r.negativo>0).map(r=>`
         <div style="display:flex;justify-content:space-between;font-size:11px;color:#791F1F;padding:2px 0;border-top:1px solid rgba(121,31,31,.15)">
-          <span>${fmtNombre(r.w.nombre)}</span>
+          <span>${r.w.nombre}</span>
           <span>−${fmt(r.negativo)}</span>
         </div>`).join('')}
     </div>`:''}
@@ -3991,7 +4049,7 @@ function rSueldos(){
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="av ${avC(w.id)}" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${ini(w.nombre)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:14px">${fmtNombre(w.nombre)}</div>
+          <div style="font-weight:600;font-size:14px">${w.nombre}</div>
           <div style="font-size:11px;color:var(--t3)">${CATL[w.cat]||'—'}${ob?' · '+ob.nombre:''}${esBaja?' · <span style="color:#791F1F;font-weight:600">🏥 Baja médica</span>':''}${esNoEmpresa?' · <span style="color:#E24B4A;font-weight:600">🚪 Baja empresa</span>':''}</div>
         </div>
         <div style="text-align:right">
@@ -4143,7 +4201,7 @@ function rSueldos(){
       const pct=Math.round(pagadas/p.cuotasTotal*100);
       html+=`<div class="card" style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px">
         <div style="flex:1">
-          <div style="font-weight:600;font-size:12px">${w?fmtNombre(w.nombre):'—'}</div>
+          <div style="font-weight:600;font-size:12px">${w?w.nombre:'—'}</div>
           <div style="font-size:11px;color:var(--t3)">${p.motivo||'Préstamo'}${p.fecha?` · <b>${p.fecha}</b>`:''} · ${p.cuotasTotal} cuotas</div>
           <div style="background:var(--br);border-radius:99px;height:4px;margin-top:5px"><div style="background:var(--g);height:4px;border-radius:99px;width:${pct}%"></div></div>
           <div style="font-size:10px;color:var(--t3);margin-top:2px">${pagadas}/${p.cuotasTotal} cuotas · Pendiente: ${fmt((p.cuotasTotal-pagadas)*p.cuotaMes)}€</div>
@@ -4350,6 +4408,35 @@ function rIncs(){
 }
 
 // ── AJUSTES ───────────────────────────────────────────────────────
+function migrarObraIdHorario(){
+  if(!confirm('¿Añadir obraId a todas las celdas que no lo tienen?\n\nEsto corrige el histórico de horas por obra. Se usará el historial de cada trabajador para asignar la obra correcta a cada día.'))return;
+  let n=0;
+  workers.forEach(w=>{
+    const keys=Object.keys(hor).filter(k=>{
+      const parts=k.split('-');
+      // key format: year-month-wid-day
+      return parts.length===4&&parseInt(parts[2])===w.id;
+    });
+    keys.forEach(k=>{
+      const val=hor[k];
+      if(!val)return;
+      // Extraer año, mes, día de la clave
+      const parts=k.split('-');
+      const year=parseInt(parts[0]),month=parseInt(parts[1]),day=parseInt(parts[3]);
+      if(typeof val==='number'&&val>0){
+        const ob=getObraEnFecha(w,year,month,day);
+        if(ob){hor[k]={n:val,obraId:ob.id};n++;}
+      }else if(typeof val==='object'&&!val.obraId&&!val.tipo&&(val.n>0||val.he>0)){
+        const ob=getObraEnFecha(w,year,month,day);
+        if(ob){val.obraId=ob.id;n++;}
+      }
+    });
+  });
+  svFB('horario',hor);
+  rHor();
+  toast(`✓ ${n} celdas actualizadas con obraId`);
+}
+
 function rAjustes(){
   const sorted=[...festivos].sort((a,b)=>a.fecha.localeCompare(b.fecha));
   document.getElementById('festivos-list').innerHTML=sorted.map((f,i)=>`<div class="festivo-item"><div><div class="festivo-name">${f.nombre}</div><div class="festivo-date">${f.fecha}</div></div><button class="btn btnd btnsm" onclick="delFestivo(${i})">🗑</button></div>`).join('')||'<div style="font-size:13px;color:var(--t3)">Sin festivos</div>';
@@ -4937,17 +5024,53 @@ function saveWorker(){
     imp:w?.imp||0,
   };
   if(editWkId){
-    if(w)Object.assign(w,data);
-    if(obraAnteriorId&&newObraId!==obraAnteriorId){
-      const obraAnterior=obras.find(o=>o.id===obraAnteriorId);
-      const calc=calcWorkerMonth(editWkId,new Date().getMonth(),new Date().getFullYear());
-      const hEnAnterior=calc.byObra[obraAnteriorId];
-      if(hEnAnterior&&(hEnAnterior.hN+hEnAnterior.hE)>0){
+    if(w){
+      // Si cambia de obra, registrar en historial ANTES de Object.assign
+      if(obraAnteriorId&&newObraId!==obraAnteriorId){
+        const hoy=new Date();
+        const dateStr=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+        const hist=w.obraHistory||[];
+        // Cerrar entrada anterior si existe sin fecha de fin
+        const last=hist[hist.length-1];
+        if(last&&!last.hasta)last.hasta=dateStr;
+        // Añadir nueva entrada
+        if(newObraId)hist.push({obraId:newObraId,desde:dateStr,hasta:null});
+        data.obraHistory=hist;
+        data.obraDesde=dateStr;
+
+        // ── BLINDAR celdas del mes actual con obraId de la obra anterior ──
+        // Así las horas ya registradas quedan ancladas a la obra correcta
+        const mActual=hoy.getMonth(),yActual=hoy.getFullYear();
+        const diasMes=new Date(yActual,mActual+1,0).getDate();
+        let celdasActualizadas=0;
+        for(let d=1;d<=diasMes;d++){
+          const k=`${yActual}-${mActual}-${w.id}-${d}`;
+          const v=hor[k];
+          if(v===undefined||v===null||v==='')continue;
+          // Si ya es objeto con obraId → ya está blindado
+          if(typeof v==='object'&&v.obraId)continue;
+          // Si es número o objeto sin obraId → añadir obraId anterior
+          if(typeof v==='number'){
+            hor[k]={n:v,he:0,obraId:obraAnteriorId};
+            celdasActualizadas++;
+          }else if(typeof v==='object'&&!v.tipo){
+            hor[k]={...v,obraId:obraAnteriorId};
+            celdasActualizadas++;
+          }
+        }
+        if(celdasActualizadas>0)svFB('horario',hor);
+
         const obraNueva=obras.find(o=>o.id===newObraId);
-        toast(`Cambiado a ${obraNueva?.nombre||'sin obra'} · Tenía ${fmtH(hEnAnterior.hN+hEnAnterior.hE)} en ${obraAnterior?.nombre||'anterior'}`);
+        const obraAnterior=obras.find(o=>o.id===obraAnteriorId);
+        toast(`✓ Cambiado a ${obraNueva?.nombre||'sin obra'}${celdasActualizadas>0?` · ${celdasActualizadas} días blindados`:''}`);
+      }else{
+        // Sin cambio de obra: preservar historial existente
+        data.obraHistory=w.obraHistory||[];
+        data.obraDesde=w.obraDesde||'';
       }
+      Object.assign(w,data);
     }
-  }else workers.push({id:Date.now(),...data});
+  }else workers.push({id:Date.now(),...data,obraHistory:newObraId?[{obraId:newObraId,desde:new Date().toISOString().slice(0,10),hasta:null}]:[]});
   svFB('workers',workers);CM();rWorkers();rDash();if(!editWkId||obraAnteriorId===newObraId)toast('Trabajador guardado ✓');
 }
 
