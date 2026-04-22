@@ -186,6 +186,7 @@ textarea.fi{min-height:75px;resize:vertical}
     <div class="sync-dot" id="sync-dot"></div>
     <div class="hr" id="hdate"></div>
     <button id="dark-btn" onclick="toggleDark()" style="background:transparent;border:1px solid var(--br);border-radius:var(--rs);padding:4px 8px;cursor:pointer;font-size:14px;color:var(--t3);line-height:1" title="Modo oscuro/claro">🌙</button>
+    <button id="undo-fab" onclick="doUndo()" title="Deshacer última acción" disabled style="display:flex;align-items:center;gap:5px;background:#3C3489;color:#fff;border:none;border-radius:var(--rs);padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;opacity:.35">↩ Deshacer</button>
   </div>
   <div id="main">
     <!-- DASHBOARD -->
@@ -308,6 +309,7 @@ textarea.fi{min-height:75px;resize:vertical}
             📥 Excel asesoría
             <input type="file" accept=".xls,.xlsx" onchange="importarExcelAsesoria(event)" style="display:none"/>
           </label>
+          <button class="btn btnd btnsm" onclick="resetPagosMes()" style="white-space:nowrap" title="Borrar todos los datos de asesoría del mes actual">🗑 Resetear mes</button>
         </div>
         <div id="sueldos-content"></div>
       </div>
@@ -1038,6 +1040,31 @@ async function initData(){
   }
 }
 
+// ── HISTORIAL DE ACCIONES (UNDO) ─────────────────────────────────
+const UNDO_MAX=20;
+let undoStack=[];
+let _undoNextDesc=null;
+
+function undoDescribe(desc){_undoNextDesc=desc;}
+
+// Tomar snapshot del estado ACTUAL (antes de modificar) y apilarlo
+function _undoPush(cols,desc){
+  const snap={desc:desc||_undoNextDesc||'Cambio',ts:Date.now(),snapshots:{}};
+  _undoNextDesc=null;
+  cols.forEach(col=>{
+    if(col==='horario')snap.snapshots.horario=JSON.parse(JSON.stringify(hor));
+    else if(col==='workers')snap.snapshots.workers=JSON.parse(JSON.stringify(workers));
+    else if(col==='obras')snap.snapshots.obras=JSON.parse(JSON.stringify(obras));
+    else if(col==='pagos')snap.snapshots.pagos=JSON.parse(JSON.stringify(pagos));
+    else if(col==='prestamos')snap.snapshots.prestamos=JSON.parse(JSON.stringify(prestamos));
+    else if(col==='bajasMedicas')snap.snapshots.bajasMedicas=JSON.parse(JSON.stringify(bajasMedicas));
+  });
+  undoStack.unshift(snap);
+  if(undoStack.length>UNDO_MAX)undoStack.pop();
+  rUndoBtn();
+}
+
+// Guardar en Firebase — centralizado
 async function svFB(col,data){
   setSyncDot('loading');
   try{
@@ -1047,9 +1074,119 @@ async function svFB(col,data){
   }catch(e){
     setSyncDot('err');
     console.error('Firebase error en',col,':',e.code,e.message);
-    toast('Error: '+( e.message||e.code||'sin conexión'));
+    toast('Error: '+(e.message||e.code||'sin conexión'));
   }
 }
+
+// Guardar pagos (objeto, no lista)
+async function svPagos(desc){
+  _undoPush(['pagos'],desc||'Cambio en pagos');
+  setSyncDot('loading');
+  try{
+    await fbSet('pagos',{data:pagos});
+    setSyncDot('ok');
+  }catch(e){setSyncDot('err');toast('Error: '+(e.message||e.code));}
+}
+
+// Guardar workers con undo
+async function svWorkers(desc){
+  _undoPush(['workers'],desc||'Cambio en trabajadores');
+  await svFB('workers',workers);
+}
+
+// Guardar obras con undo
+async function svObras(desc){
+  _undoPush(['obras'],desc||'Cambio en obras');
+  await svFB('obras',obras);
+}
+
+// Guardar horario con undo
+async function svHorario(desc){
+  _undoPush(['horario'],desc||'Cambio en horario');
+  await svFB('horario',hor);
+}
+
+// Guardar préstamos con undo
+async function svPrestamos(desc){
+  _undoPush(['prestamos'],desc||'Cambio en préstamos');
+  setSyncDot('loading');
+  try{
+    await fbSet('prestamos',{list:prestamos});
+    setSyncDot('ok');
+  }catch(e){setSyncDot('err');toast('Error: '+(e.message||e.code));}
+}
+
+// Guardar bajas con undo
+async function svBajas(desc){
+  _undoPush(['bajasMedicas'],desc||'Cambio en bajas');
+  setSyncDot('loading');
+  try{
+    await fbSet('bajasMedicas',{list:bajasMedicas});
+    setSyncDot('ok');
+  }catch(e){setSyncDot('err');toast('Error: '+(e.message||e.code));}
+}
+
+function rUndoBtn(){
+  const btn=document.getElementById('undo-fab');
+  if(!btn)return;
+  if(undoStack.length>0){
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+    btn.title=`Deshacer: ${undoStack[0].desc}`;
+    btn.innerHTML=`↩ ${undoStack[0].desc.substring(0,25)}${undoStack[0].desc.length>25?'…':''}`;
+  }else{
+    btn.disabled=true;
+    btn.style.opacity='.35';
+    btn.style.cursor='default';
+    btn.title='Nada que deshacer';
+    btn.innerHTML='↩ Deshacer';
+  }
+}
+
+async function doUndo(){
+  if(!undoStack.length){toast('Nada que deshacer');return;}
+  const snap=undoStack[0];
+  if(!confirm(`¿Deshacer "${snap.desc}"?\n\nSe revertirá al estado anterior.`))return;
+  undoStack.shift();
+  setSyncDot('loading');
+  try{
+    for(const[col,data] of Object.entries(snap.snapshots)){
+      if(col==='horario'){
+        Object.keys(hor).forEach(k=>delete hor[k]);
+        Object.assign(hor,data);
+        await fbSet('horario',{data:hor});
+      }else if(col==='workers'){
+        workers.length=0;workers.push(...data);
+        await fbSet('workers',{list:workers});
+      }else if(col==='obras'){
+        obras.length=0;obras.push(...data);
+        await fbSet('obras',{list:obras});
+      }else if(col==='pagos'){
+        Object.keys(pagos).forEach(k=>delete pagos[k]);
+        Object.assign(pagos,data);
+        await fbSet('pagos',{data:pagos});
+      }else if(col==='prestamos'){
+        prestamos.length=0;prestamos.push(...data);
+        await fbSet('prestamos',{list:prestamos});
+      }else if(col==='bajasMedicas'){
+        bajasMedicas.length=0;bajasMedicas.push(...data);
+        await fbSet('bajasMedicas',{list:bajasMedicas});
+      }
+    }
+    setSyncDot('ok');
+    rUndoBtn();
+    const secs=['horario','personal','obras','facturacion','sueldos','costes','bajas'];
+    secs.forEach(s=>{if(isActive(s))({horario:rHor,personal:rWorkers,obras:rObras,facturacion:rFact,sueldos:rSueldos,costes:rCostes,bajas:rBajas})[s]?.();});
+    rDash();
+    toast(`↩ Deshecho: ${snap.desc}`);
+  }catch(e){
+    setSyncDot('err');
+    toast('Error al deshacer: '+(e.message||e.code));
+  }
+}
+
+
 
 function isActive(s){return document.getElementById('sec-'+s)?.classList.contains('active');}
 function sO(){return[...obras].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));}
@@ -1796,7 +1933,7 @@ function saveHor(){
       const msg=dayType==='allExtra'?'✓ Extra':dayType==='viernes'&&he>0?`✓ Viernes: ${fmtH(n)}+${fmtH(he)}HE`:'✓ Jornada guardada';
       toast(msg);
     }
-    svFB('horario',hor);CM();rHor();
+    undoDescribe('Horario — '+fmtNombre(workers.find(x=>x.id===wid)?.nombre||''));svFB('horario',hor);CM();rHor();
     // Si es la primera hora registrada del trabajador este mes y la fecha de alta
     // es posterior, actualizar falta para que las X desaparezcan
     if(w&&w.falta){
@@ -1805,8 +1942,7 @@ function saveHor(){
       if(dFalta&&dHoy<dFalta){
         const nuevaFalta=`${String(editCell.day).padStart(2,'0')}/${String(cM+1).padStart(2,'0')}/${cY}`;
         w.falta=nuevaFalta;
-        svFB('workers',workers);
-        rHor();
+        svWorkers('Actualizar fecha alta').then(()=>rHor());
       }
     }
     // Limpiar xbaja desde este día hacia adelante (trabajador se reincorpora)
@@ -1831,11 +1967,11 @@ function saveHor(){
         const dFin=new Date(dHoras-86400000); // día anterior
         const finStr=`${dFin.getFullYear()}-${String(dFin.getMonth()+1).padStart(2,'0')}-${String(dFin.getDate()).padStart(2,'0')}`;
         bajaActiva.fin=finStr;
-        db.collection('app').doc('bajasMedicas').set({list:bajasMedicas}).then(()=>setSyncDot('ok'));
+        svBajas('Baja médica actualizada');
         // Reactivar trabajador si estaba en baja
         if(w.estado==='baja'){
           w.estado='active';
-          svFB('workers',workers);
+          svWorkers('Reincorporación trabajador');
           toast(`✓ ${fmtNombre(w.nombre)} reincorporado — baja cerrada el ${dFin.toLocaleDateString('es-ES')}`);
         }else{
           toast(`✓ Baja médica cerrada el ${dFin.toLocaleDateString('es-ES')}`);
@@ -2725,14 +2861,22 @@ function exportCostesPDF(){
   let y=14;
 
   const COSTES_FIJOS=[
-    {concepto:'Seguro Autónomo J.C.',mes:313.00},{concepto:'Seguro RC',mes:72.73},
-    {concepto:'Seguro AC',mes:17.26},{concepto:'Prevesalud (SPH)',mes:135.88},
-    {concepto:'Prevesalud RM',mes:101.67},{concepto:'Asesoría Pareja Fiscal',mes:254.10},
-    {concepto:'Asesoría Pareja Laboral',mes:200.00},{concepto:'Alquiler oficina',mes:353.00},
-    {concepto:'Gastos oficina',mes:56.08},{concepto:'MásMóvil',mes:27.00},
-    {concepto:'Obralia',mes:33.33},{concepto:'Seguro Berlingo 9341KNK',mes:69.44},
-    {concepto:'Seguro Mercedes Juan',mes:90.90},{concepto:'Gastos gestión confirming',mes:341.75},
-    {concepto:'Seguro Peugeot 2045HPN',mes:50.42},
+    {concepto:'Seguro Autónomo J.C.',obs:'Pte. cuota final',mes:313.00},
+    {concepto:'Seguro RC',obs:'Pte. regul. anual',mes:72.73},
+    {concepto:'Seguro AC',obs:'Pte. regul. anual',mes:17.26},
+    {concepto:'Prevesalud (SPH)',obs:'Incluye 15 RM',mes:135.88},
+    {concepto:'Prevesalud RM',obs:'',mes:101.67},
+    {concepto:'Asesoría Pareja Fiscal',obs:'Asesoría fiscal',mes:560.00},
+    {concepto:'Asesoría Pareja Laboral',obs:'Asesoría laboral',mes:225.40},
+    {concepto:'Alquiler oficina',obs:'Solo alquiler',mes:353.00},
+    {concepto:'Gastos oficina',obs:'Coste total aprox.',mes:95.83},
+    {concepto:'MásMóvil',obs:'20€/mes primer año con dto.',mes:68.00},
+    {concepto:'Obralia',obs:'Precio anual 5 trabajadores',mes:83.33},
+    {concepto:'Seguro Berlingo 9341KNK',obs:'Semestral',mes:69.44},
+    {concepto:'Seguro Mercedes Juan',obs:'',mes:90.90},
+    {concepto:'Gastos gestión confirming',obs:'',mes:536.92},
+    {concepto:'Seguro Peugeot 2045HPN',obs:'Semestral',mes:50.42},
+    {concepto:'Gastos generales (fras., com.)',obs:'',mes:1500.00},
   ];
   const totalFijos=COSTES_FIJOS.reduce((s,c)=>s+c.mes,0);
   const indirectosMes=getCostesIndirectosMes();
@@ -2959,21 +3103,22 @@ function rCostes(){
 
   // ── COSTES FIJOS EMPRESA ──────────────────────────────────────────
   const COSTES_FIJOS=[
-    {concepto:'Seguro Autónomo J.C.',      obs:'Pte. cuota final',         inicio:'30/11/2024', anual:3756.00,   mes:313.00},
-    {concepto:'Seguro RC',                  obs:'Pte. regul. anual',        inicio:'12/11/2024', anual:872.78,    mes:72.73},
-    {concepto:'Seguro AC',                  obs:'Pte. regul. anual',        inicio:'12/11/2024', anual:207.17,    mes:17.26},
-    {concepto:'Prevesalud (SPH)',           obs:'Incluye 15 RM',            inicio:'12/11/2024', anual:1630.59,   mes:135.88},
-    {concepto:'Prevesalud RM',              obs:'',                         inicio:'31/12/2025', anual:1220.00,   mes:101.67},
-    {concepto:'Asesoría Pareja',            obs:'Asesoría fiscal',          inicio:'01/12/2024', anual:3049.20,   mes:254.10},
-    {concepto:'Asesoría Pareja',            obs:'Asesoría laboral',         inicio:'01/12/2024', anual:2400.00,   mes:200.00},
-    {concepto:'Alquiler oficina',           obs:'Solo alquiler',            inicio:'01/01/2025', anual:4236.00,   mes:353.00},
-    {concepto:'Gastos oficina',             obs:'Coste total 2024',         inicio:'01/01/2025', anual:673.00,    mes:56.08},
-    {concepto:'MásMóvil',                  obs:'20€/mes primer año c/dto', inicio:'01/01/2025', anual:324.00,    mes:27.00},
-    {concepto:'Obralia',                    obs:'Precio anual 5 trabaj.',   inicio:'01/01/2025', anual:400.00,    mes:33.33},
-    {concepto:'Seguro Berlingo 9341KNK',    obs:'Semestral',                inicio:'13/05/2025', anual:833.30,    mes:69.44},
-    {concepto:'Seguro Mercedes Juan',       obs:'',                         inicio:'',           anual:1090.82,   mes:90.90},
-    {concepto:'Gastos gestión confirming',  obs:'',                         inicio:'',           anual:4100.97,   mes:341.75},
-    {concepto:'Seguro Peugeot 2045HPN',     obs:'Semestral',                inicio:'11/02/2026', anual:605.00,    mes:50.42},
+    {concepto:'Seguro Autónomo J.C.',      obs:'Pte. cuota final',             inicio:'30/11/2024', anual:3756.00,   mes:313.00},
+    {concepto:'Seguro RC',                 obs:'Pte. regul. anual',            inicio:'12/11/2024', anual:872.78,    mes:72.73},
+    {concepto:'Seguro AC',                 obs:'Pte. regul. anual',            inicio:'12/11/2024', anual:207.17,    mes:17.26},
+    {concepto:'Prevesalud (SPH)',          obs:'Incluye 15 RM',                inicio:'12/11/2024', anual:1630.59,   mes:135.88},
+    {concepto:'Prevesalud RM',             obs:'',                             inicio:'31/12/2025', anual:1220.00,   mes:101.67},
+    {concepto:'Asesoría Pareja Fiscal',    obs:'Asesoría fiscal',              inicio:'01/12/2024', anual:6720.00,   mes:560.00},
+    {concepto:'Asesoría Pareja Laboral',   obs:'Asesoría laboral',             inicio:'01/12/2024', anual:2704.80,   mes:225.40},
+    {concepto:'Alquiler oficina',          obs:'Solo alquiler',                inicio:'01/01/2025', anual:4236.00,   mes:353.00},
+    {concepto:'Gastos oficina',            obs:'Coste total aprox.',           inicio:'01/01/2025', anual:1150.00,   mes:95.83},
+    {concepto:'MásMóvil',                 obs:'20€/mes primer año con dto.',  inicio:'01/01/2025', anual:816.00,    mes:68.00},
+    {concepto:'Obralia',                   obs:'Precio anual 5 trabajadores',  inicio:'01/01/2025', anual:1000.00,   mes:83.33},
+    {concepto:'Seguro Berlingo 9341KNK',   obs:'Semestral',                    inicio:'13/05/2025', anual:833.30,    mes:69.44},
+    {concepto:'Seguro Mercedes Juan',      obs:'',                             inicio:'',           anual:1090.82,   mes:90.90},
+    {concepto:'Gastos gestión confirming', obs:'',                             inicio:'',           anual:6443.00,   mes:536.92},
+    {concepto:'Seguro Peugeot 2045HPN',    obs:'Semestral',                    inicio:'11/02/2026', anual:605.00,    mes:50.42},
+    {concepto:'Gastos generales (fras., com.)', obs:'',                        inicio:'',           anual:18000.00,  mes:1500.00},
   ];
   const totalFijos=COSTES_FIJOS.reduce((s,c)=>s+c.mes,0);
 
@@ -3369,15 +3514,7 @@ function saveBajaMedica(){
   };
   if(editBmId){const idx=bajasMedicas.findIndex(b=>b.id===editBmId);if(idx>=0)bajasMedicas[idx]=data;}
   else bajasMedicas.push(data);
-  db.collection('app').doc('bajasMedicas').set({list:bajasMedicas})
-    .then(()=>{
-      setSyncDot('ok');CM();
-      if(isActive('bajas'))rBajas();
-      if(isActive('personal'))rWorkers();
-      renderBajasHist(data.wid);
-      toast('✓ Baja guardada');
-    })
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svBajas('Nueva baja médica').then(()=>{CM();if(isActive('bajas'))rBajas();if(isActive('personal'))rWorkers();renderBajasHist(data.wid);toast('✓ Baja guardada');});
 }
 
 function delBajaMedica(){
@@ -3385,15 +3522,7 @@ function delBajaMedica(){
   if(!confirm('¿Eliminar esta baja médica?'))return;
   const wid=bajasMedicas.find(b=>b.id===editBmId)?.wid;
   bajasMedicas=bajasMedicas.filter(b=>b.id!==editBmId);
-  db.collection('app').doc('bajasMedicas').set({list:bajasMedicas})
-    .then(()=>{
-      setSyncDot('ok');CM();
-      if(isActive('bajas'))rBajas();
-      if(isActive('personal'))rWorkers();
-      if(wid)renderBajasHist(wid);
-      toast('Baja eliminada');
-    })
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svBajas('Eliminar baja médica').then(()=>{CM();if(isActive('bajas'))rBajas();if(isActive('personal'))rWorkers();if(wid)renderBajasHist(wid);toast('Baja eliminada');});
 }
 
 function getBajasMedicasWorker(wid){
@@ -3635,6 +3764,23 @@ function calcMesesTranscurridos(inicio){
   return Math.max(0,(ahora.getFullYear()-y)*12+(ahora.getMonth()+1-m));
 }
 
+function resetPagosMes(){
+  const mesNombre=MESES[sueldosM]+' '+sueldosY;
+  if(!confirm(`¿Borrar TODOS los datos de nómina del mes de ${mesNombre}?\n\nSe eliminarán: IRPF, nómina oficial, descuentos, gasoil, saldo anterior, anticipos, préstamos y observaciones de todos los trabajadores.\n\nEsta acción NO borra las horas del horario.`))return;
+
+  // Guardar snapshot para undo
+  undoDescribe(`Reset pagos ${mesNombre}`);
+
+  // Borrar todas las claves del mes
+  const prefix=`${sueldosY}-${sueldosM}-`;
+  let n=0;
+  Object.keys(pagos).forEach(k=>{
+    if(k.startsWith(prefix)){delete pagos[k];n++;}
+  });
+
+  svPagos(`Reset pagos ${mesNombre}`).then(()=>{rSueldos();toast(`✓ ${mesNombre} reseteado — ${n} registros borrados`);});
+}
+
 function importarExcelAsesoria(event){
   const file=event.target.files[0];
   if(!file)return;
@@ -3785,13 +3931,7 @@ function confirmarImportAsesoria(matches){
     pagos[key].irpfEur=m.irpf;
     pagos[key].nominaOficial=m.liquido;
   });
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>{
-      setSyncDot('ok');
-      rSueldos();
-      toast(`✓ ${matches.length} trabajadores actualizados`);
-    })
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svPagos('Importar Excel asesoría').then(()=>{rSueldos();toast(`✓ ${matches.length} trabajadores actualizados`);});
 }
 
 
@@ -3799,9 +3939,7 @@ function guardarNpDesc(wid,n){
   const key=getPagosKey(wid);
   if(!pagos[key])pagos[key]={};
   pagos[key].npDesc=n;
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>{setSyncDot('ok');rSueldos();})
-    .catch(e=>{setSyncDot('err');console.error(e);});
+  undoDescribe('Descuento NP');svPagos('Descuento NP').then(()=>rSueldos());
 }
 
 function chMonthS(d){
@@ -3818,14 +3956,10 @@ function guardarPago(wid,campo,valor){
   if(!pagos[key])pagos[key]={};
   if(campo==='transferirDif'){
     pagos[key][campo]=valor===1||valor===true||valor==='1';
-    db.collection('app').doc('pagos').set({data:pagos})
-      .then(()=>{setSyncDot('ok');rSueldos();}) // checkbox → redibujar totales
-      .catch(e=>{setSyncDot('err');console.error(e);});
+    svPagos('Anticipo').then(()=>rSueldos());
   }else{
     pagos[key][campo]=parseFloat(valor)||0;
-    db.collection('app').doc('pagos').set({data:pagos})
-      .then(()=>setSyncDot('ok')) // campo numérico → solo sync, NO redibujar
-      .catch(e=>{setSyncDot('err');console.error(e);});
+    svPagos('Eliminar anticipo').then(()=>rSueldos());
   }
 }
 
@@ -3834,27 +3968,21 @@ function addAnticipo(wid){
   if(!pagos[key])pagos[key]={};
   if(!pagos[key].anticipos)pagos[key].anticipos=[];
   pagos[key].anticipos.push({importe:0,fecha:today()});
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>{setSyncDot('ok');rSueldos();})
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svPagos('Observaciones').then(()=>{setSyncDot('ok');});
 }
 
 function editAnticipo(wid,idx,campo,valor){
   const key=getPagosKey(wid);
   if(!pagos[key]?.anticipos?.[idx])return;
   pagos[key].anticipos[idx][campo]=campo==='importe'?(parseFloat(valor)||0):valor;
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>{setSyncDot('ok');rSueldos();})
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svPagos('IRPF').then(()=>{setSyncDot('ok');});
 }
 
 function delAnticipo(wid,idx){
   const key=getPagosKey(wid);
   if(!pagos[key]?.anticipos)return;
   pagos[key].anticipos.splice(idx,1);
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>{setSyncDot('ok');rSueldos();})
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svPagos('Nómina oficial').then(()=>{setSyncDot('ok');});
 }
 
 
@@ -3862,9 +3990,7 @@ function guardarPagoTexto(wid,campo,valor){
   const key=getPagosKey(wid);
   if(!pagos[key])pagos[key]={};
   pagos[key][campo]=valor||'';
-  db.collection('app').doc('pagos').set({data:pagos})
-    .then(()=>setSyncDot('ok'))
-    .catch(e=>{setSyncDot('err');console.error(e);});
+  svPagos('Transferir diferencia').then(()=>rSueldos());
 }
 
 function rSueldos(){
@@ -4337,18 +4463,14 @@ function savePrestamo(){
   }else{
     prestamos.push(data);
   }
-  db.collection('app').doc('prestamos').set({list:prestamos})
-    .then(()=>{setSyncDot('ok');CM();rSueldos();toast('✓ Préstamo guardado');})
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svPrestamos('Nuevo préstamo').then(()=>{setSyncDot('ok');rSueldos();CM();toast('Préstamo añadido ✓');});
 }
 
 function delPrestamo(){
   if(!editPrestId)return;
   if(!confirm('¿Eliminar este préstamo?'))return;
   prestamos=prestamos.filter(p=>p.id!==editPrestId);
-  db.collection('app').doc('prestamos').set({list:prestamos})
-    .then(()=>{setSyncDot('ok');CM();rSueldos();toast('Préstamo eliminado');})
-    .catch(e=>{setSyncDot('err');toast('Error: '+e.message);});
+  svPrestamos('Editar préstamo').then(()=>{setSyncDot('ok');rSueldos();CM();toast('Préstamo guardado ✓');});
 }
 
 // ── PREVISIÓN NÓMINAS MES SIGUIENTE ───────────────────────────────
@@ -4497,9 +4619,7 @@ function resetWorkers(){
   const kb=Math.round(json.length/1024);
   if(kb>900){toast('Error: datos demasiado grandes ('+kb+'KB)');return;}
   workers=updated;
-  db.collection('app').doc('workers').set({list:workers})
-    .then(()=>{setSyncDot('ok');rWorkers();toast('✓ '+updated.length+' trabajadores actualizados');})
-    .catch(e=>{setSyncDot('err');console.error(e);toast('Error Firebase: '+(e.message||e.code));});
+  svWorkers('Actualizar trabajadores desde código').then(()=>{setSyncDot('ok');rWorkers();toast('✓ '+updated.length+' trabajadores actualizados');});
 }
 
 function importarExcelHorario(event){
@@ -4925,7 +5045,7 @@ function saveObra(){
   const data={nombre:n,empresa:document.getElementById('ob-e').value.trim().toUpperCase(),dir:document.getElementById('ob-d').value.trim(),tof:parseFloat(document.getElementById('ob-tof').value)||0,tpe:parseFloat(document.getElementById('ob-tpe').value)||0,tmaq:parseFloat(document.getElementById('ob-tmaq').value)||0,estado:document.getElementById('ob-s').value,tarifasEsp};
   if(editObraId){const o=obras.find(x=>x.id===editObraId);if(o)Object.assign(o,data);}
   else obras.push({id:Date.now(),...data});
-  svFB('obras',obras);CM();rObras();rDash();toast('Obra guardada ✓');
+  undoDescribe('Obra: '+n);svFB('obras',obras);CM();rObras();rDash();toast('Obra guardada ✓');
 }
 function delObra(id){
   if(!confirm('¿Eliminar esta obra?'))return;
@@ -5071,7 +5191,7 @@ function saveWorker(){
       Object.assign(w,data);
     }
   }else workers.push({id:Date.now(),...data,obraHistory:newObraId?[{obraId:newObraId,desde:new Date().toISOString().slice(0,10),hasta:null}]:[]});
-  svFB('workers',workers);CM();rWorkers();rDash();if(!editWkId||obraAnteriorId===newObraId)toast('Trabajador guardado ✓');
+  undoDescribe('Trabajador: '+n);svFB('workers',workers);CM();rWorkers();rDash();if(!editWkId||obraAnteriorId===newObraId)toast('Trabajador guardado ✓');
 }
 
 function delWorker(){
