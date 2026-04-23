@@ -3126,6 +3126,7 @@ function rCostes(){
     {concepto:'Seguro Peugeot 2045HPN',    obs:'Semestral',                    inicio:'11/02/2026', anual:605.00,    mes:50.42},
     {concepto:'Gastos generales (fras., com.)', obs:'',                        inicio:'',           anual:18000.00,  mes:1500.00},
   ];
+  COSTES_FIJOS.forEach((c,i)=>{if(costesConfig['cf_mes_'+i]!==undefined)c.mes=costesConfig['cf_mes_'+i];});
   const totalFijos=COSTES_FIJOS.reduce((s,c)=>s+c.mes,0);
 
   // Trabajadores activos + noEmpresa con horas
@@ -3180,12 +3181,21 @@ function rCostes(){
         <th style="text-align:right;padding:5px 8px;color:var(--t3);font-weight:600;background:var(--rl);color:#791F1F">Mes</th>
       </tr></thead>
       <tbody>
-        ${COSTES_FIJOS.map((c,i)=>`<tr style="border-bottom:1px solid var(--br);background:${i%2===0?'var(--bc)':'var(--bg)'}">
-          <td style="padding:5px 8px;font-weight:600">${c.concepto}</td>
-          <td style="padding:5px 8px;color:var(--t3)">${c.obs||'—'}</td>
-          <td style="padding:5px 8px;text-align:right">${fmt(c.anual)}</td>
-          <td style="padding:5px 8px;text-align:right;font-weight:700;color:#E24B4A">${fmt(c.mes)}</td>
-        </tr>`).join('')}
+        ${COSTES_FIJOS.map((c,i)=>{
+          const cfKey='cf_mes_'+i;
+          const mesVal=costesConfig[cfKey]!==undefined?costesConfig[cfKey]:c.mes;
+          return`<tr style="border-bottom:1px solid var(--br);background:${i%2===0?'var(--bc)':'var(--bg)'}">
+            <td style="padding:5px 8px;font-weight:600">${c.concepto}</td>
+            <td style="padding:5px 8px;color:var(--t3)">${c.obs||'—'}</td>
+            <td style="padding:5px 8px;text-align:right">${fmt(c.anual)}</td>
+            <td style="padding:4px 6px;text-align:right">
+              <input type="number" step="0.01" value="${mesVal}"
+                onblur="costesConfig['cf_mes_${i}']=parseFloat(this.value)||0;saveCostesConfig()"
+                onkeydown="if(event.key==='Enter')this.blur()"
+                style="width:80px;border:1px solid var(--br);border-radius:4px;padding:3px 6px;font-size:12px;font-weight:700;color:#E24B4A;background:transparent;text-align:right;outline:none"/>
+            </td>
+          </tr>`;
+        }).join('')}
       </tbody>
       <tfoot><tr style="background:var(--rl)">
         <td colspan="3" style="padding:6px 8px;font-weight:700;color:#791F1F">TOTAL FIJOS / MES</td>
@@ -4577,16 +4587,30 @@ function migrarObraIdHorario(){
 function rCalculadora(){
   const el=document.getElementById('calc-content');
   if(!el)return;
-  const TOTAL_FIJOS=10562.53;
-  // SS mensual real por categoría (dato de Costes)
   const SS_MES={pe:898.11,of1:924.81,of2:924.81,enc:924.81,tec:924.81,maq:924.81};
   const CAT_LABEL={of1:'Oficial 1ª',of2:'Oficial 2ª',pe:'Peón E.',enc:'Encargado',tec:'Técnico',maq:'Maquinista'};
+  // Costes fijos con valores por defecto editables
+  if(!window.calcFijos){window.calcFijos=[
+    {nombre:'Costes empresa (seguros, asesoría...)', importe:4273.78},
+    {nombre:'Antonio Arrabal (nómina+SS+IRPF)',      importe:2815.07},
+    {nombre:'Iván Moreno (nómina+SS+IRPF)',          importe:623.68},
+    {nombre:'Juan Moreno (nómina+SS+IRPF)',          importe:2050.00},
+    {nombre:'Jose C. Domínguez (nómina+SS+IRPF)',    importe:800.00},
+  ];}
 
   el.innerHTML=`
   <div class="card" style="margin-bottom:12px;background:var(--rl)">
-    <div style="font-size:12px;font-weight:700;color:#791F1F">
-      🏢 Costes fijos totales: ${fmt(TOTAL_FIJOS)}/mes
-      <span style="font-size:10px;font-weight:400;margin-left:6px">(empresa + socios: Arrabal, Iván, Juan, Domínguez)</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;color:#791F1F">
+        🏢 Costes fijos totales: <span id="calc-fijos-total">—</span>/mes
+      </div>
+      <button onclick="document.getElementById('calc-fijos-detalle').style.display=document.getElementById('calc-fijos-detalle').style.display==='none'?'block':'none'" 
+        style="font-size:11px;background:transparent;border:1px solid rgba(121,31,31,.3);border-radius:var(--rs);padding:3px 8px;cursor:pointer;color:#791F1F">
+        ✏️ Editar
+      </button>
+    </div>
+    <div id="calc-fijos-detalle" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px" id="calc-fijos-rows"></div>
     </div>
   </div>
 
@@ -4643,9 +4667,32 @@ function calcUpdate(){
   const costeH=parseFloat(document.getElementById('cv-coste')?.value)||0;
   const nTrab=parseFloat(document.getElementById('cv-ntrab')?.value)||0;
   const horas=parseFloat(document.getElementById('cv-horas')?.value)||160;
-  const TOTAL_FIJOS=10562.53;
   const SS_MES={pe:898.11,of1:924.81,of2:924.81,enc:924.81,tec:924.81,maq:924.81};
   const CAT_LABEL={of1:'Oficial 1ª',of2:'Oficial 2ª',pe:'Peón E.',enc:'Encargado',tec:'Técnico',maq:'Maquinista'};
+
+  // Leer costes fijos editables
+  if(!window.calcFijos){window.calcFijos=[
+    {nombre:'Costes empresa',importe:4273.78},
+    {nombre:'Antonio Arrabal',importe:2815.07},
+    {nombre:'Iván Moreno',importe:623.68},
+    {nombre:'Juan Moreno',importe:2050.00},
+    {nombre:'Jose C. Domínguez',importe:800.00},
+  ];}
+  // Renderizar filas editables si no están ya
+  const filasEl=document.getElementById('calc-fijos-rows');
+  if(filasEl&&filasEl.children.length===0){
+    filasEl.innerHTML=window.calcFijos.map((f,i)=>`
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="flex:1;font-size:11px;color:#791F1F">${f.nombre}</span>
+        <input type="number" step="10" value="${f.importe}"
+          oninput="window.calcFijos[${i}].importe=parseFloat(this.value)||0;calcUpdate()"
+          style="width:100px;border:1px solid rgba(121,31,31,.4);border-radius:var(--rs);padding:4px 6px;font-size:12px;font-weight:700;color:#791F1F;background:transparent;text-align:right"/>
+        <span style="font-size:11px;color:#791F1F">€/mes</span>
+      </div>`).join('');
+  }
+  const TOTAL_FIJOS=window.calcFijos.reduce((s,f)=>s+(parseFloat(f.importe)||0),0);
+  const totalEl=document.getElementById('calc-fijos-total');
+  if(totalEl)totalEl.textContent=fmt(TOTAL_FIJOS);
 
   const ssMes=SS_MES[cat]||924.81;
 
