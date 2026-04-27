@@ -3981,10 +3981,10 @@ function guardarPago(wid,campo,valor){
   if(!pagos[key])pagos[key]={};
   if(campo==='transferirDif'){
     pagos[key][campo]=valor===1||valor===true||valor==='1';
-    svPagos('Anticipo').then(()=>rSueldos());
+    svPagos('Transferir diferencia').then(()=>rSueldos());
   }else{
     pagos[key][campo]=parseFloat(valor)||0;
-    svPagos('Eliminar anticipo').then(()=>rSueldos());
+    svPagos('Pago: '+campo).then(()=>{setSyncDot('ok');});
   }
 }
 
@@ -3993,21 +3993,21 @@ function addAnticipo(wid){
   if(!pagos[key])pagos[key]={};
   if(!pagos[key].anticipos)pagos[key].anticipos=[];
   pagos[key].anticipos.push({importe:0,fecha:today()});
-  svPagos('Observaciones').then(()=>{setSyncDot('ok');});
+  svPagos('Añadir anticipo').then(()=>rSueldos());
 }
 
 function editAnticipo(wid,idx,campo,valor){
   const key=getPagosKey(wid);
   if(!pagos[key]?.anticipos?.[idx])return;
   pagos[key].anticipos[idx][campo]=campo==='importe'?(parseFloat(valor)||0):valor;
-  svPagos('IRPF').then(()=>{setSyncDot('ok');});
+  svPagos('Editar anticipo').then(()=>rSueldos());
 }
 
 function delAnticipo(wid,idx){
   const key=getPagosKey(wid);
   if(!pagos[key]?.anticipos)return;
   pagos[key].anticipos.splice(idx,1);
-  svPagos('Nómina oficial').then(()=>{setSyncDot('ok');});
+  svPagos('Eliminar anticipo').then(()=>rSueldos());
 }
 
 
@@ -4015,7 +4015,7 @@ function guardarPagoTexto(wid,campo,valor){
   const key=getPagosKey(wid);
   if(!pagos[key])pagos[key]={};
   pagos[key][campo]=valor||'';
-  svPagos('Transferir diferencia').then(()=>rSueldos());
+  svPagos('Texto: '+campo).then(()=>{setSyncDot('ok');});
 }
 
 function rSueldos(){
