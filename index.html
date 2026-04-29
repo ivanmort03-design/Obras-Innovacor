@@ -4652,6 +4652,50 @@ function rCalculadora(){
 
   <div id="calc-res"></div>
 
+  <!-- SECCIÓN NÓMINA FIJA -->
+  <div class="card" style="margin-top:12px;border-left:4px solid var(--g)">
+    <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:14px">📋 Nómina fija — ¿cuánto bfo genera?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:12px">
+      <div>
+        <label class="fl" style="font-size:11px">📋 Categoría</label>
+        <select class="fi" id="cv-cat-fija" oninput="calcUpdateFija()" style="font-size:14px;font-weight:700">
+          <option value="pe">Peón E.</option>
+          <option value="of1" selected>Oficial 1ª</option>
+          <option value="of2">Oficial 2ª</option>
+          <option value="enc">Encargado</option>
+          <option value="maq">Maquinista</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl" style="font-size:11px">💶 Nómina bruta mensual (€)</label>
+        <input class="fi" type="number" id="cv-nfija" value="1500" step="50" min="0"
+          oninput="calcUpdateFija()" style="font-size:20px;font-weight:800;color:#E24B4A"/>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px">Lo que le pagas al trabajador</div>
+      </div>
+      <div>
+        <label class="fl" style="font-size:11px">💰 Tarifa facturación €/h</label>
+        <input class="fi" type="number" id="cv-tarifa-fija" value="23" step="0.5" min="0"
+          oninput="calcUpdateFija()" style="font-size:20px;font-weight:800;color:var(--gd)"/>
+      </div>
+      <div>
+        <label class="fl" style="font-size:11px">🕐 Horas facturadas al mes</label>
+        <input class="fi" type="number" id="cv-horas-fija" value="160" step="5" min="1"
+          oninput="calcUpdateFija()" style="font-size:20px;font-weight:800"/>
+      </div>
+    </div>
+    <div>
+      <label class="fl" style="font-size:11px">👥 Nº trabajadores (para prorratear fijos)</label>
+      <input class="fi" type="number" id="cv-ntrab-fija" value="30" step="1" min="1"
+        oninput="calcUpdateFija()" style="font-size:20px;font-weight:800"/>
+    </div>
+    <div id="calc-res-fija" style="margin-top:12px"></div>
+    <div class="card" style="margin-top:12px">
+      <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:4px">📊 Bfo según nómina fija y nº trabajadores</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:12px" id="calc-tabla-fija-info"></div>
+      <div id="calc-tabla-fija" style="overflow-x:auto"></div>
+    </div>
+  </div>
+
   <div class="card" style="margin-top:12px">
     <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:4px">📊 Bfo por trabajador según coste €/h y nº trabajadores</div>
     <div style="font-size:11px;color:var(--t3);margin-bottom:12px" id="calc-tabla-info"></div>
@@ -4659,6 +4703,105 @@ function rCalculadora(){
   </div>`;
 
   calcUpdate();
+  calcUpdateFija();
+}
+
+function calcUpdateFija(){
+  const cat=document.getElementById('cv-cat-fija')?.value||'of1';
+  const nFija=parseFloat(document.getElementById('cv-nfija')?.value)||0;
+  const tarifa=parseFloat(document.getElementById('cv-tarifa-fija')?.value)||0;
+  const horasFact=parseFloat(document.getElementById('cv-horas-fija')?.value)||160;
+  const nTrab=parseFloat(document.getElementById('cv-ntrab-fija')?.value)||30;
+  const SS_MES={pe:898.11,of1:924.81,of2:924.81,enc:924.81,tec:924.81,maq:924.81};
+  const CAT_LABEL={of1:'Oficial 1ª',of2:'Oficial 2ª',pe:'Peón E.',enc:'Encargado',tec:'Técnico',maq:'Maquinista'};
+  const TOTAL_FIJOS=window.calcFijos?window.calcFijos.reduce((s,f)=>s+(parseFloat(f.importe)||0),0):10562.53;
+
+  const ssMes=SS_MES[cat]||924.81;
+  const ingresos=horasFact*tarifa;
+  const fijosProrata=TOTAL_FIJOS/nTrab;
+  const costeTotal=nFija+ssMes+fijosProrata;
+  const ben=ingresos-costeTotal;
+  const pos=ben>=0;
+  const margen=ingresos>0?ben/ingresos*100:0;
+
+  const el=document.getElementById('calc-res-fija');
+  if(!el)return;
+
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div class="card" style="text-align:center;background:${pos?'var(--gl)':'var(--rl)'};border:3px solid ${pos?'var(--g)':'#E24B4A'}">
+      <div style="font-size:11px;font-weight:700;color:${pos?'var(--gp)':'#791F1F'};margin-bottom:6px">📈 BFO CON NÓMINA FIJA / MES</div>
+      <div style="font-size:32px;font-weight:900;color:${pos?'var(--gd)':'#E24B4A'}">${pos?'+':''}${fmt(ben)}</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">${CAT_LABEL[cat]} · Nómina ${fmt(nFija)} · ${horasFact}h × ${tarifa}€/h</div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px">🏢 BFO TOTAL EMPRESA / MES</div>
+      <div style="font-size:32px;font-weight:900;color:${ben*nTrab>=0?'var(--gd)':'#E24B4A'}">${ben*nTrab>=0?'+':''}${fmt(ben*nTrab)}</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">Margen ${margen.toFixed(1)}% · Anual ${ben*nTrab>=0?'+':''}${fmt(ben*nTrab*12)}</div>
+    </div>
+  </div>
+  <div class="card" style="font-size:12px">
+    <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:10px">🔍 Desglose</div>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br)">
+        <span style="color:var(--t3)">+ Ingresos facturación (${horasFact}h × ${tarifa}€)</span>
+        <b style="color:var(--gd)">+${fmt(ingresos)}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br)">
+        <span style="color:var(--t3)">− Nómina bruta mensual</span>
+        <b style="color:#E24B4A">−${fmt(nFija)}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br)">
+        <span style="color:var(--t3)">− SS empresa ${CAT_LABEL[cat]} (dato real Costes)</span>
+        <b style="color:#E24B4A">−${fmt(ssMes)}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--br)">
+        <span style="color:var(--t3)">− Costes fijos prorrateados (${fmt(TOTAL_FIJOS)} ÷ ${nTrab})</span>
+        <b style="color:#E24B4A">−${fmt(fijosProrata)}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 10px;background:${pos?'var(--gl)':'var(--rl)'};border-radius:var(--rs);margin-top:6px">
+        <span style="font-weight:700;color:${pos?'var(--gp)':'#791F1F'}">= Beneficio por trabajador</span>
+        <b style="font-size:16px;color:${pos?'var(--gd)':'#E24B4A'}">${pos?'+':''}${fmt(ben)}</b>
+      </div>
+    </div>
+  </div>`;
+
+  // ── TABLA ESCENARIOS NÓMINA FIJA ─────────────────────────────
+  // Filas: nóminas de 1000€ a 2500€ en pasos de 100€
+  // Columnas: nº trabajadores 15 a 50
+  const nominas=[];
+  for(let n=1000;n<=2500;n+=100)nominas.push(n);
+  const trabs=[15,20,25,30,35,40,45,50];
+
+  const infoFija=document.getElementById('calc-tabla-fija-info');
+  if(infoFija)infoFija.textContent=`Tarifa ${tarifa}€/h · ${horasFact}h/mes · SS ${CAT_LABEL[cat]}: ${fmt(ssMes)}/mes · Costes fijos: ${fmt(TOTAL_FIJOS)}/mes`;
+
+  const tablaFija=document.getElementById('calc-tabla-fija');
+  if(!tablaFija)return;
+
+  let html=`<table style="border-collapse:collapse;font-size:11px;min-width:500px">
+  <thead><tr>
+    <th style="padding:6px 10px;background:var(--g);color:#fff;text-align:left;white-space:nowrap">Nómina ↓ · Trab →</th>
+    ${trabs.map(n=>`<th style="padding:6px 8px;background:${n===nTrab?'#1E3A5F':'var(--g)'};color:#fff;text-align:center">${n===nTrab?'<u>'+n+'</u>':n}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  nominas.forEach((nom,ni)=>{
+    const esFilaActual=Math.abs(nom-nFija)<50;
+    html+=`<tr style="background:${ni%2===0?'var(--bc)':'var(--bg)'}">
+      <td style="padding:5px 10px;font-weight:${esFilaActual?'800':'500'};background:${esFilaActual?'#FEF3E2':''};color:${esFilaActual?'#7C2D12':'var(--t)'}">
+        ${esFilaActual?'▶ ':''}${fmt(nom).replace(',00€','€')}
+      </td>
+      ${trabs.map(n=>{
+        const b=ingresos-nom-ssMes-(TOTAL_FIJOS/n);
+        const esActual=esFilaActual&&n===nTrab;
+        const bpos=b>=0;
+        return`<td style="padding:5px 6px;text-align:center;font-weight:${esActual?'800':'600'};background:${esActual?'#1E3A5F':bpos?'var(--gl)':'var(--rl)'};color:${esActual?'#fff':bpos?'var(--gd)':'#E24B4A'};border:${esActual?'2px solid var(--g)':'1px solid var(--br)'};white-space:nowrap">${bpos?'+':''}${Math.round(b)}€</td>`;
+      }).join('')}
+    </tr>`;
+  });
+
+  html+=`</tbody></table>`;
+  tablaFija.innerHTML=html;
 }
 
 function calcUpdate(){
