@@ -180,6 +180,30 @@ textarea.fi{min-height:75px;resize:vertical}
 </head>
 <body>
 <div id="loading"><div class="logo2">Obras<em>360</em></div><div class="spinner"></div><p>Conectando...</p></div>
+<!-- CHATBOT FLOTANTE -->
+<div id="chat-fab" onclick="toggleChat()" title="Asistente Obras360" style="position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--g);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:24px;z-index:999;transition:transform .2s">🤖</div>
+
+<div id="chat-panel" style="display:none;position:fixed;bottom:144px;right:16px;width:340px;max-height:520px;background:var(--bc);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.2);border:1px solid var(--br);z-index:998;display:none;flex-direction:column;overflow:hidden">
+  <!-- Header -->
+  <div style="background:var(--g);color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+    <div>
+      <div style="font-weight:700;font-size:13px">🤖 Asistente Obras360</div>
+      <div style="font-size:10px;opacity:.8">Pregúntame sobre tu empresa</div>
+    </div>
+    <button onclick="toggleChat()" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1">×</button>
+  </div>
+  <!-- Mensajes -->
+  <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:200px;max-height:360px"></div>
+  <!-- Input -->
+  <div style="padding:10px;border-top:1px solid var(--br);display:flex;gap:8px;flex-shrink:0">
+    <input id="chat-input" type="text" placeholder="Escribe tu pregunta..." 
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"
+      style="flex:1;border:1px solid var(--br);border-radius:var(--rs);padding:8px 10px;font-size:12px;background:var(--bg);color:var(--t);outline:none"/>
+    <button onclick="sendChat()" id="chat-send-btn"
+      style="background:var(--g);color:#fff;border:none;border-radius:var(--rs);padding:8px 12px;cursor:pointer;font-size:14px;flex-shrink:0">➤</button>
+  </div>
+</div>
+
 <div id="app" style="display:none">
   <div id="hdr">
     <div class="logo">Obras<em>360</em></div>
@@ -408,8 +432,24 @@ textarea.fi{min-height:75px;resize:vertical}
         <input type="file" id="import-excel-hor" accept=".xlsx,.xlsm,.xls" style="display:none" onchange="importarExcelHorario(event)"/>
         <div id="imp-preview" style="margin-top:10px"></div>
       </div>
+      <div class="card" style="border:1px solid var(--bl)">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">🤖 Chatbot — API Key de Anthropic</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Necesitas una API key de <b>console.anthropic.com</b> para usar el chatbot. Se guarda solo en este navegador.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="fi" type="password" id="ajustes-apikey" placeholder="sk-ant-api03-..." 
+            style="flex:1;font-family:monospace;font-size:12px"
+            value="${localStorage.getItem('ob360_apikey')||''}"/>
+          <button class="btn btnp btnsm" onclick="saveApiKey()">Guardar</button>
+          <button class="btn btnd btnsm" onclick="clearApiKey()">Borrar</button>
+        </div>
+        <div id="apikey-status" style="font-size:11px;margin-top:8px;color:var(--t3)">
+          ${localStorage.getItem('ob360_apikey')?'✅ API key guardada — el chatbot está listo':'⚠️ Sin API key — el chatbot no funcionará'}
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:8px;padding:8px;background:var(--bg);border-radius:var(--rs)">
+          📋 <b>Pasos:</b> 1) Entra en console.anthropic.com · 2) API Keys → Create Key · 3) Copia la key (empieza por sk-ant-) · 4) Pégala aquí y guarda
+        </div>
+      </div>
       <div class="card" style="border:1px solid var(--al)">
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px">🔄 Actualizar datos de trabajadores</div>
         <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Sobrescribe los datos de Firebase con la información actualizada del código (DNI, teléfonos, cuentas, cursos, etc.). Las horas y horarios no se modifican.</div>
         <button class="btn btnp btnsm" onclick="resetWorkers()">🔄 Actualizar trabajadores desde código</button>
         <button class="btn btng btnsm" onclick="migrarObraIdHorario()" style="margin-top:8px">🔧 Reparar obraId en horario histórico</button>
@@ -1046,7 +1086,160 @@ async function initData(){
   }
 }
 
-// ── HISTORIAL DE ACCIONES (UNDO) ─────────────────────────────────
+function saveApiKey(){
+  const key=document.getElementById('ajustes-apikey')?.value.trim();
+  if(!key||!key.startsWith('sk-ant-')){toast('❌ La key debe empezar por sk-ant-');return;}
+  localStorage.setItem('ob360_apikey',key);
+  document.getElementById('apikey-status').innerHTML='✅ API key guardada — el chatbot está listo';
+  document.getElementById('apikey-status').style.color='var(--gp)';
+  toast('✅ API key guardada correctamente');
+}
+function clearApiKey(){
+  localStorage.removeItem('ob360_apikey');
+  document.getElementById('ajustes-apikey').value='';
+  document.getElementById('apikey-status').innerHTML='⚠️ Sin API key — el chatbot no funcionará';
+  document.getElementById('apikey-status').style.color='var(--t3)';
+  toast('API key eliminada');
+}
+
+// ── CHATBOT ────────────────────────────────────────────────────────
+let chatOpen=false;
+let chatHistory=[];
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  const panel=document.getElementById('chat-panel');
+  const fab=document.getElementById('chat-fab');
+  panel.style.display=chatOpen?'flex':'none';
+  fab.style.transform=chatOpen?'scale(0.9)':'scale(1)';
+  if(chatOpen&&chatHistory.length===0){
+    addChatMsg('assistant','¡Hola! Soy tu asistente de Obras360. Tengo acceso a los datos reales de tu empresa: trabajadores, horas, obras, costes y sueldos. ¿En qué puedo ayudarte?');
+  }
+  if(chatOpen)setTimeout(()=>document.getElementById('chat-input')?.focus(),100);
+}
+
+function addChatMsg(role,text,loading=false){
+  const msgs=document.getElementById('chat-msgs');
+  if(!msgs)return;
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;${role==='user'?'justify-content:flex-end':''}`;
+  const bubble=document.createElement('div');
+  bubble.style.cssText=`max-width:85%;padding:8px 11px;border-radius:${role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px'};font-size:12px;line-height:1.5;${role==='user'?'background:var(--g);color:#fff':'background:var(--bg);color:var(--t);border:1px solid var(--br)'}`;
+  bubble.innerHTML=loading?'<span style="opacity:.5">✦ escribiendo...</span>':text.replace(/\n/g,'<br>');
+  if(loading)bubble.id='chat-loading-bubble';
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  return bubble;
+}
+
+function buildContext(){
+  const hoy=new Date();
+  const m=hoy.getMonth(),y=hoy.getFullYear();
+  const mNombre=MESES[m]+' '+y;
+
+  // Resumen trabajadores
+  const activos=workers.filter(w=>w.estado==='active'||w.estado==='ext');
+  const bajas=workers.filter(w=>w.estado==='baja');
+  const noEmpresa=workers.filter(w=>w.estado==='noEmpresa');
+
+  // Horas del mes actual por trabajador
+  const horasMes=activos.map(w=>{
+    const c=calcWorkerMonth(w.id,m,y);
+    return{nombre:w.nombre,hN:c.hN,hE:c.hE,total:c.hN+c.hE,obra:obras.find(o=>o.id===w.obra)?.nombre||'Sin obra'};
+  }).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
+
+  // Obras activas con horas
+  const obrasRes=obras.filter(o=>o.estado==='active').map(o=>{
+    const c=calcObraMonth(o.id,m,y);
+    return{nombre:o.nombre,empresa:o.empresa||'',horas:c.hN+c.hE,fact:c.fact};
+  }).filter(o=>o.horas>0).sort((a,b)=>b.fact-a.fact);
+
+  // Costes fijos
+  const totalFijos=window.calcFijos?window.calcFijos.reduce((s,f)=>s+(f.importe||0),0):10562.53;
+
+  return `Eres el asistente de INNOVACOR PROYECTOS Y OBRAS S.L., empresa de construcción en Málaga. Tienes acceso a los datos reales de la empresa para ${mNombre}.
+
+TRABAJADORES:
+- Activos: ${activos.length} | En baja médica: ${bajas.length} | Baja empresa: ${noEmpresa.length}
+- Lista activos: ${activos.map(w=>`${w.nombre} (${CATL[w.cat]||w.cat}, obra: ${obras.find(o=>o.id===w.obra)?.nombre||'Sin asignar'})`).join('; ')}
+
+HORAS ${mNombre.toUpperCase()} (trabajadores con horas):
+${horasMes.map(r=>`- ${r.nombre}: ${r.total}h (${r.obra})`).join('\n')||'Sin datos de horas aún'}
+
+OBRAS ACTIVAS CON ACTIVIDAD ESTE MES:
+${obrasRes.map(o=>`- ${o.nombre} (${o.empresa}): ${o.horas}h | Facturado: ${o.fact.toFixed(0)}€`).join('\n')||'Sin actividad registrada'}
+
+COSTES FIJOS EMPRESA: ${totalFijos.toFixed(2)}€/mes
+- Incluye: seguros, asesoría, alquiler oficina, socios (Arrabal, Iván Moreno, Juan Moreno, Domínguez)
+
+CATEGORÍAS: Oficial 1ª (SS: 924,81€/mes) | Oficial 2ª | Encargado | Técnico | Peón E. (SS: 898,11€/mes) | Maquinista
+
+Responde siempre en español, de forma concisa y directa. Si te preguntan por datos que no tienes (históricos de meses anteriores, pagos específicos), indícalo claramente. Usa emojis con moderación.`;
+}
+
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const btn=document.getElementById('chat-send-btn');
+  const text=(input?.value||'').trim();
+  if(!text)return;
+
+  const apiKey=localStorage.getItem('ob360_apikey');
+  if(!apiKey){
+    addChatMsg('assistant','⚠️ Necesitas configurar tu API key de Anthropic en **Ajustes** para usar el chatbot.');
+    return;
+  }
+
+  input.value='';
+  input.disabled=true;
+  btn.disabled=true;
+
+  addChatMsg('user',text);
+  chatHistory.push({role:'user',content:text});
+
+  const loading=addChatMsg('assistant','',true);
+
+  try{
+    const systemCtx=buildContext();
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:systemCtx,
+        messages:chatHistory.slice(-10),
+      })
+    });
+
+    const data=await response.json();
+    if(data.error){
+      document.getElementById('chat-loading-bubble')?.parentElement?.remove();
+      addChatMsg('assistant',`❌ Error API: ${data.error.message}`);
+      return;
+    }
+    const reply=data.content?.[0]?.text||'No he podido procesar la respuesta.';
+    document.getElementById('chat-loading-bubble')?.parentElement?.remove();
+    addChatMsg('assistant',reply);
+    chatHistory.push({role:'assistant',content:reply});
+
+  }catch(e){
+    document.getElementById('chat-loading-bubble')?.parentElement?.remove();
+    addChatMsg('assistant','❌ Error al conectar con la API. Comprueba la conexión.');
+    console.error('Chat error:',e);
+  }finally{
+    input.disabled=false;
+    btn.disabled=false;
+    input.focus();
+  }
+}
+
+
 const UNDO_MAX=20;
 let undoStack=[];
 let _undoNextDesc=null;
@@ -2918,14 +3111,15 @@ function exportCostesPDF(){
     const diasEnEmpresa=Math.max(0,Math.round((hastaDia-desdeDia)/(1000*60*60*24))+1);
     const prorrataSS=diasEnEmpresa<diasMes?Math.round(diasEnEmpresa/diasMes*100)/100:1;
     const ss=Math.round((getCosteSS(w.cat))*prorrataSS*100)/100;
-    const costeTotal=salario+ss;
+    const gasoilCostes=parseFloat(p.gasoil)||0;
+    const costeTotal=salario+ss+gasoilCostes;
     const fact=calc.fact||0;
     // Desglose por obra
     const byObra=Object.entries(calc.byObra||{}).filter(([,v])=>(v.hN+v.hE)>0).map(([obraId,v])=>{
       const ob=obras.find(o=>o.id===parseInt(obraId));
       return{ob,hN:v.hN,hE:v.hE,fact:v.fact,tof:ob?.tof||0,tpe:ob?.tpe||0};
     });
-    return{w,hN,hE,hTotal,imp,salario,esBaja,ss,prorrataSS,diasEnEmpresa,costeTotal,fact,byObra,esNFija};
+    return{w,hN,hE,hTotal,imp,salario,gasoilCostes,esBaja,ss,prorrataSS,diasEnEmpresa,costeTotal,fact,byObra,esNFija};
   });
 
   const totalDiasTodos=filas.reduce((s,r)=>s+r.diasEnEmpresa,0);
@@ -3269,14 +3463,15 @@ function rCostes(){
 
     const ssFull=getCosteSS(w.cat);
     const ss=Math.round(ssFull*prorrataSS*100)/100;
-    const costeTotal=Math.round((salario+ss+irpfEmpresa)*100)/100;
+    const gasoilCostes=parseFloat(p.gasoil)||0;
+    const costeTotal=Math.round((salario+ss+irpfEmpresa+gasoilCostes)*100)/100;
     const costePorHora=hTotal>0?Math.round(costeTotal/hTotal*100)/100:0;
     const fact=calc.fact||0;
     const beneficio=fact-costeTotal;
     const margen=fact>0?Math.round(beneficio/fact*100):0;
 
     totalSalarios+=salario;totalSS+=ss;totalCoste+=costeTotal;totalFact+=fact;totalBenef+=beneficio;
-    return{w,hN,hE,hTotal,imp,salario,irpfEmpresa,esBaja,nominaOficial,ss,ssFull,prorrataSS,diasEnEmpresa,diasMes,costeTotal,costePorHora,fact,beneficio,margen,esNFija};
+    return{w,hN,hE,hTotal,imp,salario,irpfEmpresa,gasoilCostes,esBaja,nominaOficial,ss,ssFull,prorrataSS,diasEnEmpresa,diasMes,costeTotal,costePorHora,fact,beneficio,margen,esNFija};
   });
 
   // Repartir indirectos proporcionalmente por días en la empresa
@@ -3291,6 +3486,7 @@ function rCostes(){
         <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600">Salario</th>
         <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600">SS</th>
         <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600">IRPF emp.</th>
+        <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600">⛽ Gasoil</th>
         <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600">Indirecto</th>
         <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600;background:rgba(0,0,0,.15)">Coste total</th>
         <th style="text-align:right;padding:8px 6px;color:#fff;font-weight:600">€/hora real</th>
@@ -3320,6 +3516,9 @@ function rCostes(){
           </td>
           <td style="padding:8px 6px;text-align:right;color:#791F1F;font-weight:${r.irpfEmpresa>0?'700':'400'}">
             ${r.irpfEmpresa>0?fmt(r.irpfEmpresa):'—'}
+          </td>
+          <td style="padding:8px 6px;text-align:right;color:var(--gp);font-weight:${r.gasoilCostes>0?'700':'400'}">
+            ${r.gasoilCostes>0?fmt(r.gasoilCostes):'—'}
           </td>
           <td style="padding:8px 6px;text-align:right;color:#E24B4A">${indProp?fmt(indProp):'—'}</td>
           <td style="padding:8px 6px;text-align:right;font-weight:700;background:var(--rl);color:#791F1F">${fmt(costeTotalConInd)}</td>
