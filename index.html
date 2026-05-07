@@ -1837,7 +1837,7 @@ function rHor(){
   const filtroWorkerVal=filtroWorkerEl?.value||'';
   if(filtroWorkerEl){
     filtroWorkerEl.innerHTML='<option value="">Todos los trabajadores</option>'+
-      sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa')
+      sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja')
         .map(w=>`<option value="${w.id}">${fmtNombre(w.nombre)}</option>`).join('');
     filtroWorkerEl.value=filtroWorkerVal;
   }
@@ -1850,7 +1850,13 @@ function rHor(){
 
   let list=sW().filter(w=>{
     if(w.estado==='active'||w.estado==='ext'||w.estado==='baja')return true;
-    if(w.estado==='noEmpresa')return true;
+    // Baja empresa: mostrar solo si tiene horas registradas este mes
+    if(w.estado==='noEmpresa'){
+      for(let d=1;d<=days;d++){
+        const v=hor[hKey(w.id,d)];
+        if(v&&(typeof v==='number'?v>0:(v.n>0||v.he>0)))return true;
+      }
+    }
     return false;
   });
   if(filtroObra) list=list.filter(w=>{
@@ -2032,7 +2038,7 @@ function eCell(wid,day){
   editCell={wid,day};
   const w=workers.find(x=>x.id===wid);
   document.getElementById('ttl-hor').textContent=(w?fmtNombre(w.nombre):'')+' — Día '+day;
-  document.getElementById('hor-w').innerHTML=sW().filter(x=>x.estado==='active'||x.estado==='ext'||x.estado==='baja'||x.estado==='noEmpresa').map(x=>`<option value="${x.id}"${x.id===wid?' selected':''}>${x.nombre}${x.estado==='noEmpresa'?' (Baja emp.)':''}</option>`).join('');
+  document.getElementById('hor-w').innerHTML=sW().filter(x=>x.estado==='active'||x.estado==='ext'||x.estado==='baja').map(x=>`<option value="${x.id}"${x.id===wid?' selected':''}>${x.nombre}${x.estado==='baja'?' (Baja méd.)':''}</option>`).join('');
   document.getElementById('hor-f').value=`${cY}-${String(cM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   const cur=hor[hKey(wid,day)];
   let tp='h';
@@ -5789,7 +5795,7 @@ function openFab(){
     const fw=sW().find(w=>w.estado==='active'||w.estado==='ext');
     editCell={wid:fw?.id,day:new Date().getDate()};
     selHoras=9;selHoras2=4;
-    document.getElementById('hor-w').innerHTML=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja'||w.estado==='noEmpresa').map(w=>`<option value="${w.id}">${w.nombre}${w.estado==='noEmpresa'?' (Baja emp.)':''}</option>`).join('');
+    document.getElementById('hor-w').innerHTML=sW().filter(w=>w.estado==='active'||w.estado==='ext'||w.estado==='baja').map(w=>`<option value="${w.id}">${w.nombre}${w.estado==='baja'?' (Baja méd.)':''}</option>`).join('');
     document.getElementById('hor-f').value=today();
     document.getElementById('hor-tp').value='h';
     const obraOpts='<option value="0">— Obra del trabajador —</option>'+sO().map(o=>`<option value="${o.id}">${o.nombre}</option>`).join('');
