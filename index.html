@@ -452,7 +452,9 @@ textarea.fi{min-height:75px;resize:vertical}
       <div class="card" style="border:1px solid var(--al)">
         <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Sobrescribe los datos de Firebase con la información actualizada del código (DNI, teléfonos, cuentas, cursos, etc.). Las horas y horarios no se modifican.</div>
         <button class="btn btnp btnsm" onclick="resetWorkers()">🔄 Actualizar trabajadores desde código</button>
+        <button class="btn btng btnsm" onclick="resetObras()" style="margin-top:8px">🏗️ Actualizar obras desde código</button>
         <button class="btn btng btnsm" onclick="migrarObraIdHorario()" style="margin-top:8px">🔧 Reparar obraId en horario histórico</button>
+        <button class="btn btnp btnsm" onclick="importarHorasMayo()" style="margin-top:8px;background:#1A6B3A">📅 Importar horas Mayo 2026</button>
       </div>
       <div class="card">
         <div style="font-size:14px;font-weight:600;margin-bottom:8px">📊 Certificación PDF por obra</div>
@@ -968,6 +970,20 @@ const WD=[
   {id:32,nombre:'VEGA CANTOS, CARLOS',obra:9,estado:'active',cat:'of1',cn:10.5,ce:0,dni:'53686486R',fnac:'19/07/1974',vtodni:'22/03/2026',tel:'655143241',cuenta:'ES4721030240520010074064',banco:'UNICAJA',falta:'20/01/2025',rm:'03/02/2026',vtrm:'03/02/2027',localidad:'MALAGA',correo:'carlosvega1974@gmail.com',prl20:'OK',cursos:'8H CARR. ELE. - 8H DUMPER',imp:10.5},
   {id:33,nombre:'VIRUEL ALARCON, PEDRO',obra:4,estado:'active',cat:'of2',cn:9.5,ce:0,dni:'26831694D',fnac:'13/12/1994',vtodni:'18/07/2027',tel:'625784107',cuenta:'ES2721033067150010059726',banco:'UNICAJA',falta:'09/01/2025',rm:'03/02/2026',vtrm:'03/02/2027',localidad:'CAMPANILLAS',correo:'pedroviruelalarcon@gmail.com',prl20:'OK',cursos:'20H APAR. ELEV. - 6H MOV. TIERRAS',imp:9.5,irpfAplica:'empresa50'},
   {id:34,nombre:'TESGHITI, MOHAMED',obra:0,estado:'active',cat:'of2',cn:10.5,ce:0,dni:'Y8500850H',fnac:'12/04/1993',vtodni:'18/12/2028',tel:'611705039',cuenta:'ES6700494988512716157971',banco:'',falta:'18/03/2026',rm:'',vtrm:'',localidad:'MALAGA',correo:'',prl20:'OK',cursos:'',imp:10.5},
+  {id:35,nombre:'FLORIDO SERVIA, MANUEL DAVID',cat:'pe',dni:'25677023F',tel:'646600399',cuenta:'ES3814650270351715191725',banco:'',localidad:'MALAGA',imp:9.5,cn:9.5,ce:0,estado:'active',obra:9,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:36,nombre:'SELLES VERGARA, RICARDO',cat:'of2',dni:'25696031V',tel:'747649411',cuenta:'ES8201824107110201537686',banco:'BBVA',localidad:'MALAGA',imp:10.5,cn:10.5,ce:0,estado:'active',obra:1775029283113,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:37,nombre:'KHIMCHAK, YAROSLAV',cat:'of1',dni:'X5277609Y',tel:'624883738',cuenta:'ES2121006453170100024186',banco:'LA CAIXA',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:38,nombre:'TRAORE, LASSAMA',cat:'pe',dni:'Z2084734L',tel:'662404708',cuenta:'ES6000492845502614102859',banco:'',localidad:'MALAGA',imp:8.5,cn:8.5,ce:0,estado:'active',obra:1775465758919,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:39,nombre:'BAKKAR, KAMAL',cat:'pe',dni:'X9589749Z',tel:'632992828',cuenta:'ES5300495480272216251313',banco:'SANTANDER',localidad:'MALAGA',imp:8.5,cn:8.5,ce:0,estado:'active',obra:1775465758922,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:40,nombre:'ALBA SANCHEZ, MIGUEL',cat:'pe',dni:'77190717A',tel:'631781248',cuenta:'ES7321005617610100451476',banco:'LA CAIXA',localidad:'MALAGA',imp:8.5,cn:8.5,ce:0,estado:'baja',obra:1775465758926,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:41,nombre:'BASSOU, TAHA',cat:'pe',dni:'Z2954734K',tel:'689295847',cuenta:'',banco:'',localidad:'COIN',imp:8.5,cn:8.5,ce:0,estado:'baja',obra:1775465758926,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:42,nombre:'SHISSEH SATOUTI, AMINE',cat:'pe',dni:'33008428R',tel:'631123129',cuenta:'ES6230230063046906897415',banco:'',localidad:'ZAFARRAYA',imp:8.5,cn:8.5,ce:0,estado:'baja',obra:1775465758926,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:43,nombre:'MARTINEZ GUERRERO, JUAN',cat:'pe',dni:'33382212N',tel:'628286770',cuenta:'ES1521030152880010102011',banco:'',localidad:'MALAGA',imp:9.5,cn:9.5,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:44,nombre:'MARUSZAK, ANDRZEJ BRONISLAW',cat:'of1',dni:'X7941638Z',tel:'642485093',cuenta:'ES7621030246260010081112',banco:'',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:45,nombre:'ZHYLYNSKYI, OLEH',cat:'of1',dni:'Y3939858H',tel:'631978385',cuenta:'ES1721033037860010100704',banco:'',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:46,nombre:'SLABKO, MYKOLA',cat:'of1',dni:'X6836824M',tel:'693950527',cuenta:'ES0321033037850010055415',banco:'',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758922,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:47,nombre:'KOVALCHUK, VOLODYMYR',cat:'pe',dni:'X6541508D',tel:'662233915',cuenta:'',banco:'',localidad:'MALAGA',imp:10,cn:10,ce:0,estado:'active',obra:13,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''}
+
 ];
 
 let obras=[
@@ -990,6 +1006,15 @@ let obras=[
   {empresa:"IOTE",nombre:"REFORMA ARTURO CAMPOS",id:1775029283113,tof:24,tpe:22,estado:"active",dir:"Málaga"},
   {estado:"active",dir:"",empresa:"PAMASA S.A.",nombre:"EMERGENCIA VIAS PECUARIAS",id:1775465714152,tof:23,tpe:21.5},
   {dir:"",estado:"active",tpe:21.5,tof:23,id:1775465758919,nombre:"CONSERVACION CARRETERAS ZONA SUR MALAGA",empresa:"PAMASA S.A."}
+,
+  {id:1775465758920,nombre:"URBANIZACION CAMINO SAN RAFAEL",empresa:"CONFORMAS S.L.",dir:"Málaga",tof:23,tpe:22,the:25,estado:"active"},
+  {id:1775465758921,nombre:"HOTEL BARCELO",empresa:"BAREA",dir:"Málaga",tof:23,tpe:21.5,estado:"active"},
+  {id:1775465758922,nombre:"EL TOMILLAR PUERTO DE LA TORRE",empresa:"RIALSA S.L.",dir:"Puerto de la Torre, Málaga",tof:23,tpe:21.5,estado:"active"},
+  {id:1775465758923,nombre:"DEPOSITO DE TORMENTAS MIJAS",empresa:"NAXFOR",dir:"Mijas, Málaga",tof:23,tpe:21.5,estado:"active"},
+  {id:1775465758924,nombre:"AVENIDA VELAZQUEZ",empresa:"PAMASA S.A.",dir:"Málaga",tof:23,tpe:21.5,estado:"active"},
+  {id:1775465758925,nombre:"OBRA LOS ALAMOS",empresa:"DELTA",dir:"Málaga",tof:23,tpe:21.5,estado:"active"}
+,
+  {id:1775465758926,nombre:"OBRA MORLACO PEDREGALEJO",empresa:"EXCAVACIONES FCO. MONTIEL",dir:"Pedregalejo, Málaga",tof:23,tpe:21.5,the:25,estado:"active"}
 ];
 let workers=[
   {irpfAplica:"no",nombre:"ARRABAL MORENO, ANTONIO",cat:"tec",fnac:"15/02/1973",nFija:1500,ce:0,correo:"antonioarrabalmoreno@gmail.com",fechaBaja:"",obra:0,estado:"admin",falta:"01/01/2026",imp:0,obraDesde:"",banco:"CAJAMAR",tel:"606728218",cn:0,cursos:"",obraHistory:[],id:1,localidad:"ALMOGIA",dni:"25681690M",cuenta:"ES7330580990272753262465",vtodni:"15/03/2033",rm:"",prl20:"NO",vtrm:""},
@@ -1025,7 +1050,21 @@ let workers=[
   {dni:"25687523L",cuenta:"ES6231870424135886284420",rm:"23/09/2025",prl20:"NO OK",vtodni:"02/06/2026",vtrm:"23/09/2026",nombre:"VAZQUEZ HERNANDEZ, JUAN JOSE",irpfAplica:"si",nFija:0,ce:0,fechaBaja:"",correo:"",fnac:"16/08/1972",cat:"pe",falta:"16/09/2025",imp:9.5,banco:"",obraDesde:"",obra:3,estado:"active",obraHistory:[],id:31,localidad:"MALAGA",tel:"643481423",cn:9.5,cursos:"6H MOV. TIERRAS - 20H CARRET. Y TELESCOPICA"},
   {fnac:"19/07/1974",cat:"of1",nFija:0,ce:0,fechaBaja:"",correo:"carlosvega1974@gmail.com",irpfAplica:"si",nombre:"VEGA CANTOS, CARLOS",tel:"655143241",cn:10.5,cursos:"8H CARR. ELE. - 8H DUMPER",obraHistory:[],localidad:"MALAGA",id:32,obra:9,estado:"active",falta:"20/01/2025",obraDesde:"",banco:"UNICAJA",imp:10.5,dni:"53686486R",cuenta:"ES4721030240520010074064",vtrm:"03/02/2027",vtodni:"22/03/2026",rm:"03/02/2026",prl20:"OK"},
   {prl20:"OK",rm:"03/02/2026",vtodni:"18/07/2027",vtrm:"03/02/2027",cuenta:"ES2721033067150010059726",dni:"26831694D",falta:"09/01/2025",banco:"UNICAJA",imp:9.5,obraDesde:"2026-03-16",obra:1774947785579,estado:"active",obraHistory:[{"desde": "2020-01-01", "hasta": "2026-03-02", "obraId": 4}, {"obraId": 1774947664762, "desde": "2026-03-02", "hasta": "2026-03-09"}, {"obraId": 4, "desde": "2026-03-09", "hasta": "2026-03-16"}, {"obraId": 1774947785579, "hasta": null, "desde": "2026-03-16"}],localidad:"CAMPANILLAS",id:33,cn:9.5,cursos:"20H APAR. ELEV. - 6H MOV. TIERRAS",tel:"625784107",nombre:"VIRUEL ALARCON, PEDRO",irpfAplica:"empresa50",correo:"pedroviruelalarcon@gmail.com",fechaBaja:"",nFija:0,ce:0,cat:"of2",fnac:"13/12/1994"},
-  {fnac:"12/04/1993",cat:"of2",fechaBaja:"",correo:"",ce:0,nFija:0,irpfAplica:"si",nombre:"TESGHITI, MOHAMED",cursos:"",cn:10.5,tel:"611705039",id:34,localidad:"MALAGA",obraHistory:[{"desde": "2026-03-18", "hasta": null, "obraId": 8}],estado:"active",obra:8,banco:"",obraDesde:"2026-03-18",imp:10.5,falta:"18/03/2026",cuenta:"ES6700494988512716157971",dni:"Y8500850H",vtrm:"",vtodni:"18/12/2028",prl20:"OK",rm:""}
+  {fnac:"12/04/1993",cat:"of2",fechaBaja:"",correo:"",ce:0,nFija:0,irpfAplica:"si",nombre:"TESGHITI, MOHAMED",cursos:"",cn:10.5,tel:"611705039",id:34,localidad:"MALAGA",obraHistory:[{"desde": "2026-03-18", "hasta": null, "obraId": 8}],estado:"active",obra:8,banco:"",obraDesde:"2026-03-18",imp:10.5,falta:"18/03/2026",cuenta:"ES6700494988512716157971",dni:"Y8500850H",vtrm:"",vtodni:"18/12/2028",prl20:"OK",rm:""},
+  {id:35,nombre:'FLORIDO SERVIA, MANUEL DAVID',cat:'pe',dni:'25677023F',tel:'646600399',cuenta:'ES3814650270351715191725',banco:'',localidad:'MALAGA',imp:9.5,cn:9.5,ce:0,estado:'active',obra:9,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:36,nombre:'SELLES VERGARA, RICARDO',cat:'of2',dni:'25696031V',tel:'747649411',cuenta:'ES8201824107110201537686',banco:'BBVA',localidad:'MALAGA',imp:10.5,cn:10.5,ce:0,estado:'active',obra:1775029283113,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:37,nombre:'KHIMCHAK, YAROSLAV',cat:'of1',dni:'X5277609Y',tel:'624883738',cuenta:'ES2121006453170100024186',banco:'LA CAIXA',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:38,nombre:'TRAORE, LASSAMA',cat:'pe',dni:'Z2084734L',tel:'662404708',cuenta:'ES6000492845502614102859',banco:'',localidad:'MALAGA',imp:8.5,cn:8.5,ce:0,estado:'active',obra:1775465758919,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:39,nombre:'BAKKAR, KAMAL',cat:'pe',dni:'X9589749Z',tel:'632992828',cuenta:'ES5300495480272216251313',banco:'SANTANDER',localidad:'MALAGA',imp:8.5,cn:8.5,ce:0,estado:'active',obra:1775465758922,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:40,nombre:'ALBA SANCHEZ, MIGUEL',cat:'pe',dni:'77190717A',tel:'631781248',cuenta:'ES7321005617610100451476',banco:'LA CAIXA',localidad:'MALAGA',imp:8.5,cn:8.5,ce:0,estado:'baja',obra:1775465758926,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:41,nombre:'BASSOU, TAHA',cat:'pe',dni:'Z2954734K',tel:'689295847',cuenta:'',banco:'',localidad:'COIN',imp:8.5,cn:8.5,ce:0,estado:'baja',obra:1775465758926,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:42,nombre:'SHISSEH SATOUTI, AMINE',cat:'pe',dni:'33008428R',tel:'631123129',cuenta:'ES6230230063046906897415',banco:'',localidad:'ZAFARRAYA',imp:8.5,cn:8.5,ce:0,estado:'baja',obra:1775465758926,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:43,nombre:'MARTINEZ GUERRERO, JUAN',cat:'pe',dni:'33382212N',tel:'628286770',cuenta:'ES1521030152880010102011',banco:'',localidad:'MALAGA',imp:9.5,cn:9.5,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:44,nombre:'MARUSZAK, ANDRZEJ BRONISLAW',cat:'of1',dni:'X7941638Z',tel:'642485093',cuenta:'ES7621030246260010081112',banco:'',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:45,nombre:'ZHYLYNSKYI, OLEH',cat:'of1',dni:'Y3939858H',tel:'631978385',cuenta:'ES1721033037860010100704',banco:'',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758920,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:46,nombre:'SLABKO, MYKOLA',cat:'of1',dni:'X6836824M',tel:'693950527',cuenta:'ES0321033037850010055415',banco:'',localidad:'MALAGA',imp:11,cn:11,ce:0,estado:'active',obra:1775465758922,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''},
+  {id:47,nombre:'KOVALCHUK, VOLODYMYR',cat:'pe',dni:'X6541508D',tel:'662233915',cuenta:'',banco:'',localidad:'MALAGA',imp:10,cn:10,ce:0,estado:'active',obra:13,irpfAplica:'si',nFija:0,falta:'',fechaBaja:'',rm:'',vtrm:'',vtodni:'',fnac:'',correo:'',prl20:'',cursos:'',obraHistory:[],obraDesde:''}
+
 ];
 let incs=[],hor={},festivos=[],notifs={},recordatorios=[],pagos={},prestamos=[],costesConfig={},bajasMedicas=[];
 let cM=new Date().getMonth(),cY=new Date().getFullYear();
@@ -5139,6 +5178,611 @@ function calcUpdate(){
 }
 
 
+// IMPORTACIÓN HORAS MAYO 2026
+async function importarHorasMayo(){
+  if(!confirm('¿Importar horas de mayo 2026? Esto BORRARÁ todos los datos existentes de mayo y los reemplazará.'))return;
+  Object.keys(hor).forEach(k=>{if(k.startsWith('2026-4-'))delete hor[k];});
+  function wid(nm){const w=workers.find(x=>x.nombre===nm);return w?w.id:null;}
+  function oid(kw){const o=obras.find(x=>x.nombre.toUpperCase().includes(kw.toUpperCase()));return o?o.id:0;}
+  let cnt=0;
+  const oKW0=oid('ALAMOS');
+  const oKW1=oid('BARCELO');
+  const oKW2=oid('BOMBEROS');
+  const oKW3=oid('CAMINO SAN RAFAEL');
+  const oKW4=oid('CARRETERAS ZONA SUR');
+  const oKW5=oid('COLINAS');
+  const oKW6=oid('DEPOSITO');
+  const oKW7=oid('DISTRITO ESTE');
+  const oKW8=oid('HUELIN');
+  const oKW9=oid('MORLACO');
+  const oKW10=oid('PASEO');
+  const oKW11=oid('REFORMA ARTURO');
+  const oKW12=oid('TOMILLAR');
+  const oKW13=oid('VELAZQUEZ');
+  const wM0=wid('FLORIDO SERVIA, MANUEL DAVID');
+  if(wM0){
+    hor[`2026-4-${wM0}-11`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-12`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-13`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-14`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-17`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-18`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-19`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-20`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-21`]={n:8,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-24`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-25`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-26`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM0}-27`]={n:6,obraId:oKW10};cnt++;
+  }
+  const wM1=wid('LEAL MORALES, LUIS MANUEL');
+  if(wM1){
+    hor[`2026-4-${wM1}-4`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-5`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-6`]='np';cnt++;
+    hor[`2026-4-${wM1}-7`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-8`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-11`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-12`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-13`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-14`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-15`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-18`]='np';cnt++;
+    hor[`2026-4-${wM1}-19`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-20`]='np';cnt++;
+    hor[`2026-4-${wM1}-21`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-22`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-25`]='np';cnt++;
+    hor[`2026-4-${wM1}-26`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-27`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-28`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM1}-29`]={n:6,obraId:oKW10};cnt++;
+  }
+  const wM2=wid('SELLES VERGARA, RICARDO');
+  if(wM2){
+    hor[`2026-4-${wM2}-4`]='np';cnt++;
+    hor[`2026-4-${wM2}-5`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-6`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-7`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-8`]={n:6,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-11`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-12`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-13`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-14`]='np';cnt++;
+    hor[`2026-4-${wM2}-15`]={n:6,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-18`]='np';cnt++;
+    hor[`2026-4-${wM2}-19`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-20`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-21`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-22`]={n:6,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-25`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-26`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-27`]={n:9,obraId:oKW11};cnt++;
+    hor[`2026-4-${wM2}-28`]='np';cnt++;
+    hor[`2026-4-${wM2}-29`]='np';cnt++;
+  }
+  const wM3=wid('URBANO DE LA CRUZ, YERAY');
+  if(wM3){
+    hor[`2026-4-${wM3}-4`]={n:10,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-5`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-6`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-7`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-8`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-11`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-12`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-13`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-14`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-15`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-18`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-19`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-20`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-21`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-22`]={n:6,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-25`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-26`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-27`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-28`]={n:9,obraId:oKW10};cnt++;
+    hor[`2026-4-${wM3}-29`]={n:6,obraId:oKW10};cnt++;
+  }
+  const wM4=wid('ARRABAL MORENO, ANTONIO');
+  if(wM4){
+    hor[`2026-4-${wM4}-4`]={n:1,obraId:0};cnt++;
+  }
+  const wM5=wid('CUEVAS MORILLAS, DAVID');
+  if(wM5){
+    hor[`2026-4-${wM5}-4`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-5`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-6`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-7`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-8`]={n:6,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-11`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-12`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-13`]='np';cnt++;
+    hor[`2026-4-${wM5}-14`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-15`]='np';cnt++;
+    hor[`2026-4-${wM5}-18`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-19`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-20`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-21`]={n:8.5,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-22`]={n:6,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-25`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-26`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-27`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-28`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM5}-29`]={n:6,obraId:oKW6};cnt++;
+  }
+  const wM6=wid('DIAZ RODRIGUEZ, MIGUEL ANGEL');
+  if(wM6){
+    hor[`2026-4-${wM6}-4`]={n:20,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM6}-5`]={n:14,obraId:oKW6};cnt++;
+  }
+  const wM7=wid('DOMINGUEZ RUIZ, JOSE CARLOS');
+  if(wM7){
+    hor[`2026-4-${wM7}-4`]={n:1,obraId:0};cnt++;
+  }
+  const wM8=wid('EL MASOUDI, HASSAN');
+  if(wM8){
+    hor[`2026-4-${wM8}-4`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-5`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-6`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-7`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-8`]={n:6,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-11`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-12`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-13`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-14`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-15`]={n:7,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-18`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-19`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-20`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-21`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-22`]={n:6,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-25`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-26`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-27`]='np';cnt++;
+    hor[`2026-4-${wM8}-28`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM8}-29`]={n:6,obraId:oKW8};cnt++;
+  }
+  const wM9=wid('EL OUAD, SELLAM');
+  if(wM9){
+    hor[`2026-4-${wM9}-4`]={n:1,obraId:oKW13};cnt++;
+  }
+  const wM10=wid('FEDASH, VOLODYMYR');
+  if(wM10){
+    hor[`2026-4-${wM10}-4`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-5`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-6`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-7`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-8`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-11`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-12`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-13`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-14`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-15`]={n:14,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-18`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-19`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-20`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-21`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-22`]={n:7,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-25`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-26`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-27`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-28`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-29`]={n:8,obraId:oKW13};cnt++;
+  }
+  const wM11=wid('FERNANDEZ FERNANDEZ, ADRIAN');
+  if(wM11){
+    hor[`2026-4-${wM11}-4`]={n:1,obraId:oKW10};cnt++;
+  }
+  const wM12=wid('FOFANA, ISSA');
+  if(wM12){
+    hor[`2026-4-${wM12}-4`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-5`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-6`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-7`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-8`]={n:6,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-11`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-12`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-13`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-14`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-15`]={n:6,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-18`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-19`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-20`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-21`]={n:9.5,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-22`]={n:6,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-25`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-26`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-27`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-28`]={n:9,obraId:oKW6};cnt++;
+    hor[`2026-4-${wM12}-29`]={n:6,obraId:oKW6};cnt++;
+  }
+  const wM13=wid('FORTES ALMELLONES, PEDRO');
+  if(wM13){
+    hor[`2026-4-${wM13}-4`]={n:1,obraId:oKW10};cnt++;
+  }
+  const wM14=wid('GOMEZ ADROUN, MOHAMED');
+  if(wM14){
+    hor[`2026-4-${wM14}-4`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-5`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-6`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-7`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-8`]={n:6,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-11`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-12`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-13`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-14`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-15`]={n:7,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-18`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-19`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-20`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-21`]='np';cnt++;
+    hor[`2026-4-${wM14}-22`]={n:6,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-25`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-26`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-27`]='np';cnt++;
+    hor[`2026-4-${wM14}-28`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM14}-29`]={n:6,obraId:oKW8};cnt++;
+  }
+  const wM15=wid('HAMMADI, YASSINE');
+  if(wM15){
+    hor[`2026-4-${wM15}-4`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-5`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-6`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-7`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-8`]={n:6,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-11`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-12`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-13`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-14`]={n:10,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-15`]={n:6,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-18`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-19`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-20`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-21`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-22`]={n:6,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-25`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-26`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-27`]='np';cnt++;
+    hor[`2026-4-${wM15}-28`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM15}-29`]={n:6,obraId:oKW13};cnt++;
+  }
+  const wM16=wid('IZQUIERDO EXPOSITO, FERNANDO');
+  if(wM16){
+    hor[`2026-4-${wM16}-4`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-5`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-6`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-7`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-8`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-11`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-12`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-13`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-14`]={n:10,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-15`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-18`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-19`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-20`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-21`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-22`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-25`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-26`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-27`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-28`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM16}-29`]={n:6,obraId:oKW2};cnt++;
+  }
+  const wM17=wid('KHIMCHAK, VASYL');
+  if(wM17){
+    hor[`2026-4-${wM17}-13`]={n:6,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-14`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-15`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-16`]={n:6,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-18`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-19`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-20`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-21`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-22`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-25`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-26`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-27`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-28`]={n:9,obraId:oKW1};cnt++;
+    hor[`2026-4-${wM17}-29`]={n:6,obraId:oKW1};cnt++;
+  }
+  const wM18=wid('KHIMCHAK, YAROSLAV');
+  if(wM18){
+    hor[`2026-4-${wM18}-18`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-19`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-20`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-21`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-22`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-25`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-26`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-27`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-28`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM18}-29`]={n:6,obraId:oKW3};cnt++;
+  }
+  const wM19=wid('MARTIN CASTILLO, ALBERTO');
+  if(wM19){
+    hor[`2026-4-${wM19}-4`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-5`]={n:11,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-6`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-7`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-8`]={n:8,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-11`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-12`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-13`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM19}-14`]={n:9,obraId:oKW5};cnt++;
+  }
+  const wM20=wid('MORENO DOMINGUEZ, JUAN');
+  if(wM20){
+    hor[`2026-4-${wM20}-4`]={n:1,obraId:0};cnt++;
+  }
+  const wM21=wid('MORENO TORREBLANCA, IVAN');
+  if(wM21){
+    hor[`2026-4-${wM21}-4`]={n:1,obraId:0};cnt++;
+  }
+  const wM22=wid('PEREZ BALLESTEROS, MANUEL');
+  if(wM22){
+    hor[`2026-4-${wM22}-4`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-5`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-6`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-7`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-8`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-11`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-12`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-13`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-14`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-15`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-18`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-19`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-20`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-21`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-22`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-25`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-26`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-27`]={n:10,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-28`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM22}-29`]={n:6,obraId:oKW2};cnt++;
+  }
+  const wM23=wid('RAMIREZ DEL PINO, FRANCISCO RUBEN');
+  if(wM23){
+    hor[`2026-4-${wM23}-4`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-5`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-6`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-7`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-8`]={n:6,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-11`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-12`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-13`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-14`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-15`]={n:6,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-18`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-19`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-20`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-21`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-22`]={n:7.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-25`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-26`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-27`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-28`]={n:8.5,obraId:oKW0};cnt++;
+    hor[`2026-4-${wM23}-29`]={n:6,obraId:oKW0};cnt++;
+  }
+  const wM24=wid('SANGARE, MOHAMED');
+  if(wM24){
+    hor[`2026-4-${wM24}-4`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM24}-5`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM24}-6`]={n:10,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM24}-7`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM24}-8`]='np';cnt++;
+    hor[`2026-4-${wM24}-11`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM24}-12`]={n:9,obraId:oKW8};cnt++;
+    hor[`2026-4-${wM24}-13`]={n:9,obraId:oKW8};cnt++;
+  }
+  const wM25=wid('TESGHITI, MOHAMED');
+  if(wM25){
+    hor[`2026-4-${wM25}-4`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-5`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-6`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-7`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-8`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-11`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-12`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-13`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-14`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-15`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-18`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-19`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-20`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-21`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-22`]={n:6,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-25`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-26`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-27`]={n:10,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-28`]={n:9,obraId:oKW2};cnt++;
+    hor[`2026-4-${wM25}-29`]={n:6,obraId:oKW2};cnt++;
+  }
+  const wM26=wid('VAZQUEZ HERNANDEZ, JUAN JOSE');
+  if(wM26){
+    hor[`2026-4-${wM26}-4`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-5`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-6`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-7`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-8`]={n:6,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-11`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-12`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-13`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-14`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-15`]={n:6,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-18`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-19`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-20`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-21`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-22`]={n:6,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-25`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-26`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-27`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-28`]={n:9,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM26}-29`]={n:6,obraId:oKW13};cnt++;
+  }
+  const wM27=wid('VEGA CANTOS, CARLOS');
+  if(wM27){
+    hor[`2026-4-${wM27}-4`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-5`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-6`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-7`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-8`]='np';cnt++;
+    hor[`2026-4-${wM27}-11`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-12`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-13`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-14`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-15`]={n:7,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-18`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-19`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-20`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-21`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-22`]={n:6,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-25`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-26`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-27`]='np';cnt++;
+    hor[`2026-4-${wM27}-28`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM27}-29`]={n:6,obraId:oKW7};cnt++;
+  }
+  const wM28=wid('VIRUEL ALARCON, PEDRO');
+  if(wM28){
+    hor[`2026-4-${wM28}-4`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-5`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-6`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-7`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-8`]={n:7,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-11`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-12`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-13`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-14`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-15`]={n:7,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-18`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-19`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-20`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-21`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-22`]={n:7,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-25`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-26`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-27`]={n:9,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-28`]={n:10,obraId:oKW7};cnt++;
+    hor[`2026-4-${wM28}-29`]='np';cnt++;
+  }
+  const wM29=wid('TRAORE, LASSAMA');
+  if(wM29){
+    hor[`2026-4-${wM29}-14`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-15`]={n:7,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-18`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-19`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-20`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-21`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-22`]={n:7,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-25`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-26`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-27`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-28`]={n:9,obraId:oKW4};cnt++;
+    hor[`2026-4-${wM29}-29`]={n:7,obraId:oKW4};cnt++;
+  }
+  const wM30=wid('BAKKAR, KAMAL');
+  if(wM30){
+    hor[`2026-4-${wM30}-18`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-19`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-20`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-21`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-22`]={n:7,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-25`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-26`]='np';cnt++;
+    hor[`2026-4-${wM30}-27`]={n:8,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-28`]={n:7,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM30}-29`]={n:5,obraId:oKW12};cnt++;
+  }
+  const wM31=wid('ALBA SANCHEZ, MIGUEL');
+  if(wM31){
+    hor[`2026-4-${wM31}-18`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM31}-19`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM31}-20`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM31}-21`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM31}-22`]={n:6,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM31}-25`]={n:8,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM31}-26`]={n:9,obraId:oKW9};cnt++;
+  }
+  const wM32=wid('BASSOU, TAHA');
+  if(wM32){
+    hor[`2026-4-${wM32}-18`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM32}-19`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM32}-20`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM32}-21`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM32}-22`]={n:6,obraId:oKW9};cnt++;
+  }
+  const wM33=wid('SHISSEH SATOUTI, AMINE');
+  if(wM33){
+    hor[`2026-4-${wM33}-18`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM33}-19`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM33}-20`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM33}-21`]={n:9,obraId:oKW9};cnt++;
+    hor[`2026-4-${wM33}-22`]={n:6,obraId:oKW9};cnt++;
+  }
+  const wM34=wid('MARTINEZ GUERRERO, JUAN');
+  if(wM34){
+    hor[`2026-4-${wM34}-18`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-19`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-20`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-21`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-22`]={n:6,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-25`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-26`]={n:10,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-27`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-28`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM34}-29`]={n:6,obraId:oKW3};cnt++;
+  }
+  const wM35=wid('MARUSZAK, ANDRZEJ BRONISLAW');
+  if(wM35){
+    hor[`2026-4-${wM35}-18`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-19`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-20`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-21`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-22`]={n:6,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-25`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-26`]={n:2,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-27`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-28`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM35}-29`]={n:6,obraId:oKW3};cnt++;
+  }
+  const wM36=wid('ZHYLYNSKYI, OLEH');
+  if(wM36){
+    hor[`2026-4-${wM36}-18`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-19`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-20`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-21`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-22`]={n:6,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-25`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-26`]={n:2,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-27`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-28`]={n:9,obraId:oKW3};cnt++;
+    hor[`2026-4-${wM36}-29`]={n:6,obraId:oKW3};cnt++;
+  }
+  const wM37=wid('SLABKO, MYKOLA');
+  if(wM37){
+    hor[`2026-4-${wM37}-25`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM37}-26`]='np';cnt++;
+    hor[`2026-4-${wM37}-27`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM37}-28`]={n:9,obraId:oKW12};cnt++;
+    hor[`2026-4-${wM37}-29`]={n:9,obraId:oKW12};cnt++;
+  }
+  const wM38=wid('KOVALCHUK, VOLODYMYR');
+  if(wM38){
+    hor[`2026-4-${wM38}-25`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM38}-26`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM38}-27`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM38}-28`]={n:9,obraId:oKW5};cnt++;
+    hor[`2026-4-${wM38}-29`]={n:9,obraId:oKW5};cnt++;
+  }
+  await svFB('horario',hor);
+  if(isActive('horario'))rHor();
+  toast(`✓ ${cnt} celdas importadas`);
+}
+
 function rAjustes(){
   const sorted=[...festivos].sort((a,b)=>a.fecha.localeCompare(b.fecha));
   document.getElementById('festivos-list').innerHTML=sorted.map((f,i)=>`<div class="festivo-item"><div><div class="festivo-name">${f.nombre}</div><div class="festivo-date">${f.fecha}</div></div><button class="btn btnd btnsm" onclick="delFestivo(${i})">🗑</button></div>`).join('')||'<div style="font-size:13px;color:var(--t3)">Sin festivos</div>';
@@ -5166,6 +5810,27 @@ function delFestivo(idx){festivos.splice(idx,1);svFB('festivos',festivos);rAjust
 window.delFestivo=delFestivo;
 
 // ── BACKUP ────────────────────────────────────────────────────────
+function resetObras(){
+  if(!confirm('¿Actualizar obras desde el código?\n\nSe añadirán obras nuevas que no estén en Firebase.\nLas obras existentes NO se modifican (para no perder tarifas especiales ni cambios manuales).'))return;
+  const current=[...obras];
+  let añadidas=0;
+  // Obras del código que no están en Firebase (por nombre)
+  const obrasWD=obras; // el array ya tiene las del código
+  obrasWD.forEach(o=>{
+    const existe=current.find(x=>x.nombre.toLowerCase()===o.nombre.toLowerCase());
+    if(!existe){
+      current.push(o);
+      añadidas++;
+    }
+  });
+  if(añadidas===0){toast('Todas las obras ya están en Firebase');return;}
+  obras.length=0;obras.push(...current);
+  svObras(`Actualizar obras desde código`).then(()=>{
+    rObras();rDash();
+    toast(`✓ ${añadidas} obra${añadidas!==1?'s':''} nueva${añadidas!==1?'s':''} añadida${añadidas!==1?'s':''}`);
+  });
+}
+
 function resetWorkers(){
   if(!confirm('¿Actualizar datos de todos los trabajadores desde el código?\n\nSe actualizarán: nombre, categoría, DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL, cursos.\n\nSe preservan de Firebase: obra, estado, cn, ce, nFija, irpfAplica, fechaBaja, finiquitado, finiquitaNota, obraHistory, obraDesde, imp y bajas.'))return;
   const current=[...workers];
