@@ -450,9 +450,9 @@ textarea.fi{min-height:75px;resize:vertical}
         </div>
       </div>
       <div class="card" style="border:1px solid var(--al)">
-        <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Sobrescribe los datos de Firebase con la información actualizada del código (DNI, teléfonos, cuentas, cursos, etc.). Las horas y horarios no se modifican.</div>
-        <button class="btn btnp btnsm" onclick="resetWorkers()">🔄 Actualizar trabajadores desde código</button>
-        <button class="btn btng btnsm" onclick="resetObras()" style="margin-top:8px">🏗️ Actualizar obras desde código</button>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Compara el listado de trabajadores (Excel 01/10/2026) con los datos reales: altas, bajas, tarifas €/h, datos personales, obras y bajas médicas. Te muestra un resumen antes de aplicar y se puede deshacer con ↩. No toca horas, pagos ni préstamos.</div>
+        <button class="btn btnp btnsm" onclick="sincronizarListado()">🔁 Sincronizar con listado de trabajadores</button>
+        <button class="btn btnp btnsm" onclick="importarHorasSep()" style="margin-top:8px;background:#1A6B3A">📅 Importar horas Septiembre 2026</button>
         <button class="btn btng btnsm" onclick="migrarObraIdHorario()" style="margin-top:8px">🔧 Reparar obraId en horario histórico</button>
         <button class="btn btnp btnsm" onclick="importarHorasMayo()" style="margin-top:8px;background:#1A6B3A">📅 Importar horas Mayo 2026</button>
       </div>
@@ -904,7 +904,7 @@ const AUSENCIAS={
   fi:{txt:'FI',cls:'cF'},h_ij:{txt:'H',cls:'cAUS'},m:{txt:'M',cls:'cAUS'},
   nl:{txt:'NL',cls:'cF'},p:{txt:'P',cls:'cAUS'},rm:{txt:'RM',cls:'cAUS'},
   v:{txt:'V',cls:'cVAC'},n:{txt:'N',cls:'cX'},np:{txt:'NP',cls:'cNP'},
-  x:{txt:'X',cls:'cX'},f:{txt:'FES',cls:'cFES'}
+  x:{txt:'X',cls:'cX'},f:{txt:'FES',cls:'cFES'},fa:{txt:'FA',cls:'cAUS'}
 };
 
 // Medias horas disponibles
@@ -5183,7 +5183,7 @@ async function importarHorasMayo(){
   if(!confirm('¿Importar horas de mayo 2026? Esto BORRARÁ todos los datos existentes de mayo y los reemplazará.'))return;
   Object.keys(hor).forEach(k=>{if(k.startsWith('2026-4-'))delete hor[k];});
   function wid(nm){const w=workers.find(x=>x.nombre===nm);return w?w.id:null;}
-  function oid(kw){const o=obras.find(x=>x.nombre.toUpperCase().includes(kw.toUpperCase()));return o?o.id:0;}
+  function oid(kw){const nz=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();const AL={'DEPOSITO':'TORMENTAS MIJAS'};const k=nz(AL[kw]||kw);const o=obras.find(x=>nz(x.nombre).includes(k));return o?o.id:0;}
   let cnt=0;
   const oKW0=oid('ALAMOS');
   const oKW1=oid('BARCELO');
@@ -5349,26 +5349,26 @@ async function importarHorasMayo(){
   }
   const wM10=wid('FEDASH, VOLODYMYR');
   if(wM10){
-    hor[`2026-4-${wM10}-4`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-5`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-6`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-7`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-8`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-11`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-12`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-13`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-14`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-15`]={n:14,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-18`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-19`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-20`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-21`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-22`]={n:7,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-25`]={n:9,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-26`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-27`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-28`]={n:8,obraId:oKW13};cnt++;
-    hor[`2026-4-${wM10}-29`]={n:8,obraId:oKW13};cnt++;
+    hor[`2026-4-${wM10}-4`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-5`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-6`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-7`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-8`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-11`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-12`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-13`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-14`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-15`]={n:14,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-18`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-19`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-20`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-21`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-22`]={n:7,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-25`]={n:9,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-26`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-27`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-28`]={n:8,obraId:oid('ESPANA')};cnt++;
+    hor[`2026-4-${wM10}-29`]={n:8,obraId:oid('ESPANA')};cnt++;
   }
   const wM11=wid('FERNANDEZ FERNANDEZ, ADRIAN');
   if(wM11){
@@ -5810,26 +5810,219 @@ function delFestivo(idx){festivos.splice(idx,1);svFB('festivos',festivos);rAjust
 window.delFestivo=delFestivo;
 
 // ── BACKUP ────────────────────────────────────────────────────────
-function resetObras(){
-  if(!confirm('¿Actualizar obras desde el código?\n\nSe añadirán obras nuevas que no estén en Firebase.\nLas obras existentes NO se modifican (para no perder tarifas especiales ni cambios manuales).'))return;
-  const current=[...obras];
-  let añadidas=0;
-  // Obras del código que no están en Firebase (por nombre)
-  const obrasWD=obras; // el array ya tiene las del código
-  obrasWD.forEach(o=>{
-    const existe=current.find(x=>x.nombre.toLowerCase()===o.nombre.toLowerCase());
-    if(!existe){
-      current.push(o);
-      añadidas++;
-    }
-  });
-  if(añadidas===0){toast('Todas las obras ya están en Firebase');return;}
-  obras.length=0;obras.push(...current);
-  svObras(`Actualizar obras desde código`).then(()=>{
-    rObras();rDash();
-    toast(`✓ ${añadidas} obra${añadidas!==1?'s':''} nueva${añadidas!==1?'s':''} añadida${añadidas!==1?'s':''}`);
-  });
+// ══ SINCRONIZAR CON LISTADO DE TRABAJADORES (Excel 01/10/2026) ══════════════
+// Busca cada persona por DNI/nombre en los datos REALES (Firebase), nunca por id fijo.
+const _nrm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const SYNC_OBRAS={
+  PASEO:{al:['PASEO MARITIMO']},CIERRE:{al:['CIERRE MALLA']},BOMBEROS:{al:['BOMBEROS']},
+  NINADEORO:{al:['NINA DE ORO']},CHAPARRAL:{al:['CHAPARRAL']},ARTURO:{al:['ARTURO CAMPOS']},
+  ZONASUR:{al:['ZONA SUR']},HUELIN:{al:['HUELIN']},DISTRITOESTE:{al:['DISTRITO ESTE']},
+  ALMOGIA:{al:['OBRA ALMOGIA']},AVDAESPANA:{al:['AVDA ESPANA','AVENIDA ESPANA']},
+  AVDAVELAZQUEZ:{al:['AVENIDA VELAZQUEZ'],c:{nombre:'AVENIDA VELAZQUEZ',empresa:'PAMASA S.A.',dir:'Málaga',tof:23,tpe:21.5}},
+  MARBELLA:{al:['MARBELLA'],c:{nombre:'MARBELLA CENTRO',empresa:'CONFORMAS S.L.',dir:'Marbella, Málaga',tof:23,tpe:22}},
+  COLON:{al:['CRISTOBAL COLON'],c:{nombre:'CRISTOBAL COLON',empresa:'A7GR',dir:'Málaga',tof:23,tpe:22}},
+  UNAMUNO:{al:['MIGUEL DE UNAMUNO'],c:{nombre:'CALLE MIGUEL DE UNAMUNO',empresa:'FCO. TERNERO',dir:'Málaga',tof:23,tpe:21.5}},
+  TORMENTAS:{al:['TORMENTAS MIJAS'],c:{nombre:'DEPOSITO DE TORMENTAS MIJAS',empresa:'NAXFOR',dir:'Mijas, Málaga',tof:23,tpe:21.5}},
+  BARCELO:{al:['BARCELO'],c:{nombre:'HOTEL BARCELO',empresa:'BAREA',dir:'Málaga',tof:23,tpe:21.5}},
+  TOMILLAR:{al:['TOMILLAR'],c:{nombre:'EL TOMILLAR PUERTO DE LA TORRE',empresa:'RIALSA S.L.',dir:'Puerto de la Torre, Málaga',tof:23,tpe:21.5}},
+  SANRAFAEL:{al:['CAMINO SAN RAFAEL'],c:{nombre:'URBANIZACION CAMINO SAN RAFAEL',empresa:'CONFORMAS S.L.',dir:'Málaga',tof:23,tpe:22}},
+  ALAMOS:{al:['ALAMOS'],c:{nombre:'OBRA LOS ALAMOS',empresa:'DELTA',dir:'Málaga',tof:23,tpe:21.5}},
+  MORLACO:{al:['MORLACO'],c:{nombre:'OBRA MORLACO PEDREGALEJO',empresa:'EXCAVACIONES FCO. MONTIEL',dir:'Pedregalejo, Málaga',tof:23,tpe:21.5}},
+  CANADA:{al:['CANADA CAPITAN'],c:{nombre:'URBANIZACION CAÑADA CAPITAN',empresa:'DULCE ALOE S.L.',dir:'Málaga',tof:26.5,tpe:25.5}},
+  COCHERAS:{al:['COCHERAS'],c:{nombre:'NUEVAS COCHERAS EMT',empresa:'NAXFOR',dir:'Calle Paquiro, Málaga',tof:23,tpe:21.5}},
+  PRADOS:{al:['LOS PRADOS'],c:{nombre:'OBRA EMT LOS PRADOS',empresa:'DELTA',dir:'Málaga',tof:23,tpe:21.5}},
+  FERNANDO:{al:['FERNANDO DE LOS RIOS'],c:{nombre:'REFORMA COLEGIO FERNANDO DE LOS RIOS',empresa:'DELTA',dir:'Málaga',tof:23,tpe:21.5}},
+  CERRILLO:{al:['CERRILLO'],c:{nombre:'REFORMA CALLE CERRILLO',empresa:'INNOVACOR S.L.',dir:'Málaga',tof:0,tpe:0}},
+  LORING:{al:['JORGE LORING'],c:{nombre:'CALLE JORGE LORING - METRO MALAGA',empresa:'UTE METRO (PAMASA)',dir:'Málaga',tof:23,tpe:21.5}}
+};
+
+function _syncGetObra(O,key,log){
+  const sp=SYNC_OBRAS[key];if(!sp)return null;
+  const als=sp.al.map(_nrm);
+  let o=O.find(x=>{const n=_nrm(x.nombre);return als.some(a=>n.includes(a));});
+  if(!o&&sp.c){o={id:Date.now()+O.length,...sp.c,the:25,estado:'active'};O.push(o);if(log)log.push(`${o.nombre} (${o.empresa}) ${o.tof}/${o.tpe}€`);}
+  return o||null;
 }
+const SYNC_DATA=[{"n":"ALBA SANCHEZ, MIGUEL","d":"77190717A","c":"pe","fn":"02/06/2002","vd":"12/08/2027","t":"631781248","cu":"ES7321005617610100451476","b":"LA CAIXA","e":"A","fb":"","fa":"30/06/2026","rm":"23/06/2026","vr":"23/06/2027","o":"MORLACO","lo":"MALAGA","co":"mlg2002migue@gmail.com","p":"OK","cs":"","i":8.5},{"n":"ANGELOV, VLADIMIR MARGARITOV","d":"X8374552E","c":"pe","fn":"19/08/1982","vd":"28/06/2029","t":"671916662","cu":"ES4521007819670100038655","b":"","e":"A","fb":"","fa":"20/07/2026","rm":"30/06/2026","vr":"30/06/2027","o":"COCHERAS","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"ARRABAL MORENO, ANTONIO","d":"25681690M","c":"tec","fn":"15/02/1973","vd":"15/03/2033","t":"606728218","cu":"ES7330580990272753262465","b":"CAJAMAR","e":"A","fb":"","fa":"01/01/2026","rm":"","vr":"","o":"","lo":"ALMOGIA","co":"antonioarrabalmoreno@gmail.com","p":"NO","cs":"","i":0.0},{"n":"BAKKAR, KAMAL","d":"X9589749Z","c":"pe","fn":"24/03/1990","vd":"02/04/2028","t":"632992828","cu":"ES5300495480272216251313","b":"SANTANDER","e":"B","fb":"2026-06-04","fa":"18/05/2026","rm":"10/07/2025","vr":"10/07/2026","o":"TOMILLAR","lo":"MALAGA","co":"kamal2017malaga@gmail.com","p":"OK","cs":"","i":8.5},{"n":"BASSOU, TAHA","d":"Z2954734K","c":"pe","fn":"08/09/1995","vd":"29/08/2029","t":"689295847","cu":"ES3521004165362200359869","b":"","e":"B","fb":"2026-05-22","fa":"18/05/2026","rm":"","vr":"","o":"MORLACO","lo":"COIN","co":"","p":"","cs":"","i":8.5},{"n":"BUZU, NICOLAE","d":"X7954923M","c":"of1","fn":"19/11/1979","vd":"05/06/2030","t":"624242253","cu":"ES6800495853942916160061","b":"","e":"A","fb":"","fa":"09/09/2026","rm":"29/09/2026","vr":"29/09/2027","o":"CANADA","lo":"MALAGA","co":"","p":"OK","cs":"FALTA TRASERA","i":11.0},{"n":"CAMARA, BALLO","d":"Z1948541D","c":"pe","fn":"01/01/2008","vd":"14/10/2030","t":"614719054","cu":"ES1601825332110001522212","b":"","e":"A","fb":"","fa":"21/09/2026","rm":"07/07/2026","vr":"07/07/2027","o":"PRADOS","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"CAPARROS TRIANO, SAMUEL","d":"44589865H","c":"of2","fn":"15/03/1983","vd":"15/03/2027","t":"657243246","cu":"ES1030580990222759076666","b":"","e":"B","fb":"2026-07-27","fa":"13/07/2026","rm":"23/07/2026","vr":"23/07/2027","o":"ZONASUR","lo":"RINCON DE LA VICTORIA","co":"","p":"NO OK","cs":"","i":0.0},{"n":"CARMONA FERNANDEZ, ANTONIO","d":"74864069N","c":"of2","fn":"25/02/1980","vd":"04/05/2031","t":"639551789","cu":"ES1030580718362720014488","b":"","e":"B","fb":"2026-09-07","fa":"21/07/2026","rm":"03/09/2026","vr":"03/09/2027","o":"CANADA","lo":"MALAGA","co":"","p":"OK","cs":"6H MOV. TIERRAS - 6H APAR. ELEV.","i":11.0},{"n":"CASTILLERO RODRIGUEZ, CESAR AUGUSTO","d":"74824864E","c":"of1","fn":"05/11/1976","vd":"13/07/2029","t":"647268628","cu":"ES0600495967832016063431","b":"SANTANDER","e":"B","fb":"2026-01-19","fa":"17/11/2025","rm":"17/06/2025","vr":"17/06/2026","o":"","lo":"MALAGA","co":"choguarmasalsa@gmail.com","p":"OK","cs":"","i":10.5},{"n":"CORDOBA CORTES, SALVADOR","d":"26803481V","c":"of2","fn":"10/04/1979","vd":"26/01/2034","t":"682203813","cu":"ES4830580990222764313109","b":"","e":"B","fb":"2026-09-09","fa":"09/09/2026","rm":"","vr":"","o":"BOMBEROS","lo":"MALAGA","co":"","p":"OK","cs":"","i":11.0},{"n":"CUENCA LUQUE, PEDRO JESUS","d":"74867967T","c":"pe","fn":"09/12/1983","vd":"","t":"633131362","cu":"ES3530230429377378042001","b":"","e":"B","fb":"2026-02-15","fa":"19/11/2025","rm":"02/12/2025","vr":"02/12/2026","o":"PASEO","lo":"MALAGA","co":"","p":"OK","cs":"","i":10.5},{"n":"CUEVAS MORILLAS, DAVID","d":"45491478P","c":"of1","fn":"31/08/1976","vd":"19/03/2036","t":"644889738","cu":"ES1621032076030010048758","b":"UNICAJA","e":"A","fb":"","fa":"02/02/2026","rm":"07/04/2026","vr":"07/04/2027","o":"TORMENTAS","lo":"ANTEQUERA","co":"davilescuevas@gmail.com","p":"OK","cs":"8H PRL - 6H ESTRUC. TUBUL.","i":0.0},{"n":"DE LA RUBIA MARTIN, ISMAEL","d":"76434727T","c":"of1","fn":"16/01/1987","vd":"21/09/2027","t":"662472598","cu":"ES9401824106700201753461","b":"","e":"B","fb":"2026-03-24","fa":"24/02/2026","rm":"05/03/2026","vr":"05/03/2027","o":"CHAPARRAL","lo":"MALAGA","co":"","p":"OK","cs":"20H APAR. ELEV. - 8H DUMPER","i":11.0},{"n":"DIAZ EXPOSITO, SALVADOR","d":"33395854S","c":"of1","fn":"26/10/1970","vd":"02/02/2032","t":"691216207","cu":"ES6801823066570208541470","b":"","e":"B","fb":"2026-09-16","fa":"21/07/2026","rm":"03/09/2026","vr":"03/09/2027","o":"CANADA","lo":"MALAGA","co":"","p":"NO","cs":"CURSO 60H","i":12.0},{"n":"DIAZ GARCIA, CARLOS","d":"74838560X","c":"of1","fn":"24/05/1981","vd":"29/09/2033","t":"633207685","cu":"ES7321030108980010028375","b":"UNICAJA","e":"B","fb":"2026-03-27","fa":"27/08/2025","rm":"04/09/2025","vr":"04/09/2026","o":"BARCELO","lo":"ALMOGIA","co":"","p":"OK","cs":"","i":12.0},{"n":"DIAZ RODRIGUEZ, MIGUEL ANGEL","d":"74848273V","c":"of1","fn":"28/09/1982","vd":"17/07/2033","t":"631087840","cu":"ES4921004083562100740439","b":"","e":"B","fb":"2026-05-05","fa":"28/01/2026","rm":"16/12/2025","vr":"16/12/2026","o":"TORMENTAS","lo":"MALAGA","co":"","p":"OK","cs":"","i":10.5},{"n":"DIAZ URBANO, JESUS","d":"77227135N","c":"pe","fn":"24/10/1998","vd":"04/01/2030","t":"","cu":"ES3620801134203040168220","b":"ABANCA","e":"B","fb":"2026-03-27","fa":"28/08/2025","rm":"04/09/2025","vr":"04/09/2026","o":"BARCELO","lo":"ALMOGIA","co":"","p":"OK","cs":"","i":9.5},{"n":"DJABRA, MAMADOU","d":"Z1751011A","c":"pe","fn":"01/01/2008","vd":"13/11/2030","t":"613718459","cu":"ES3301825332170001912813","b":"","e":"A","fb":"","fa":"21/09/2026","rm":"01/10/2026","vr":"01/10/2027","o":"PRADOS","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"DOMINGUEZ RUIZ, JOSE CARLOS","d":"74883119H","c":"adm","fn":"29/10/1984","vd":"09/05/2028","t":"667822795","cu":"ES8130580768182810729581","b":"CAJAMAR","e":"A","fb":"","fa":"01/11/2024","rm":"","vr":"","o":"","lo":"ALMOGIA","co":"","p":"NO","cs":"","i":0.0},{"n":"DURAN DURAN, CESAR","d":"Z2352904D","c":"of1","fn":"24/04/1972","vd":"12/08/2030","t":"642741071","cu":"ES5021030108950010028936","b":"BBVA","e":"B","fb":"2026-01-13","fa":"21/10/2025","rm":"10/07/2025","vr":"10/07/2026","o":"BOMBEROS","lo":"MALAGA","co":"","p":"OK","cs":"74H PEON ALBAÑIL","i":0.0},{"n":"EL HARRAK, ABDELILAH","d":"X1359192F","c":"of1","fn":"25/02/1967","vd":"21/05/2029","t":"662480387","cu":"ES2721030104070010095554","b":"","e":"A","fb":"","fa":"29/07/2026","rm":"03/09/2026","vr":"03/09/2027","o":"NINADEORO","lo":"ALHAURIN DE LA TORRE","co":"","p":"OK","cs":"60H PRL","i":12.0},{"n":"EL HARRAK, AHMED TIJANI","d":"X1952235H","c":"of1","fn":"01/01/1974","vd":"04/01/2027","t":"","cu":"ES6721001049810100824116","b":"","e":"A","fb":"","fa":"09/09/2026","rm":"24/09/2026","vr":"24/09/2027","o":"NINADEORO","lo":"MALAGA","co":"","p":"OK","cs":"","i":0.0},{"n":"EL MASOUDI SFAIHI, HANZA","d":"13453645W","c":"pe","fn":"06/10/2006","vd":"04/07/2028","t":"641557448","cu":"ES8601827363140201711548","b":"","e":"B","fb":"2026-04-10","fa":"26/02/2026","rm":"12/03/2026","vr":"12/03/2027","o":"PASEO","lo":"VELEZ-MALAGA","co":"","p":"OK","cs":"6H MOV. TIERRAS","i":9.0},{"n":"EL MASOUDI, HASSAN","d":"X1235949K","c":"of1","fn":"01/01/1964","vd":"16/05/2030","t":"602189665","cu":"ES3121002573280110601608","b":"LA CAIXA","e":"B","fb":"2026-05-29","fa":"12/01/2026","rm":"17/06/2025","vr":"17/06/2026","o":"HUELIN","lo":"VELEZ-MALAGA","co":"hamzamasoudi0164@gmail.com","p":"OK","cs":"","i":11.0},{"n":"EL OUAD, SELLAM","d":"X3401527B","c":"of1","fn":"01/01/1962","vd":"04/02/2036","t":"631204729","cu":"ES8830230063046332072716","b":"C.R. GRANADA","e":"B","fb":"2026-06-11","fa":"24/09/2025","rm":"17/06/2025","vr":"17/06/2026","o":"CIERRE","lo":"MALAGA","co":"sellamelouad@gmail.com","p":"OK","cs":"6H ENCOF.","i":11.0},{"n":"ESPAÑA NIETO, VICTOR MANUEL","d":"26832736Q","c":"pe","fn":"30/03/2004","vd":"18/04/2028","t":"640554187","cu":"ES9521030201060040011992","b":"","e":"B","fb":"2026-01-30","fa":"22/10/2025","rm":"30/10/2025","vr":"30/10/2026","o":"BOMBEROS","lo":"MALAGA","co":"","p":"NO","cs":"20H ENCOFRADO","i":8.5},{"n":"FEDASH, VOLODYMYR","d":"X9764677G","c":"of1","fn":"19/01/1972","vd":"27/07/2028","t":"678005598","cu":"ES6901824106780201634694","b":"","e":"A","fb":"","fa":"02/03/2026","rm":"12/03/2026","vr":"12/03/2027","o":"AVDAVELAZQUEZ","lo":"MALAGA","co":"Volodymirfedash@gmail.com","p":"OK","cs":"","i":11.5},{"n":"FERNANDEZ ALVAREZ, CRISTIAN","d":"77424858G","c":"of1","fn":"08/02/2000","vd":"22/04/2027","t":"601578039","cu":"ES1521032038050030012693","b":"","e":"B","fb":"2026-08-06","fa":"29/07/2026","rm":"23/07/2026","vr":"23/07/2027","o":"LORING","lo":"CARTAMA","co":"","p":"OK","cs":"","i":11.0},{"n":"FERNANDEZ ALVAREZ, JOSE ANTONIO","d":"77424857A","c":"pe","fn":"16/07/1997","vd":"04/02/2026","t":"623128087","cu":"ES7101826675500201592843","b":"","e":"B","fb":"2026-08-06","fa":"29/07/2026","rm":"23/07/2026","vr":"23/07/2027","o":"LORING","lo":"CARTAMA","co":"","p":"NO OK","cs":"","i":9.0},{"n":"FERNANDEZ FERNANDEZ, ADRIAN","d":"76435156S","c":"pe","fn":"24/06/1987","vd":"18/06/2028","t":"617899319","cu":"ES2701824106760201742733","b":"","e":"B","fb":"2026-06-11","fa":"09/10/2025","rm":"22/10/2025","vr":"22/10/2026","o":"PASEO","lo":"MALAGA","co":"fernandezfernandezadrian59@gmail.com","p":"NO OK","cs":"","i":9.0},{"n":"FLORIDO SERVIA, MANUEL DAVID","d":"25677023F","c":"pe","fn":"19/07/1974","vd":"09/03/2027","t":"646600399","cu":"ES3814650270351715191725","b":"","e":"A","fb":"","fa":"12/05/2026","rm":"21/05/2026","vr":"21/05/2027","o":"PASEO","lo":"MALAGA","co":"","p":"OK","cs":"","i":10.0},{"n":"FOFANA, ISSA","d":"Z2084739R","c":"pe","fn":"01/01/2002","vd":"26/12/2029","t":"662434804","cu":"ES4801825332140000146417","b":"","e":"B","fb":"2026-08-25","fa":"26/09/2025","rm":"09/10/2025","vr":"09/10/2026","o":"TORMENTAS","lo":"MALAGA","co":"Fofanaissa228@gmail.com","p":"OK","cs":"","i":9.0},{"n":"FORTES ALMELLONES, PEDRO","d":"74820706G","c":"of2","fn":"20/05/1975","vd":"07/04/2027","t":"685094103","cu":"ES0801825332180206361957","b":"BBVA","e":"B","fb":"2026-06-11","fa":"06/10/2025","rm":"03/02/2026","vr":"03/02/2027","o":"PASEO","lo":"MALAGA","co":"pedro75fortes@gmail.com","p":"OK","cs":"","i":11.0},{"n":"GALLEGO REBOLLO, MIGUEL ANTONIO","d":"25046745K","c":"of1","fn":"19/12/1960","vd":"23/06/2027","t":"620198877","cu":"ES5414650100911751155190","b":"","e":"A","fb":"","fa":"11/06/2026","rm":"23/06/2026","vr":"23/06/2027","o":"PASEO","lo":"MALAGA","co":"","p":"OK","cs":"","i":11.0},{"n":"GARRIDO RUIZ, JORGE","d":"74837925L","c":"of1","fn":"06/11/1980","vd":"01/12/2031","t":"609939376","cu":"ES2221030225370040000693","b":"","e":"B","fb":"2026-04-16","fa":"11/03/2026","rm":"","vr":"","o":"ALMOGIA","lo":"ALMOGIA","co":"","p":"OK","cs":"","i":0.0},{"n":"GODRID PEREZ, MARIA DE LAS MERCEDES","d":"26817624S","c":"pe","fn":"12/08/1990","vd":"08/08/2034","t":"664697557","cu":"ES3001823066560201647540","b":"","e":"B","fb":"2026-06-11","fa":"10/06/2026","rm":"","vr":"","o":"BOMBEROS","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"GOMEZ ADROUN, MOHAMED","d":"76437818D","c":"pe","fn":"23/09/1986","vd":"29/10/2031","t":"632067058","cu":"ES2521030236510010071508","b":"UNICAJA","e":"B","fb":"2026-09-09","fa":"17/08/2026","rm":"01/09/2026","vr":"01/09/2027","o":"CANADA","lo":"VELEZ-MALAGA","co":"malagacosta07@gmail.com","p":"OK","cs":"","i":9.5},{"n":"HAMMADI, YASSINE","d":"Y8535535L","c":"of1","fn":"27/12/1988","vd":"06/05/2030","t":"632417321","cu":"ES7330230010006975645612","b":"C.R. GRANADA","e":"A","fb":"","fa":"24/09/2025","rm":"03/09/2026","vr":"03/09/2027","o":"CIERRE","lo":"RINCON DE LA VICTORIA","co":"","p":"OK","cs":"","i":11.0},{"n":"IZQUIERDO EXPOSITO, FERNANDO","d":"33369113T","c":"pe","fn":"03/09/1969","vd":"27/03/2033","t":"697626756","cu":"ES4330580762252720005249","b":"CAJAMAR","e":"A","fb":"","fa":"18/11/2024","rm":"18/11/2025","vr":"18/11/2026","o":"BOMBEROS","lo":"RINCON DE LA VICTORIA","co":"fizquierdo79@gmail.com","p":"OK","cs":"24H ELEV. TELESC.","i":9.0},{"n":"JIMENEZ GONZALEZ, FELIPE","d":"33373585X","c":"of1","fn":"13/08/1969","vd":"05/06/2034","t":"602542746","cu":"ES3821001836610200446105","b":"","e":"A","fb":"","fa":"20/07/2026","rm":"23/07/2026","vr":"23/07/2027","o":"COCHERAS","lo":"MALAGA","co":"","p":"OK","cs":"","i":0.0},{"n":"KHIMCHAK, VASYL","d":"X5084152W","c":"of1","fn":"27/12/1963","vd":"19/05/2029","t":"673570059","cu":"ES7921006453170200039066","b":"LA CAIXA","e":"A","fb":"","fa":"04/06/2026","rm":"21/05/2026","vr":"21/05/2027","o":"BARCELO","lo":"MALAGA","co":"khimchak1963@gmail.com","p":"OK","cs":"","i":12.0},{"n":"KHIMCHAK, YAROSLAV","d":"X5277609Y","c":"of1","fn":"19/08/1989","vd":"24/01/2029","t":"624883738","cu":"ES2121006453170100024186","b":"LA CAIXA","e":"B","fb":"2026-09-11","fa":"18/08/2026","rm":"01/09/2026","vr":"01/09/2027","o":"CANADA","lo":"MALAGA","co":"","p":"OK","cs":"","i":11.0},{"n":"KOROLIUK, VOLODYMYR","d":"Y9708043X","c":"pe","fn":"16/11/1962","vd":"04/03/2025","t":"","cu":"ES0514650100931775356407","b":"","e":"A","fb":"","fa":"29/07/2026","rm":"01/09/2026","vr":"01/09/2027","o":"CERRILLO","lo":"MALAGA","co":"","p":"NO","cs":"","i":11.0},{"n":"KOUDIR, HAMID","d":"X6850900M","c":"pe","fn":"10/01/1968","vd":"17/01/2036","t":"","cu":"ES7100491735202910121569","b":"","e":"A","fb":"","fa":"09/09/2026","rm":"24/09/2026","vr":"24/09/2027","o":"NINADEORO","lo":"MALAGA","co":"","p":"OK","cs":"","i":0.0},{"n":"KOVALCHUK, VOLODYMYR","d":"X6541508D","c":"pe","fn":"25/11/1964","vd":"07/07/2035","t":"662233915","cu":"ES0214650100921729518578","b":"","e":"B","fb":"2026-09-21","fa":"25/05/2026","rm":"04/06/2026","vr":"04/06/2027","o":"CHAPARRAL","lo":"MALAGA","co":"","p":"OK","cs":"20H ELECTRICIDAD","i":10.0},{"n":"LEAL MORALES, LUIS MANUEL","d":"76437628A","c":"pe","fn":"06/11/1991","vd":"14/02/2033","t":"610158729","cu":"ES8015830001189000805953","b":"","e":"B","fb":"2026-07-11","fa":"07/07/2026","rm":"17/02/2026","vr":"17/02/2027","o":"PASEO","lo":"MALAGA","co":"Luismanuellealmorales@gmail.com","p":"OK","cs":"20H MOV. TIERRAS","i":9.0},{"n":"LINDE SEGARRA, ENRIQUE","d":"53371010Q","c":"of1","fn":"30/10/1984","vd":"03/10/2027","t":"668554098","cu":"ES6321006057551300084143","b":"","e":"B","fb":"2026-09-02","fa":"01/07/2026","rm":"07/07/2026","vr":"07/07/2027","o":"PRADOS","lo":"MALAGA","co":"","p":"","cs":"","i":0.0},{"n":"LOAIZA ALVAREZ, JOHNNATHAN","d":"47613463J","c":"pe","fn":"10/12/1989","vd":"13/05/2033","t":"642028127","cu":"ES7414650270311755135000","b":"","e":"B","fb":"2026-09-07","fa":"17/08/2026","rm":"01/09/2026","vr":"01/09/2027","o":"CANADA","lo":"MALAGA","co":"","p":"OK","cs":"6H MOV. TIERRAS","i":9.0},{"n":"MARTIN BENAVIDES, DANIEL","d":"74844717A","c":"pe","fn":"07/01/1978","vd":"13/04/2034","t":"642375460","cu":"ES4714650270391747578891","b":"","e":"B","fb":"2026-04-07","fa":"02/03/2026","rm":"12/03/2026","vr":"12/03/2027","o":"AVDAVELAZQUEZ","lo":"FUENGIROLA","co":"","p":"OK","cs":"","i":8.5},{"n":"MARTIN CASTILLO, ALBERTO","d":"74833441C","c":"pe","fn":"19/07/1984","vd":"05/11/2028","t":"625647917","cu":"ES3721030246260040003016","b":"","e":"B","fb":"2026-05-15","fa":"24/02/2026","rm":"05/03/2026","vr":"05/03/2027","o":"CHAPARRAL","lo":"MALAGA","co":"amartincastillo@outlook.es","p":"OK","cs":"","i":9.5},{"n":"MARTINEZ GUERRERO, JUAN","d":"33382212N","c":"pe","fn":"17/11/1968","vd":"18/10/2032","t":"628286770","cu":"ES1521030152880010102011","b":"","e":"A","fb":"","fa":"18/05/2026","rm":"26/05/2026","vr":"26/05/2027","o":"SANRAFAEL","lo":"MALAGA","co":"","p":"","cs":"","i":9.5},{"n":"MARUSZAK, ANDRZEJ BRONISLAW","d":"X7941638Z","c":"of1","fn":"29/11/1958","vd":"09/08/2027","t":"642485093","cu":"ES7621030246260010081112","b":"","e":"B","fb":"2026-07-03","fa":"18/05/2026","rm":"26/05/2026","vr":"26/05/2027","o":"SANRAFAEL","lo":"MALAGA","co":"","p":"","cs":"","i":11.0},{"n":"MIRA MUÑOZ, MOISES","d":"25693569Q","c":"pe","fn":"07/07/1978","vd":"21/07/2035","t":"666706422","cu":"ES5401823427550201613975","b":"","e":"B","fb":"2026-09-14","fa":"01/07/2026","rm":"07/07/2026","vr":"07/07/2027","o":"PRADOS","lo":"MALAGA","co":"","p":"OK","cs":"","i":0.0},{"n":"MOREIRA FERNANDEZ, ALBERTO","d":"44584856T","c":"of1","fn":"01/02/1977","vd":"05/05/2028","t":"697781891","cu":"ES8214650270311718490099","b":"","e":"B","fb":"2026-07-27","fa":"13/07/2026","rm":"23/07/2026","vr":"23/07/2027","o":"ZONASUR","lo":"RINCON DE LA VICTORIA","co":"","p":"OK","cs":"","i":0.0},{"n":"MORENO DOMINGUEZ, JUAN","d":"30822248V","c":"enc","fn":"24/01/1975","vd":"06/05/2026","t":"655606879","cu":"ES1921004989542100000481","b":"LA CAIXA","e":"A","fb":"","fa":"23/10/2025","rm":"","vr":"","o":"","lo":"ALMOGIA","co":"","p":"NO","cs":"60H PRL- 10H DIRECTIVO","i":0.0},{"n":"MORENO DOMINGUEZ, SALVADOR","d":"74831876L","c":"of1","fn":"29/04/1978","vd":"27/07/2031","t":"614486651","cu":"ES9814650100981754120412","b":"","e":"B","fb":"2026-04-24","fa":"26/01/2026","rm":"02/12/2025","vr":"02/12/2026","o":"TORMENTAS","lo":"PUERTO DE LA TORRE","co":"","p":"OK","cs":"","i":10.5},{"n":"MORENO TORREBLANCA, IVAN","d":"77190471X","c":"tec","fn":"17/07/2003","vd":"15/05/2029","t":"609196964","cu":"ES3021002904070258857977","b":"LA CAIXA","e":"A","fb":"","fa":"11/06/2026","rm":"","vr":"","o":"","lo":"ALMOGIA","co":"ivanmrt2003@gmail.com","p":"NO","cs":"","i":0.0},{"n":"NAVARRETE IGLESIAS, DANIEL","d":"74843017M","c":"of2","fn":"14/05/1982","vd":"29/11/2035","t":"657465288","cu":"ES6001825332100203630184","b":"","e":"B","fb":"2026-02-18","fa":"19/11/2025","rm":"02/12/2025","vr":"02/12/2026","o":"PASEO","lo":"MALAGA","co":"","p":"OK","cs":"","i":10.5},{"n":"OUELD AHMED, OMAR","d":"Z0238144F","c":"pe","fn":"03/07/2000","vd":"05/11/2026","t":"627122673","cu":"ES1021035342780030010458","b":"","e":"B","fb":"2026-07-31","fa":"06/07/2026","rm":"09/07/2026","vr":"09/07/2027","o":"FERNANDO","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"PEREZ BALLESTEROS, MANUEL","d":"52582055F","c":"of1","fn":"22/04/1968","vd":"31/01/2033","t":"653703515","cu":"ES2021002573200110678634","b":"LA CAIXA","e":"B","fb":"2026-09-07","fa":"14/07/2025","rm":"09/07/2026","vr":"09/07/2027","o":"BOMBEROS","lo":"MALAGA","co":"","p":"NO OK","cs":"","i":12.0},{"n":"RAMIREZ BUITRAGO, ALEXANDER","d":"Z2135104L","c":"pe","fn":"29/10/1972","vd":"","t":"677299332","cu":"ES1301822116010201748578","b":"","e":"A","fb":"","fa":"08/07/2026","rm":"07/07/2026","vr":"07/07/2027","o":"FERNANDO","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"RAMIREZ DEL PINO, FRANCISCO RUBEN","d":"26812854Y","c":"pe","fn":"09/12/1992","vd":"30/03/2033","t":"691550360","cu":"ES8600493375042714036160","b":"","e":"B","fb":"2026-09-02","fa":"25/11/2025","rm":"02/12/2025","vr":"02/12/2026","o":"ALAMOS","lo":"MALAGA","co":"fcoruben.ramirez92@gmail.com","p":"OK","cs":"6H MOV. TIERRAS - 6H APAR. ELEV.","i":10.5},{"n":"RAQI, EL MOKHTAR","d":"X6459297T","c":"of1","fn":"09/09/1974","vd":"30/06/2035","t":"631822916","cu":"ES9421004512831300249285","b":"","e":"B","fb":"2026-06-22","fa":"22/06/2026","rm":"","vr":"","o":"BOMBEROS","lo":"MALAGA","co":"","p":"OK","cs":"","i":11.0},{"n":"RODRIGUEZ MENJIBAR, JORGE","d":"26835563Z","c":"pe","fn":"27/03/1996","vd":"03/06/2030","t":"744467513","cu":"ES3821001836630100933707","b":"","e":"B","fb":"2026-08-14","fa":"21/07/2026","rm":"","vr":"","o":"CANADA","lo":"MALAGA","co":"","p":"OK","cs":"","i":10.0},{"n":"RUIZ DELGADO, FRANCISCO IGNACIO","d":"76748931R","c":"of2","fn":"19/10/1992","vd":"22/05/2034","t":"603464928","cu":"ES6121002107580100827159","b":"","e":"B","fb":"2026-06-11","fa":"10/06/2026","rm":"","vr":"","o":"BOMBEROS","lo":"MALAGA","co":"","p":"OK","cs":"","i":11.0},{"n":"SALAS CRUZ, MARIO","d":"74875080Y","c":"pe","fn":"14/03/1987","vd":"29/01/2032","t":"632702712","cu":"ES4501825332140001227827","b":"","e":"B","fb":"2026-07-30","fa":"21/07/2026","rm":"","vr":"","o":"NINADEORO","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0},{"n":"SANGARE, MOHAMED","d":"Z2085177W","c":"pe","fn":"08/11/1991","vd":"25/12/2029","t":"672063516","cu":"ES0601825332130208805765","b":"BBVA","e":"B","fb":"2026-05-13","fa":"12/06/2025","rm":"24/06/2025","vr":"24/06/2026","o":"HUELIN","lo":"MALAGA","co":"mohamed.sang686@gmail.com","p":"OK","cs":"","i":9.0},{"n":"SELLES VERGARA, RICARDO","d":"25696031V","c":"of2","fn":"24/05/1973","vd":"06/06/2028","t":"747649411","cu":"ES8201824107110201537686","b":"BBVA","e":"B","fb":"2026-06-05","fa":"06/04/2026","rm":"28/08/2025","vr":"28/08/2026","o":"ARTURO","lo":"MALAGA","co":"","p":"OK","cs":"8H CARR. ELE.","i":10.5},{"n":"SHISSEH SATOUTI, AMINE","d":"33008428R","c":"pe","fn":"17/09/2003","vd":"21/02/2029","t":"631123129","cu":"ES6230230063046906897415","b":"","e":"B","fb":"2026-05-22","fa":"18/05/2026","rm":"","vr":"","o":"MORLACO","lo":"ZAFARRAYA","co":"","p":"NO OK","cs":"","i":8.5},{"n":"SLABKO, MYKOLA","d":"X6836824M","c":"of1","fn":"08/05/1962","vd":"14/11/2035","t":"693950527","cu":"ES0321033037850010055415","b":"","e":"A","fb":"","fa":"18/05/2026","rm":"04/06/2026","vr":"04/06/2027","o":"TOMILLAR","lo":"MALAGA","co":"","p":"OK","cs":"75H FONTANERIA","i":11.0},{"n":"SOTO HEREDIA, MANUEL","d":"74865537P","c":"pe","fn":"02/11/1980","vd":"25/08/2032","t":"744733271","cu":"ES9821002904030288431764","b":"LA CAIXA","e":"A","fb":"","fa":"15/07/2025","rm":"29/09/2026","vr":"29/09/2027","o":"NINADEORO","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.5},{"n":"TESGHITI, MOHAMED","d":"Y8500850H","c":"of2","fn":"12/04/1993","vd":"18/12/2028","t":"611705039","cu":"ES6700494988512716157971","b":"","e":"A","fb":"","fa":"18/03/2026","rm":"31/03/2026","vr":"31/03/2027","o":"BOMBEROS","lo":"MALAGA","co":"tesghitimohamed4@gmail.com","p":"OK","cs":"","i":11.0},{"n":"TRAORE, LASSAMA","d":"Z2084734L","c":"pe","fn":"13/12/2002","vd":"25/12/2029","t":"662404708","cu":"ES6000492845502614102859","b":"","e":"A","fb":"","fa":"14/05/2026","rm":"04/06/2026","vr":"04/06/2027","o":"ZONASUR","lo":"MALAGA","co":"","p":"OK","cs":"","i":8.5},{"n":"TRAVESEDO DE CASTILLA, ALVARO","d":"44589599M","c":"tec","fn":"21/12/1983","vd":"16/07/2034","t":"","cu":"ES1715830001159004243556","b":"","e":"B","fb":"2026-06-19","fa":"25/05/2026","rm":"","vr":"","o":"","lo":"MALAGA","co":"","p":"","cs":"","i":0.0},{"n":"URBANO DE LA CRUZ, YERAY","d":"79380628S","c":"pe","fn":"29/07/2006","vd":"07/03/2031","t":"633918492","cu":"ES3001824106780201724539","b":"","e":"A","fb":"","fa":"20/10/2025","rm":"30/10/2025","vr":"30/10/2026","o":"PASEO","lo":"MALAGA","co":"yerayurbano1@gmail.com","p":"OK","cs":"6H MOV. TIERRAS","i":9.5},{"n":"VAZQUEZ HERNANDEZ, JUAN JOSE","d":"25687523L","c":"pe","fn":"16/08/1972","vd":"02/06/2026","t":"643481423","cu":"ES6231870424135886284420","b":"","e":"A","fb":"","fa":"06/08/2026","rm":"01/10/2026","vr":"01/10/2027","o":"LORING","lo":"MALAGA","co":"Juanjosevazquezhernandez5@gmail.com","p":"OK","cs":"6H MOV. TIERRAS - 20H CARRET. Y TELESCOPICA","i":9.5},{"n":"VEGA CANTOS, CARLOS","d":"53686486R","c":"of1","fn":"19/07/1974","vd":"","t":"655143241","cu":"ES4721030240520010074064","b":"UNICAJA","e":"B","fb":"2026-08-27","fa":"20/01/2025","rm":"03/02/2026","vr":"03/02/2027","o":"","lo":"MALAGA","co":"carlosvaga1974@gmail.com","p":"OK","cs":"8H CARR. ELE. - 8H DUMPER","i":10.5},{"n":"VIDELA, CLAUDIO ADRIAN","d":"Z1647563D","c":"of2","fn":"04/07/1982","vd":"","t":"676385486","cu":"ES8721002582570710014400","b":"","e":"A","fb":"","fa":"07/09/2026","rm":"29/09/2026","vr":"29/09/2027","o":"BOMBEROS","lo":"","co":"","p":"OK","cs":"","i":11.0},{"n":"VIRUEL ALARCON, PEDRO","d":"26831694D","c":"of2","fn":"13/12/1994","vd":"18/07/2027","t":"625784107","cu":"ES2721033067150010059726","b":"UNICAJA","e":"A","fb":"","fa":"09/01/2025","rm":"03/02/2026","vr":"03/02/2027","o":"DISTRITOESTE","lo":"CAMPANILLAS","co":"pedroviruelalarcon@gmail.com","p":"OK","cs":"20H APAR. ELEV. - 6H MOV. TIERRAS","i":10.0},{"n":"ZHYLINSKYI, OLEH","d":"Y3939858H","c":"of1","fn":"27/12/1971","vd":"27/05/2027","t":"631978385","cu":"ES1721033037860010100704","b":"","e":"A","fb":"","fa":"18/05/2026","rm":"26/05/2026","vr":"26/05/2027","o":"SANRAFAEL","lo":"MALAGA","co":"","p":"OK","cs":"6H CLIMATIZACIN","i":11.0},{"n":"NDOUR, FAMARA","d":"Z1291564G","c":"pe","fn":"03/05/1997","vd":"04/03/2027","t":"","cu":"ES4700495200712516486122","b":"","e":"A","fb":"","fa":"28/09/2026","rm":"01/10/2026","vr":"01/10/2027","o":"NINADEORO","lo":"MALAGA","co":"","p":"OK","cs":"","i":10.0},{"n":"NOBLE CASTAÑO, FRANCISCO JAVIER","d":"75799157N","c":"pe","fn":"24/02/1983","vd":"19/04/2033","t":"602618730","cu":"","b":"","e":"A","fb":"","fa":"29/09/2026","rm":"","vr":"","o":"BOMBEROS","lo":"MALAGA","co":"","p":"OK","cs":"","i":9.0}];
+const SYNC_BM=[{"n":"VEGA CANTOS, CARLOS","i":"2025-02-24","f":"2025-02-27","m":"ENF. COMUN"},{"n":"VEGA CANTOS, CARLOS","i":"2025-06-19","f":"2025-06-20","m":"ENF. COMUN"},{"n":"EL OUAD, SELLAM","i":"2025-07-09","f":"2025-08-18","m":"ACC. LABORAL"},{"n":"BAKKAR, KAMAL","i":"2025-09-01","f":"2025-09-12","m":"ACC. LABORAL"},{"n":"BAKKAR, KAMAL","i":"2025-10-22","f":"2025-10-31","m":"ACC. LABORAL"},{"n":"DURAN DURAN, CESAR","i":"2025-11-10","f":"2025-11-25","m":"ACC. LABORAL"},{"n":"VEGA CANTOS, CARLOS","i":"2025-11-21","f":"2026-01-16","m":"ACC. LABORAL"},{"n":"EL OUAD, SELLAM","i":"2026-01-29","f":"2026-06-11","m":"ENF. COMUN"},{"n":"BAKKAR, KAMAL","i":"2026-02-12","f":"2026-02-13","m":"ENF. COMUN"},{"n":"FERNANDEZ FERNANDEZ, ADRIAN","i":"2026-02-12","f":"2026-06-11","m":"ENF. COMUN"},{"n":"LEAL MORALES, LUIS MANUEL","i":"2026-02-23","f":"2026-02-27","m":"ENF. COMUN"},{"n":"VEGA CANTOS, CARLOS","i":"2026-03-12","f":"2026-04-21","m":"ACC. LABORAL"},{"n":"MARTIN BENAVIDES, DANIEL","i":"2026-03-20","f":"2026-04-07","m":"ENF. COMUN"},{"n":"FORTES ALMELLONES, PEDRO","i":"2026-03-23","f":"2026-06-11","m":"ENF. COMUN"},{"n":"GARRIDO RUIZ, JORGE","i":"2026-04-10","f":"2026-04-16","m":"ENF. COMUN"},{"n":"VEGA CANTOS, CARLOS","i":"2026-06-01","f":"2026-06-04","m":"ENF. COMUN"},{"n":"KHIMCHAK, YAROSLAV","i":"2026-06-15","f":"2026-07-18","m":"ENF. COMUN"},{"n":"KOVALCHUK, VOLODYMYR","i":"2026-06-17","f":"2026-07-06","m":"ENF. COMUN"},{"n":"VEGA CANTOS, CARLOS","i":"2026-06-24","f":"2026-08-26","m":"ACC. LABORAL"},{"n":"URBANO DE LA CRUZ, YERAY","i":"2026-07-06","f":null,"m":"ENF. COMUN"},{"n":"RAMIREZ DEL PINO, FRANCISCO RUBEN","i":"2026-07-13","f":"2026-07-20","m":"ACC. LABORAL"},{"n":"KHIMCHAK, VASYL","i":"2026-07-17","f":"2026-07-24","m":"ACC. LABORAL"},{"n":"LINDE SEGARRA, ENRIQUE","i":"2026-07-30","f":"2026-07-31","m":"ENF. COMUN"},{"n":"LINDE SEGARRA, ENRIQUE","i":"2026-08-04","f":"2026-09-01","m":"ENF. COMUN"},{"n":"DIAZ EXPOSITO, SALVADOR","i":"2026-08-24","f":"2026-09-15","m":"ACC. LABORAL"},{"n":"RAMIREZ BUITRAGO, ALEXANDER","i":"2026-08-24","f":"2026-09-04","m":"ENF. COMUN"}];
+
+function _syncCompute(W,O,B){
+  const P={nuevos:[],bajas:[],reactiva:[],tarifas:[],datos:0,datosW:0,conflictos:[],obrasNuevas:[],obraCambio:[],obraSinEnc:[],bm:0,sinTarifa:[],cat:[]};
+  const hoy=new Date().toISOString().slice(0,10);
+  const isoF=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s||'');return m?`${m[3]}-${m[2]}-${m[1]}`:'';};
+  let nextW=Math.max(0,...W.map(w=>+w.id||0))+1;
+  const getOb=key=>_syncGetObra(O,key,P.obrasNuevas);
+  const reasignar=(w,newId,desde)=>{
+    const h=w.obraHistory||[];
+    if(!h.length&&w.obra)h.push({obraId:w.obra,desde:'2020-01-01',hasta:desde});
+    else{const l=h[h.length-1];if(l&&!l.hasta)l.hasta=desde;}
+    h.push({obraId:newId,desde,hasta:null});
+    w.obraHistory=h;w.obraDesde=desde;w.obra=newId;
+  };
+  const match=e=>{
+    const dn=String(e.d||'').trim().toUpperCase();
+    let w=dn?W.find(x=>String(x.dni||'').trim().toUpperCase()===dn):null;
+    if(!w){const k=_nrm(e.n);w=W.find(x=>_nrm(x.nombre)===k);}
+    return w||null;
+  };
+  const CAMPOS=[['d','dni',1],['fn','fnac',0],['vd','vtodni',0],['t','tel',1],['cu','cuenta',1],['b','banco',0],
+                ['rm','rm',0],['vr','vtrm',0],['lo','localidad',0],['co','correo',1],['p','prl20',0],['cs','cursos',0]];
+  const idPorNombre={};
+  // ALTAS primero: así las obras se crean una sola vez y las bajas las encuentran
+  const orden=[...SYNC_DATA].sort((a,b)=>(a.e==='A'?0:1)-(b.e==='A'?0:1));
+  orden.forEach(e=>{
+    let w=match(e);const ob=e.o?getOb(e.o):null;
+    if(!w){
+      w={id:nextW++,nombre:e.n,cat:e.c||'pe',dni:e.d,tel:e.t,cuenta:e.cu,banco:e.b,localidad:e.lo,
+         imp:e.i,cn:e.i,ce:0,estado:e.e==='B'?'noEmpresa':'active',obra:ob?ob.id:0,irpfAplica:'si',nFija:0,
+         falta:e.fa,fechaBaja:e.e==='B'?e.fb:'',rm:e.rm,vtrm:e.vr,vtodni:e.vd,fnac:e.fn,correo:e.co,
+         prl20:e.p,cursos:e.cs,obraHistory:[],obraDesde:''};
+      if(ob){const d=isoF(e.fa)||hoy;w.obraDesde=d;w.obraHistory=[{obraId:ob.id,desde:d,hasta:e.e==='B'?(e.fb||null):null}];}
+      W.push(w);P.nuevos.push(`${e.n} (${e.e==='A'?'alta':'baja '+e.fb})`);
+      if(e.e==='A'&&!(e.i>0))P.sinTarifa.push(e.n);
+      idPorNombre[e.n]=w.id;return;
+    }
+    idPorNombre[e.n]=w.id;
+    // datos personales (no se pisa DNI, tel, cuenta ni correo ya rellenos: se avisa)
+    let cambio=false;
+    CAMPOS.forEach(([k,f,prot])=>{
+      const v=(e[k]||'').trim();if(!v)return;
+      const cur=String(w[f]||'').trim();if(cur===v)return;
+      if(prot&&cur){P.conflictos.push(`${w.nombre}: ${f} app='${cur}' / listado='${v}'`);return;}
+      w[f]=v;P.datos++;cambio=true;
+    });
+    if(cambio)P.datosW++;
+    if(e.c&&e.c!==w.cat){P.cat.push(`${w.nombre}: ${w.cat} → ${e.c}`);w.cat=e.c;}
+    // tarifa €/h (la app la aplica también a meses pasados)
+    if(e.i>0&&Number(w.cn)!==e.i){P.tarifas.push(`${w.nombre}: ${w.cn||0} → ${e.i}`);w.cn=e.i;w.imp=e.i;}
+    // estado
+    if(e.e==='A'){
+      if(w.estado==='noEmpresa'||w.estado==='baja'){P.reactiva.push(w.nombre);w.estado='active';w.fechaBaja='';w.finiquitado=false;}
+    }else if(e.e==='B'){
+      if(w.estado!=='noEmpresa'){P.bajas.push(`${w.nombre} (${e.fb})`);w.estado='noEmpresa';}
+      if(e.fb)w.fechaBaja=e.fb;
+    }
+    if(!w.falta&&e.fa)w.falta=e.fa;
+    // obra
+    if(ob){
+      const cur=O.find(x=>x.id===w.obra);
+      if(!cur){w.obra=ob.id;}
+      else if(e.e==='A'&&cur.id!==ob.id){P.obraCambio.push(`${w.nombre}: ${cur.nombre} → ${ob.nombre}`);reasignar(w,ob.id,hoy);}
+    }else if(e.o){P.obraSinEnc.push(`${w.nombre} (${e.o})`);}
+  });
+  // bajas médicas de la hoja BAJAS MEDICAS (sin duplicar wid+inicio)
+  SYNC_BM.forEach((x,i)=>{
+    const wid=idPorNombre[x.n];if(!wid)return;
+    if(B.some(b=>b.wid===wid&&b.inicio===x.i))return;
+    B.push({id:Date.now()+i,wid,inicio:x.i,fin:x.f||null,motivo:x.m==='ACC. LABORAL'?'Accidente laboral':'Enfermedad común'});P.bm++;
+  });
+  // baja médica abierta ⇒ el trabajador pasa a "baja médica"
+  W.forEach(w=>{if((w.estado==='active'||w.estado==='ext')&&B.some(b=>b.wid===w.id&&!b.fin)){w.estado='baja';P.reactiva=P.reactiva.filter(n=>n!==w.nombre);P.medica=(P.medica||[]).concat(w.nombre);}});
+  return P;
+}
+
+async function sincronizarListado(){
+  const W=JSON.parse(JSON.stringify(workers)),O=JSON.parse(JSON.stringify(obras)),B=JSON.parse(JSON.stringify(bajasMedicas));
+  const P=_syncCompute(W,O,B);
+  window._syncLog=P;console.log('Sincronizar con listado — detalle:',P);
+  const L=(t,a,n=6)=>a.length?`\n• ${t}: ${a.length}${a.length<=n?' → '+a.join('; '):''}`:'';
+  const msg='SINCRONIZAR CON EL LISTADO (01/10/2026)\n'+
+    L('Trabajadores nuevos',P.nuevos,0)+L('Pasan a baja empresa',P.bajas,0)+L('Vuelven a activo',P.reactiva)+
+    (P.medica?L('En baja médica',P.medica):'')+L('Cambios de €/h',P.tarifas,12)+L('Cambios de categoría',P.cat)+
+    `\n• Datos personales completados: ${P.datos} campos en ${P.datosW} trabajadores`+
+    L('Obras nuevas',P.obrasNuevas,14)+L('Cambios de obra',P.obraCambio,0)+`\n• Bajas médicas nuevas: ${P.bm}`+
+    (P.sinTarifa.length?`\n• ⚠ Sin €/h en el Excel: ${P.sinTarifa.join(', ')}`:'')+
+    (P.conflictos.length?`\n• ⚠ Conflictos (no se tocan): ${P.conflictos.join(' | ')}`:'')+
+    '\n\nNo se modifican horario, pagos ni préstamos. Se guarda copia para deshacer (↩).\n¿Aplicar?';
+  if(!confirm(msg))return;
+  const kb=Math.round(JSON.stringify({list:W}).length/1024);
+  if(kb>900){toast('Error: datos demasiado grandes ('+kb+'KB)');return;}
+  _undoPush(['workers','obras','bajasMedicas'],'Sincronizar con listado');   // snapshot ANTES de modificar
+  workers=W;obras=O;bajasMedicas=B;
+  await svFB('workers',workers);await svFB('obras',obras);
+  try{await fbSet('bajasMedicas',{list:bajasMedicas});}catch(e){toast('Error bajas médicas: '+(e.message||e.code));}
+  CM();if(typeof rWorkers==='function')rWorkers();if(typeof rObras==='function')rObras();if(isActive('bajas'))rBajas();
+  toast(`✓ Sincronizado: ${P.nuevos.length} nuevos, ${P.bajas.length} bajas, ${P.obrasNuevas.length} obras nuevas`);
+}
+
+// ══ IMPORTAR HORAS SEPTIEMBRE 2026 (Control horario 09 - Excel) ══════════════
+// Cada celda lleva el color de su obra en el Excel. Cada trabajador queda en la obra de su última celda del mes.
+const SEP_COLOR_OBRA={AZc:'NINADEORO',ROJ:'BOMBEROS',VER:'PASEO',AZU:'COCHERAS',AMA:'SANRAFAEL',GRN:'CANADA',MOR:'LORING',
+  RJG:'AVDAVELAZQUEZ',PUN:'AVDAESPANA',MAR:'MARBELLA',SAL:'PRADOS',VG1:'TORMENTAS',VG2:'ALAMOS',DOR:'COLON',GRS:'UNAMUNO'};
+const SEP_AUS={NL:'nl',FI:'fi',NP:'np',B:'b',BE:'be',A:'a',N:'n',FA:'fa'};
+const SEP_ALIAS={'RAMIRES DEL PINO, FRANCISCO RUBEN':'RAMIREZ DEL PINO, FRANCISCO RUBEN'};
+const SEP_TOTAL_EXCEL=3605.5;
+const SEP_DATA=[{"n":"ALBA SANCHEZ, MIGUEL","c":[[1,9,"AMA"],[2,9,"AMA"],[3,9,"AMA"],[4,9,"AMA"],[7,"NL"],[8,"FI"],[9,9,"GRS"],[10,9,"GRS"],[11,6,"GRS"],[14,9,"GRS"],[15,9,"GRS"],[16,9,"MAR"],[17,9,"MAR"],[18,6,"MAR"],[21,9,"MAR"],[22,9,"MAR"],[23,9,"MAR"],[24,9,"MAR"],[25,6,"MAR"]]},{"n":"ANGELOV, VLADIMIR MARGARITOV","c":[[1,8.5,"AZU"],[2,8.5,"AZU"],[3,8.5,"AZU"],[4,6,"AZU"],[7,"NL"],[8,"FI"],[9,8.5,"AZU"],[10,8.5,"AZU"],[11,6,"AZU"],[14,8.5,"AZU"],[15,8.5,"AZU"],[16,8.5,"AZU"],[17,8.5,"AZU"],[18,6,"AZU"],[21,8.5,"AZU"],[22,8.5,"AZU"],[23,8.5,"AZU"],[24,8.5,"AZU"],[25,6,"AZU"],[28,6,"AZU"],[29,8.5,"AZU"],[30,8.5,"AZU"]]},{"n":"ARRABAL MORENO, ANTONIO","c":[[1,1,""],[7,"NL"],[8,"FI"]]},{"n":"CAMARA, BALLO","c":[[7,"NL"],[8,"FI"],[22,8.5,"SAL"],[23,8.5,"SAL"],[24,8.5,"SAL"],[25,6,"SAL"],[28,8.5,"SAL"],[29,8.5,"SAL"],[30,8.5,"SAL"]]},{"n":"CARMONA FERNANDEZ, ANTONIO","c":[[1,8,"GRN"],[2,"NP"],[3,"NP"],[4,8,"GRN"],[7,8,"GRN"],[8,"FI"],[9,"BE"]]},{"n":"CUEVAS MORILLAS, DAVID","c":[[1,8.5,"VG1"],[2,8.5,"VG1"],[3,8.5,"VG1"],[4,6,"VG1"],[7,"NL"],[8,"FI"],[9,8.5,"AZU"],[10,8.5,"AZU"],[11,6,"AZU"],[14,8.5,"AZU"],[15,8.5,"AZU"],[16,8.5,"AZU"],[17,8.5,"AZU"],[18,6,"AZU"],[21,8.5,"AZU"],[22,8.5,"AZU"],[23,8.5,"AZU"],[24,8.5,"AZU"],[25,6,"AZU"],[28,6,"AZU"],[29,8.5,"AZU"],[30,8.5,"AZU"]]},{"n":"DIAZ EXPOSITO, SALVADOR","c":[[1,"B"],[2,"B"],[3,"B"],[4,"B"],[7,"NL"],[8,"FI"],[9,"B"],[10,"B"],[11,"B"],[14,"B"],[15,"BE"]]},{"n":"DOMINGUEZ RUIZ, JOSE CARLOS","c":[[1,1,""],[7,"NL"],[8,"FI"]]},{"n":"EL HARRAK, ABDELILAH","c":[[1,9,"AZc"],[2,9,"AZc"],[3,9,"AZc"],[4,7,"AZc"],[5,8,"AZc"],[7,9,"AZc"],[8,9,"AZc"],[9,9,"AZc"],[10,9,"AZc"],[11,9,"AZc"],[12,7,"AZc"],[14,3,"AZc"],[18,2,"AZc"],[28,9,"AZc"],[30,5,"AZc"]]},{"n":"FEDASH, VOLODYMYR","c":[[1,9,"RJG"],[2,9,"PUN"],[3,9,"PUN"],[4,8,"PUN"],[7,9,"VER"],[8,"FI"],[9,8,"RJG"],[10,8,"PUN"],[11,9,"RJG"],[14,"FA"],[15,8,"RJG"],[16,9,"RJG"],[17,9,"RJG"],[18,8,"RJG"],[21,9,"RJG"],[22,9,"RJG"],[23,9,"RJG"],[24,8,"RJG"],[25,6,"RJG"],[28,"N"],[29,9,"RJG"],[30,9,"RJG"]]},{"n":"FLORIDO SERVIA, MANUEL DAVID","c":[[1,9,"VER"],[2,9,"VER"],[3,9,"VER"],[4,6,"VER"],[7,"NL"],[8,"FI"],[9,9,"VER"],[10,9,"VER"],[11,6,"VER"],[14,9,"VER"],[15,9,"VER"],[16,9,"VER"],[17,9,"VER"],[18,6,"VER"],[21,9,"VER"],[22,9,"VER"],[23,9,"VER"],[24,9,"VER"],[25,6,"VER"],[28,9,"VER"],[29,9,"VER"],[30,9,"VER"]]},{"n":"GALLEGO REBOLLO, MIGUEL ANTONIO","c":[[7,"NL"],[8,"FI"]]},{"n":"GOMEZ ADROUN, MOHAMED","c":[[1,8,"GRN"],[2,"NP"],[3,8,"GRN"],[4,8,"GRN"],[7,8,"GRN"],[8,"FI"],[9,6.5,"GRN"],[10,"BE"]]},{"n":"HAMMADI, YASSINE","c":[[1,9,"ROJ"],[2,9,"ROJ"],[3,9,"ROJ"],[4,6,"ROJ"],[7,"NL"],[8,"FI"],[9,9,"ROJ"],[10,9,"ROJ"],[11,6,"ROJ"],[14,9,"ROJ"],[15,9,"ROJ"],[16,9,"ROJ"],[17,9,"ROJ"],[18,6,"ROJ"],[21,9,"ROJ"],[22,9,"ROJ"],[23,9,"ROJ"],[24,9,"ROJ"],[25,9,"ROJ"],[28,9,"ROJ"],[29,9,"ROJ"],[30,9,"ROJ"]]},{"n":"IZQUIERDO EXPOSITO, FERNANDO","c":[[1,9,"ROJ"],[2,9,"ROJ"],[3,9,"ROJ"],[4,6,"ROJ"],[7,"NL"],[8,"FI"],[9,9,"ROJ"],[10,9,"ROJ"],[11,6,"ROJ"],[14,9,"ROJ"],[15,9,"ROJ"],[16,9,"ROJ"],[17,9,"ROJ"],[18,6,"ROJ"],[21,9,"ROJ"],[22,9,"ROJ"],[23,9,"ROJ"],[24,9,"ROJ"],[25,9,"ROJ"],[28,9,"ROJ"],[29,9,"ROJ"],[30,9,"ROJ"]]},{"n":"JIMENEZ GONZALEZ, FELIPE","c":[[1,8.5,"AZU"],[2,8.5,"AZU"],[3,8.5,"AZU"],[4,6,"AZU"],[7,"NL"],[8,"FI"],[9,8.5,"AZU"],[10,8.5,"AZU"],[11,6,"AZU"],[14,8.5,"AZU"],[15,8.5,"AZU"],[16,8.5,"AZU"],[17,8.5,"AZU"],[18,6,"AZU"],[21,8.5,"AZU"],[22,8.5,"AZU"],[23,8.5,"AZU"],[24,8.5,"AZU"],[25,6,"AZU"],[28,6,"AZU"],[29,8.5,"AZU"],[30,8.5,"AZU"]]},{"n":"KHIMCHAK, VASYL","c":[[1,11,"VER"],[2,9,"VER"],[3,9,"VER"],[4,9,"VER"],[7,9,"VER"],[8,"FI"],[9,9,"VER"],[10,9,"VER"],[11,9,"VER"],[14,9,"VER"],[15,9,"VER"],[16,9,"VER"],[17,8,"VER"],[18,9,"VER"],[21,9,"VER"],[22,9,"VER"],[23,9,"VER"],[24,9,"VER"],[25,9,"VER"],[28,9,"VER"],[29,9,"VER"],[30,9,"VER"]]},{"n":"KHIMCHAK, YAROSLAV","c":[[1,9,"VER"],[2,"NP"],[3,8,"GRN"],[4,8,"GRN"],[7,"NL"],[8,"FI"],[9,6.5,"GRN"],[11,9,"VER"],[14,"BE"]]},{"n":"KOROLIUK, VOLODYMYR","c":[[1,9,"VER"],[2,9,"VER"],[3,9,"VER"],[4,9,"VER"],[7,9,"VER"],[8,"FI"],[9,9,"VER"],[10,9,"VER"],[11,9,"VER"],[14,9,"VER"],[15,9,"VER"],[16,9,"VER"],[17,8,"VER"],[18,9,"VER"],[21,9,"VER"],[22,9,"VER"],[23,9,"VER"],[24,9,"VER"],[25,9,"VER"],[28,9,"VER"],[29,9,"VER"],[30,9,"VER"]]},{"n":"KOVALCHUK, VOLODYMYR","c":[[1,9,"AMA"],[2,9,"AMA"],[3,9,"AMA"],[4,9,"AMA"],[5,9,"AMA"],[7,"NL"],[8,"FI"],[10,8,"DOR"],[11,4,"DOR"],[14,9,"AZc"],[15,10,"AZc",1],[16,10,"AZc",1],[17,10,"AZc",1],[18,6,"AZc"],[21,10,"AZc",1],[22,"BE"]]},{"n":"LINDE SEGARRA, ENRIQUE","c":[[2,"BE"],[7,"NL"],[8,"FI"]]},{"n":"LOAIZA ALVAREZ, JOHNNATHAN","c":[[1,8,"GRN"],[2,8,"GRN"],[3,8,"GRN"],[4,8,"GRN"],[7,"NL"],[8,"FI"],[9,"BE"]]},{"n":"MARTINEZ GUERRERO, JUAN","c":[[1,9,"AMA"],[2,9,"AMA"],[3,9,"AMA"],[4,9,"AMA"],[5,9,"AMA"],[7,9,"AMA"],[8,8,"AMA"],[9,9,"AMA"],[10,8,"AMA"],[11,"A"],[14,9,"AZc"],[15,10,"AZc",1],[16,10,"AZc",1],[17,10,"AZc",1],[18,6,"AZc"],[21,10,"AZc",1],[22,9,"AZc"],[23,9,"AZc"],[24,9,"AZc"],[25,6,"AZc"],[28,9,"AZc"],[29,9,"AZc"],[30,9,"AZc"]]},{"n":"MIRA MUÑOZ, MOISES","c":[[7,"NL"],[8,"FI"],[9,"BE"]]},{"n":"MORENO DOMINGUEZ, JUAN","c":[[1,1,""],[7,"NL"],[8,"FI"]]},{"n":"MORENO TORREBLANCA, IVAN","c":[[1,1,""],[7,"NL"],[8,"FI"]]},{"n":"PEREZ BALLESTEROS, MANUEL","c":[[1,8,"GRN"],[2,8,"GRN"],[3,8,"GRN"],[4,8,"GRN"],[7,8,"GRN"],[8,"FI"],[9,"BE"]]},{"n":"RAMIRES DEL PINO, FRANCISCO RUBEN","c":[[1,8.5,"VG2"],[2,8.5,"VG2"],[3,"BE"],[7,"NL"],[8,"FI"]]},{"n":"RAMIREZ BUITRAGO, ALEXANDER","c":[[1,"B"],[2,"B"],[3,"B"],[4,"B"],[7,"NL"],[8,"FI"],[9,9,"ROJ"],[10,9,"ROJ"],[11,6,"ROJ"],[14,9,"ROJ"],[15,9,"ROJ"],[16,9,"ROJ"],[17,9,"ROJ"],[18,6,"ROJ"],[21,9,"ROJ"],[22,9,"ROJ"],[23,9,"ROJ"],[24,9,"ROJ"],[25,9,"ROJ"],[28,9,"ROJ"],[29,9,"ROJ"],[30,9,"ROJ"]]},{"n":"SLABKO, MYKOLA","c":[[1,9,"AMA"],[2,9,"AMA"],[3,9,"AMA"],[4,9,"AMA"],[5,9,"AMA"],[7,9,"AMA"],[8,8,"AMA"],[14,9,"AZc"],[15,10,"AZc",1],[16,10,"AZc",1],[17,10,"AZc",1],[18,6,"AZc"],[21,10,"AZc",1],[22,9,"AZc"],[23,9,"AZc"],[24,9,"AZc"],[25,3,"AZc"],[28,9,"AZc"],[29,"NP"],[30,9,"AZc"]]},{"n":"SOTO HEREDIA, MANUEL","c":[[7,"NL"],[8,"FI"]]},{"n":"TESGHITI, MOHAMED","c":[[1,9,"ROJ"],[2,9,"ROJ"],[3,9,"ROJ"],[4,6,"ROJ"],[7,"NL"],[8,"FI"],[9,9,"ROJ"],[10,9,"ROJ"],[11,6,"ROJ"],[14,9,"ROJ"],[15,9,"ROJ"],[16,9,"ROJ"],[17,9,"ROJ"],[18,6,"ROJ"],[21,9,"ROJ"],[22,9,"ROJ"],[23,9,"ROJ"],[24,9,"ROJ"],[25,9,"ROJ"],[28,9,"ROJ"],[29,9,"ROJ"],[30,9,"ROJ"]]},{"n":"TRAORE, LASSAMA","c":[[7,"NL"],[8,"FI"]]},{"n":"URBANO DE LA CRUZ, YERAY","c":[[1,"B"],[7,"NL"],[8,"FI"]]},{"n":"VAZQUEZ HERNANDEZ, JUAN JOSE","c":[[1,9,"MOR"],[2,10,"MOR"],[3,10,"MOR"],[4,7,"MOR"],[7,"NL"],[8,"FI"],[9,9,"MOR"],[10,9,"MOR"],[11,7,"MOR"],[14,9,"MOR"],[15,9,"MOR"],[16,9,"MOR"],[17,9,"MOR"],[18,7,"MOR"],[21,10,"MOR"],[22,9,"MOR"],[23,9,"MOR"],[24,10,"MOR"],[25,7,"MOR"]]},{"n":"VIRUEL ALARCON, PEDRO","c":[[7,"NL"],[8,"FI"]]},{"n":"ZHYLINSKYI, OLEH","c":[[1,9,"AMA"],[2,9,"AMA"],[3,9,"AMA"],[4,9,"AMA"],[5,9,"AMA"],[7,9,"AMA"],[8,8,"AMA"],[9,9,"AMA"],[10,8,"AMA"],[11,"A"],[14,9,"AZc"],[15,10,"AZc",1],[16,10,"AZc",1],[17,10,"AZc",1],[18,6,"AZc"],[21,10,"AZc",1],[22,9,"AZc"],[23,9,"AZc"],[24,9,"AZc"],[25,6,"AZc"],[28,9,"AZc"],[29,9,"AZc"],[30,9,"AZc"]]},{"n":"CORDOBA CORTES, SALVADOR","c":[[7,"NL"],[8,"FI"],[9,9,"ROJ"],[10,"BE"]]},{"n":"BUZU, NICOLAE","c":[[7,"NL"],[8,"FI"],[10,8,"DOR"],[11,4,"DOR"],[14,9,"AZc"],[15,10,"AZc",1],[16,10,"AZc",1],[17,10,"AZc",1],[18,6,"AZc"],[21,10,"AZc",1],[22,9,"AZc"],[23,9,"AZc"],[24,9,"AZc"],[25,6,"AZc"],[28,9,"AZc"],[29,9,"AZc"],[30,9,"AZc"]]},{"n":"NDOUR, FAMARA","c":[[7,"NL"],[8,"FI"],[28,9,"AZc"],[29,9,"AZc"],[30,9,"AZc"]]},{"n":"EL HARRAK, AHMED TIJANI","c":[[7,"NL"],[8,"FI"],[9,9,"AZc"],[10,9,"AZc"],[11,9,"AZc"],[12,7,"AZc"],[14,3,"AZc"],[18,2,"AZc"],[28,9,"AZc"],[30,5,"AZc"]]},{"n":"NOBLE CASTAÑO, FRANCISCO JAVIER","c":[[30,9,"ROJ"]]},{"n":"KOUDIR, HAMID","c":[[1,9,"AZc"],[2,9,"AZc"],[3,9,"AZc"],[4,7,"AZc"],[7,9,"AZc"],[8,9,"AZc"],[9,9,"AZc"],[10,9,"AZc"],[11,9,"AZc"],[12,7,"AZc"],[14,3,"AZc"],[18,2,"AZc"],[28,9,"AZc"],[30,5,"AZc"]]},{"n":"VIDELA, CLAUDIO ADRIAN","c":[[7,"NL"],[8,"FI"],[9,9,"ROJ"],[10,9,"ROJ"],[11,6,"ROJ"],[14,9,"ROJ"],[15,9,"ROJ"],[16,9,"ROJ"],[17,9,"ROJ"],[18,6,"ROJ"],[21,9,"ROJ"],[22,9,"ROJ"],[23,9,"ROJ"],[24,9,"ROJ"],[25,9,"ROJ"],[28,9,"ROJ"],[29,"NP"],[30,"FA"]]}];
+
+function _setObraActual(w,newId,desde){
+  const h=w.obraHistory||[];const l=h[h.length-1];
+  if(w.obra===newId&&(!h.length||l.obraId===newId))return false;
+  if(l&&l.desde>=desde){                       // tramo posterior a la fecha real: se re-fecha
+    l.obraId=newId;l.desde=desde;l.hasta=null;
+    const p=h[h.length-2];if(p){p.hasta=desde;if(p.obraId===newId){p.hasta=null;h.pop();}}
+  }else{
+    if(!h.length&&w.obra)h.push({obraId:w.obra,desde:'2020-01-01',hasta:desde});
+    else if(l&&!l.hasta)l.hasta=desde;
+    h.push({obraId:newId,desde,hasta:null});
+  }
+  w.obraHistory=h;w.obraDesde=desde;w.obra=newId;return true;
+}
+function _sepWorker(W,name){
+  const k=_nrm(SEP_ALIAS[name]||name);
+  const e=SYNC_DATA.find(x=>_nrm(x.n)===k);
+  let w=null;
+  if(e&&e.d)w=W.find(x=>String(x.dni||'').trim().toUpperCase()===e.d.trim().toUpperCase());
+  return w||W.find(x=>_nrm(x.nombre)===k)||null;
+}
+function _sepPlan(W,O){
+  const P={filas:[],noEnc:[],horas:0,celdas:0,aus:0,porObra:{},cambios:[],creadas:[]};
+  SEP_DATA.forEach(r=>{
+    const w=_sepWorker(W,r.n);if(!w){P.noEnc.push(r.n);return;}
+    const cells={};let lastObra=null,desde=0;
+    r.c.forEach(([d,v,col,he])=>{
+      if(typeof v==='number'){
+        const key=col?SEP_COLOR_OBRA[col]:null;
+        const ob=key?_syncGetObra(O,key,P.creadas):null;
+        cells[d]={n:he?v-he:v,he:he||0,obraId:ob?ob.id:0};
+        P.horas+=v;P.celdas++;
+        if(ob){P.porObra[ob.nombre]=(P.porObra[ob.nombre]||0)+v;if(lastObra!==ob.id){lastObra=ob.id;desde=d;}}
+      }else{const t=SEP_AUS[v];if(t){cells[d]=t;P.aus++;}}
+    });
+    if(lastObra){
+      const antes=(O.find(x=>x.id===w.obra)||{}).nombre||'sin obra';
+      if(_setObraActual(w,lastObra,`2026-09-${String(desde).padStart(2,'0')}`))
+        P.cambios.push(`${w.nombre}: ${antes} → ${O.find(x=>x.id===lastObra).nombre}`);
+    }
+    P.filas.push({w,cells});
+  });
+  return P;
+}
+async function importarHorasSep(){
+  const W=JSON.parse(JSON.stringify(workers)),O=JSON.parse(JSON.stringify(obras));
+  const P=_sepPlan(W,O);
+  if(P.noEnc.length){alert('No encuentro en la app a estos trabajadores:\n\n'+P.noEnc.join('\n')+'\n\nPulsa primero "Sincronizar con listado de trabajadores" y vuelve a intentarlo.');return;}
+  const ok=Math.abs(P.horas-SEP_TOTAL_EXCEL)<0.01;
+  const obrasTxt=Object.entries(P.porObra).sort((a,b)=>b[1]-a[1]).map(([n,h])=>`   ${h} h  ${n}`).join('\n');
+  const msg='IMPORTAR HORAS SEPTIEMBRE 2026\n\n'+
+    `• ${P.filas.length} trabajadores, ${P.celdas} días con horas, ${P.aus} ausencias\n`+
+    `• Total: ${P.horas} h  (Excel: ${SEP_TOTAL_EXCEL} h) ${ok?'✓ cuadra':'⚠ NO cuadra'}\n\n`+
+    `Horas por obra:\n${obrasTxt}\n\n`+
+    (P.creadas.length?`Obras nuevas (${P.creadas.length}): ${P.creadas.join('; ')}\n\n`:'')+
+    (P.cambios.length?`Obra actual de cada trabajador (la de su último día del mes):\n${P.cambios.map(x=>'   '+x).join('\n')}\n\n`:'')+
+    'Se reemplazan las celdas de septiembre de estos trabajadores; las de otros no se tocan. Se guarda copia para deshacer (↩).\n¿Aplicar?';
+  if(!confirm(msg))return;
+  _undoPush(['horario','workers','obras'],'Importar horas septiembre 2026');
+  workers=W;obras=O;
+  P.filas.forEach(({w,cells})=>{
+    const pre=`2026-8-${w.id}-`;
+    Object.keys(hor).filter(k=>k.startsWith(pre)).forEach(k=>delete hor[k]);
+    Object.entries(cells).forEach(([d,v])=>{hor[pre+d]=v;});
+  });
+  await svFB('horario',hor);await svFB('workers',workers);await svFB('obras',obras);
+  CM();if(typeof rWorkers==='function')rWorkers();if(typeof rObras==='function')rObras();if(isActive('horario'))rHor();
+  toast(`✓ Septiembre importado: ${P.horas} h en ${P.filas.length} trabajadores`);
+}
+
 
 function resetWorkers(){
   if(!confirm('¿Actualizar datos de todos los trabajadores desde el código?\n\nSe actualizarán: nombre, categoría, DNI, teléfono, cuenta, banco, fechas, localidad, correo, PRL, cursos.\n\nSe preservan de Firebase: obra, estado, cn, ce, nFija, irpfAplica, fechaBaja, finiquitado, finiquitaNota, obraHistory, obraDesde, imp y bajas.'))return;
